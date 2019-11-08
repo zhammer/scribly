@@ -13,6 +13,7 @@ starlette = {extras = ["aiofiles", "jinja2"],version = "*"}
 uvicorn = "*"
 aiofiles = "*"
 jinja2 = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.7"
