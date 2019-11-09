@@ -16,11 +16,10 @@
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <h1>scribly</h1>
-    <p>write stories together</p>
-    <form action="/login" method="post">
-      <button type="submit" id="login-button">
-        log in
+    <h1>{{ username }}'s scribly</h1>
+    <form action="/new" method="get">
+      <button type="submit" id="new-story-button">
+        start a new story
       </button>
     </form>
   </body>
