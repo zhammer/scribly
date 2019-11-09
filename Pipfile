@@ -14,6 +14,7 @@ uvicorn = "*"
 aiofiles = "*"
 jinja2 = "*"
 gunicorn = "*"
+python-multipart = "*"
 
 [requires]
 python_version = "3.7"
