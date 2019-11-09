@@ -10,7 +10,7 @@ from starlette.responses import RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from scribly.definitions import Context
+from scribly.definitions import Context, User
 from scribly.delivery.constants import STORY_STARTERS
 from scribly.delivery.middleware import BasicAuthBackend, ScriblyMiddleware
 
@@ -46,7 +46,7 @@ async def homepage(request):
 
 @app.route("/me")
 async def me(request):
-    if not request.user.is_authenticated:
+    if not isinstance(request.user, User):
         return RedirectResponse("/")
 
     return templates.TemplateResponse(
@@ -56,7 +56,7 @@ async def me(request):
 
 @app.route("/login", methods=["POST", "GET"])
 async def login(request):
-    if request.user.is_authenticated:
+    if isinstance(request.user, User):
         return RedirectResponse("/me", status_code=303)
 
     return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Site"'})
@@ -64,7 +64,7 @@ async def login(request):
 
 @app.route("/new")
 async def new_story(request):
-    if not request.user.is_authenticated:
+    if not isinstance(request.user, User):
         return RedirectResponse("/")
 
     random_title_suggestion, random_intro_suggestion = random.choice(STORY_STARTERS)
@@ -80,7 +80,7 @@ async def new_story(request):
 
 @app.route("/new", methods=["POST"])
 async def new_story_submit(request):
-    if not request.user.is_authenticated:
+    if not isinstance(request.user, User):
         return RedirectResponse("/", status_code=303)
 
     form = await request.form()
