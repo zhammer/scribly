@@ -1,0 +1,15 @@
+{
+  "name": "scribly",
+  "version": "1.0.0",
+  "description": "node dependencies for scribly cypress testing",
+  "repository": "git@github.com:zhammer/scribly.git",
+  "author": "zhammer <zachary_hammer@alumni.brown.edu>",
+  "license": "MIT",
+  "dependencies": {
+    "cypress": "^3.6.1",
+    "cypress-cucumber-preprocessor": "^1.16.2"
+  },
+  "cypress-cucumber-preprocessor": {
+    "nonGlobalStepDefinitions": true
+  }
+}
