@@ -4,22 +4,34 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:10.8
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: scribly
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.7'
-    - run: sudo pip install pipenv
-    - run: yarn install
-    - run: pipenv sync
-    - name: Start scribly server in background
-      run: |
-        pipenv run dev &
-        npx wait-on http://localhost:8000
-    - name: Run cypress tests
-      run: |
-        yarn run cypress run
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: "3.7"
+      - name: setup database
+        run: psql -d scribly -a -f migrations/createdb.sql
+      - run: sudo pip install pipenv
+      - run: yarn install
+      - run: pipenv sync
+      - name: Start scribly server in background
+        run: |
+          pipenv run dev &
+          npx wait-on http://localhost:8000
+      - name: Run cypress tests
+        run: |
+          yarn run cypress run
