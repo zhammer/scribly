@@ -21,7 +21,7 @@ jobs:
       - name: setup database
         run: |
           sudo apt-get install postgresql
-          psql -u postgres -d scribly -a -f migrations/createdb.sql
+          psql -d scribly -a -f migrations/createdb.sql
       - run: sudo pip install pipenv
       - run: yarn install
       - run: pipenv sync
