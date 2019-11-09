@@ -1,0 +1,22 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v1
+    - uses: actions/setup-python@v1
+    - name: yarn install
+    - name: pipenv sync
+    - name: Start scribly server in background
+      run: |
+        pipenv run dev
+        npx wait-on http://localhost:8000
+    - name: Run cypress tests
+      run: |
+        yarn run cypress run
