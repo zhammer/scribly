@@ -46,7 +46,7 @@ class DatabaseGateway(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create_story(self, user: User, title: str, body: str) -> Story:
+    async def start_story(self, user: User, title: str, body: str) -> Story:
         ...
 
 

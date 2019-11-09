@@ -11,4 +11,4 @@ class Scribly:
         return await self.context.database.fetch_user(username, password)
 
     async def start_story(self, user: User, title: str, body: str) -> Story:
-        return await self.context.database.create_story(user, title, body)
+        return await self.context.database.start_story(user, title, body)
