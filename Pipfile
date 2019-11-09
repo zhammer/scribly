@@ -15,6 +15,7 @@ aiofiles = "*"
 jinja2 = "*"
 gunicorn = "*"
 python-multipart = "*"
+asyncpg = "*"
 
 [requires]
 python_version = "3.7"
@@ -23,4 +24,4 @@ python_version = "3.7"
 allow_prereleases = true
 
 [scripts]
-dev = "uvicorn --reload scribly.server:app"
+dev = "uvicorn --reload scribly.delivery.server:app"

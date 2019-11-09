@@ -4,22 +4,33 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:11.5
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        env:
+          POSTGRES_DB: scribly
+
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.7'
-    - run: sudo pip install pipenv
-    - run: yarn install
-    - run: pipenv sync
-    - name: Start scribly server in background
-      run: |
-        pipenv run dev &
-        npx wait-on http://localhost:8000
-    - name: Run cypress tests
-      run: |
-        yarn run cypress run
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: "3.7"
+      - run: sudo curl https://cli-assets.heroku.com/install.sh | sh
+      - run: sudo pip install pipenv
+      - run: yarn install
+      - run: pipenv sync
+      - name: Start scribly server in background
+        run: |
+          pipenv run python scripts/createdb.py
+          pipenv run heroku local -p 8000 &
+          npx wait-on http://localhost:8000
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost/scribly
+      - name: Run cypress tests
+        run: |
+          yarn run cypress run
