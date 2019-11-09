@@ -20,7 +20,7 @@ jobs:
           python-version: "3.7"
       - name: setup database
         run: |
-          sudo apt-get install postgres
+          sudo apt-get install postgresql
           psql -u postgres -d scribly -a -f migrations/createdb.sql
       - run: sudo pip install pipenv
       - run: yarn install
