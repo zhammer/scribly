@@ -29,7 +29,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup")
 async def startup():
-    app.state.connection_pool = await asyncpg.create_pool(dsn=DATABASE_URL)
+    app.state.connection_pool = await asyncpg.create_pool(
+        dsn=DATABASE_URL, min_size=2, max_size=2
+    )
 
 
 @app.on_event("shutdown")
