@@ -1,7 +1,9 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL,
     username TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 INSERT INTO users (username, password)
