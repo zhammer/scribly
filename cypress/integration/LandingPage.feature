@@ -5,4 +5,4 @@ Feature: Landing Page
         When I visit "/"
         Then I see the text "scribly"
         And I see the text "write stories together"
-        And I see the text "log in"
+        And I see the button "log in"

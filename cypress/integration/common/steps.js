@@ -9,3 +9,7 @@ When(`I visit {string}`, path => {
 Then(`I see the text {string}`, text => {
   cy.contains(text);
 });
+
+Then(`I see the button {string}`, text => {
+  cy.get("button").contains(text);
+});
