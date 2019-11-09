@@ -24,6 +24,7 @@ jobs:
       - run: pipenv sync
       - name: Start scribly server in background
         run: |
+          pipenv run python scripts/createdb.py
           pipenv run heroku local -p 8000 &
           npx wait-on http://localhost:8000
         env:
