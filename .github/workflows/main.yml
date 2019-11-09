@@ -18,7 +18,7 @@ jobs:
     - run: pipenv sync
     - name: Start scribly server in background
       run: |
-        pipenv run dev
+        pipenv run dev &
         npx wait-on http://localhost:8000
     - name: Run cypress tests
       run: |
