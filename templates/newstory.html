@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Scribly</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- fonts -->
+    <link
+      href="https://fonts.googleapis.com/css?family=Lora|Open+Sans:300&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- stylehseet -->
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <h1>start a new story</h1>
+    <form id="new-story-form" class="simple-form" action="/new" method="post">
+      <label class="inline"
+        ><span>title:</span>
+        <input
+          name="title"
+          id="title"
+          required
+          placeholder="{{ random_title_suggestion }}"
+      /></label>
+      <br />
+      <label class="inline inline-list">
+        <span>with:</span>
+        <div>
+          <input
+            name="person-1"
+            id="person-1"
+            required
+            placeholder="person 1"
+          />
+          <input
+            name="person-2"
+            id="person-2"
+            placeholder="person 2 (optional)"
+          />
+          <input
+            name="person-3"
+            id="person-3"
+            placeholder="person 3 (optional)"
+          />
+        </div>
+      </label>
+      <br />
+      <button type="submit" action="/new" method="post" id="new-story-button">
+        create
+      </button>
+    </form>
+  </body>
+</html>
