@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: "3.7"
-      - run: sudo snap install --classic ubuntu
+      - run: sudo snap install --classic heroku
       - run: sudo pip install pipenv
       - run: yarn install
       - run: pipenv sync
