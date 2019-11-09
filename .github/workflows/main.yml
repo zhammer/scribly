@@ -18,12 +18,13 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: "3.7"
+      - run: sudo snap install --classic ubuntu
       - run: sudo pip install pipenv
       - run: yarn install
       - run: pipenv sync
       - name: Start scribly server in background
         run: |
-          pipenv run dev &
+          pipenv run heroku local -p 8000 &
           npx wait-on http://localhost:8000
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost/scribly
