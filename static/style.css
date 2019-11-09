@@ -47,3 +47,14 @@ form.simple-form > label.inline-list > div > input {
 form.simple-form > label.inline-list > div > input + input {
   margin-top: 0.25em;
 }
+
+.simple-form > input,
+.simple-form > textarea {
+  width: 100%;
+}
+
+.writer {
+  min-height: 10em;
+  resize: vertical;
+  margin-top: 1em;
+}
