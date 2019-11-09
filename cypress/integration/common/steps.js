@@ -23,6 +23,18 @@ When(`I visit {string}`, path => {
   });
 });
 
+When(`I click the text {string}`, text => {
+  cy.contains(text).click();
+});
+
+When(/I click on the "(.*)" (input|textarea)/, (name, formElement) => {
+  cy.get(`${formElement}[name='${name}']`).click();
+});
+
+When(`I type {string}`, text => {
+  cy.focused().type(text);
+});
+
 Then(`I see the text {string}`, text => {
   cy.contains(text);
 });

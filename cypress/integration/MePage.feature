@@ -11,3 +11,10 @@ Feature: Me Page
         When I visit "/me"
         Then I am on "/"
         And I see the text "log in"
+
+    Scenario: I click start a new story
+        Given I am logged in
+        When I visit "/me"
+        And I click the text "start a new story"
+        Then I am on "/new"
+        And I see the text "start a new story"
