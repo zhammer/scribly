@@ -9,8 +9,6 @@ jobs:
     services:
       postgres:
         image: postgres:11.5
-        env:
-          POSTGRES_USER: runner # the name of the CI user
         ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
@@ -20,10 +18,6 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: "3.7"
-      - name: setup database
-        run: |
-          sudo apt-get install postgresql
-          psql -d scribly -a -f migrations/createdb.sql
       - run: sudo pip install pipenv
       - run: yarn install
       - run: pipenv sync
@@ -32,7 +26,7 @@ jobs:
           pipenv run dev &
           npx wait-on http://localhost:8000
         env:
-          DATABASE_URL: postgres://localhost/scribly
+          DATABASE_URL: postgres://postgres:postgres@localhost/scribly
       - name: Run cypress tests
         run: |
           yarn run cypress run
