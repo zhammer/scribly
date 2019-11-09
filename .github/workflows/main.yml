@@ -8,13 +8,9 @@ jobs:
 
     services:
       postgres:
-        image: postgres:10.8
+        image: postgres:11.5
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: scribly
-        ports:
-          - 5432/tcp
+        ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
@@ -24,7 +20,7 @@ jobs:
         with:
           python-version: "3.7"
       - name: setup database
-        run: psql -d scribly -a -f migrations/createdb.sql
+        run: psql -u postgres -d scribly -a -f migrations/createdb.sql
       - run: sudo pip install pipenv
       - run: yarn install
       - run: pipenv sync
