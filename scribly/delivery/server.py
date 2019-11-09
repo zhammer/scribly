@@ -1,60 +1,40 @@
-import base64
-import binascii
 import logging
+import os
 import random
 from typing import Tuple
 
+import asyncpg
 from starlette.applications import Starlette
-from starlette.authentication import (
-    AuthCredentials,
-    AuthenticationBackend,
-    AuthenticationError,
-    SimpleUser,
-    UnauthenticatedUser,
-)
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.responses import RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
+from scribly.definitions import Context
 from scribly.delivery.constants import STORY_STARTERS
+from scribly.delivery.middleware import BasicAuthBackend, ScriblyMiddleware
+
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 logger = logging.getLogger(__name__)
-
-
-USERS = ("zach.the.hammer@gmail.com:password", "gsnussbaum@gmail.com:password")
-
-
-class BasicAuthBackend(AuthenticationBackend):
-    # from https://www.starlette.io/authentication/
-    async def authenticate(self, request):
-        if "Authorization" not in request.headers:
-            return
-
-        auth = request.headers["Authorization"]
-        try:
-            scheme, credentials = auth.split()
-            if scheme.lower() != "basic":
-                return
-            decoded = base64.b64decode(credentials).decode("ascii")
-        except (ValueError, UnicodeDecodeError, binascii.Error) as exc:
-            logger.error("Invalid basic auth credentials: %s", exc)
-            raise AuthenticationError("Invalid basic auth credentials")
-
-        username, _, _ = decoded.partition(":")
-        if decoded not in USERS:
-            logger.info("bad login attempt from %s", username)
-            return AuthCredentials, UnauthenticatedUser()
-
-        logger.info("request from user %s", username)
-        return AuthCredentials(["authenticated"]), SimpleUser(username)
 
 
 templates = Jinja2Templates(directory="templates")
 
 app = Starlette(debug=True)
 app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
+app.add_middleware(ScriblyMiddleware)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.on_event("startup")
+async def startup():
+    app.state.connection_pool = await asyncpg.create_pool(dsn=DATABASE_URL)
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await app.state.connection_pool.close()
 
 
 @app.route("/")

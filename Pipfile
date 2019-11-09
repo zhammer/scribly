@@ -15,6 +15,7 @@ aiofiles = "*"
 jinja2 = "*"
 gunicorn = "*"
 python-multipart = "*"
+asyncpg = "*"
 
 [requires]
 python_version = "3.7"
