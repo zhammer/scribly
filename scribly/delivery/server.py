@@ -6,7 +6,7 @@ from typing import Tuple
 import asyncpg
 from starlette.applications import Starlette
 from starlette.middleware.authentication import AuthenticationMiddleware
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
@@ -90,12 +90,35 @@ async def new_story_submit(request):
 
     story = await scribly.start_story(request.user, form["title"], form["intro"])
 
-    return templates.TemplateResponse(
-        "addpeopletostory.html",
-        {
-            "request": request,
-            "title": story.title,
-            "intro": story.turns[0].text_written,
-            "story_id": story.id,
-        },
-    )
+    return RedirectResponse(f"/stories/{story.id}", status_code=303)
+
+
+@app.route("/stories/{story_id}/addcowriters", methods=["POST"])
+async def add_cowriters(request):
+    if not isinstance(request.user, User):
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+    logger.info("request to add cowriters to story %s", story_id)
+
+
+@app.route("/stories/{story_id}")
+async def story_page(request):
+    if not isinstance(request.user, User):
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+
+    scribly = request.scope["scribly"]
+    story = await scribly.get_story(request.user, story_id)
+
+    if story.state == "draft":
+        return templates.TemplateResponse(
+            "addpeopletostory.html",
+            {
+                "request": request,
+                "title": story.title,
+                "intro": story.turns[0].text_written,
+                "story_id": story.id,
+            },
+        )

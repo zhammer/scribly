@@ -1,6 +1,7 @@
 import abc
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
-from typing import Optional, Sequence
+from typing import AsyncIterator, Optional, Sequence
 
 from typing_extensions import Literal
 
@@ -56,6 +57,14 @@ class DatabaseGateway(abc.ABC):
 
     @abc.abstractmethod
     async def start_story(self, user: User, title: str, body: str) -> Story:
+        ...
+
+    @abc.abstractmethod
+    async def fetch_story(self, story_id: int) -> Story:
+        ...
+
+    @abc.abstractmethod
+    def transaction(self) -> "AbstractAsyncContextManager[None]":
         ...
 
 
