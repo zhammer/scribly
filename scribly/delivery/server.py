@@ -86,4 +86,15 @@ async def new_story_submit(request):
     form = await request.form()
     logger.info("received new story submission: %s", form)
 
-    return Response(status_code=200)
+    scribly = request.scope["scribly"]
+
+    story = await scribly.start_story(request.user, form["title"], form["intro"])
+
+    return templates.TemplateResponse(
+        "addpeopletostory.html",
+        {
+            "request": request,
+            "title": story.title,
+            "intro": story.turns[0].text_written,
+        },
+    )

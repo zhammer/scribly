@@ -25,7 +25,7 @@ class Database(DatabaseGateway):
         return User(row["id"], row["username"])
 
     async def start_story(self, user: User, title: str, body: str) -> Story:
-        story_record = await self.connection.execute(
+        story_record = await self.connection.fetchrow(
             """
             INSERT INTO stories (title, state, created_by)
             VALUES ($1, 'draft', $2)
@@ -35,9 +35,9 @@ class Database(DatabaseGateway):
             user.id,
         )
         story_id = story_record["id"]
-        turn_record = await self.connection.execute(
+        turn_record = await self.connection.fetchrow(
             """
-            INSERT INTO turns (story_id, taken_by, turn_action, text_written)
+            INSERT INTO turns (story_id, taken_by, action, text_written)
             VALUES ($1, $2, 'write', $3)
             RETURNING *;
             """,
@@ -64,7 +64,7 @@ def _pluck_story(
 
 def _pluck_turn(turn_record: Record, user_by_id: Dict[int, User]) -> Turn:
     return Turn(
-        taken_by=user_by_id[turn_record["user_id"]],
+        taken_by=user_by_id[turn_record["taken_by"]],
         action=turn_record["action"],
         text_written=turn_record["text_written"],
     )
