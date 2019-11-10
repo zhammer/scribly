@@ -34,10 +34,19 @@ class Story:
     created_by: User
     """In order list of users cowriting the story. Includes creator. Empty in `draft` state."""
     cowriters: Optional[Sequence[User]]
-    """The person whose turn it is to write. Only exists in `in_progress` state."""
-    current_writers_turn: Optional[User]
     """All of the turns taken by writers to get to the story's current state."""
     turns: Sequence[Turn]
+
+    @property
+    def current_writers_turn(self) -> Optional[User]:
+        """The person whose turn it is to write. Only exists in `in_progress` state."""
+        if not self.cowriters:
+            return None
+
+        num_turns = len(self.turns)
+        current_writer_index = num_turns % len(self.cowriters)
+
+        return self.cowriters[current_writer_index]
 
 
 class DatabaseGateway(abc.ABC):
