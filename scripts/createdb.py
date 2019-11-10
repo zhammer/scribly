@@ -5,24 +5,11 @@ import asyncpg
 
 
 async def main():
-    connection = await asyncpg.connect(os.environ["DATABASE_URL"])
-    await connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL,
-            username TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL,
-            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-        );
+    with open("./migrations/createdb.sql") as f:
+        sql = f.read()
 
-        INSERT INTO users (username, password)
-        VALUES
-            ('zach.the.hammer@gmail.com', 'password'),
-            ('gsnussbaum@gmail.com', 'password')
-        ;
-        """
-    )
+    connection = await asyncpg.connect(os.environ["DATABASE_URL"])
+    await connection.execute(sql)
     await connection.close()
 
 

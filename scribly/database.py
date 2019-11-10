@@ -3,7 +3,7 @@ from typing import AsyncIterator, Optional
 
 import asyncpg
 
-from scribly.definitions import DatabaseGateway, User
+from scribly.definitions import DatabaseGateway, Story, User
 from scribly.exceptions import AuthError
 
 
@@ -22,3 +22,5 @@ class Database(DatabaseGateway):
             raise AuthError()
 
         return User(row["id"], row["username"])
+
+    async def start_story(self, user: User, title: str, body: str) -> Story:

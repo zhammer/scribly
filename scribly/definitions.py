@@ -16,10 +16,10 @@ TurnAction = Literal["pass", "write", "finish", "write_and_finish"]
 
 @dataclass
 class Turn:
-    by: User
+    taken_by: User
     action: TurnAction
     """Text written by the user on this turn. Only exists on `write` and `write_and_finish` actions."""
-    text: Optional[str]
+    text_written: Optional[str]
 
 
 StoryState = Literal["draft", "in_progress", "done"]
@@ -32,7 +32,7 @@ class Story:
     state: StoryState
     """User that created the story."""
     created_by: User
-    """In order list of users cowriting the story. Empty in `draft` state."""
+    """In order list of users cowriting the story. Includes creator. Empty in `draft` state."""
     cowriters: Optional[Sequence[User]]
     """The person whose turn it is to write. Only exists in `in_progress` state."""
     current_writers_turn: Optional[User]
