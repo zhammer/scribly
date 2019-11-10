@@ -20,12 +20,11 @@ CREATE TABLE IF NOT EXISTS stories (
 );
 
 CREATE TABLE IF NOT EXISTS story_cowriters (
-    story_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
+    story_id INTEGER NOT NULL REFERENCES stories (id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     turn_index INTEGER NOT NULL,
     PRIMARY KEY (story_id, user_id),
-    CONSTRAINT fk_story_id FOREIGN KEY (story_id) REFERENCES stories (id) ON DELETE CASCADE,
-    CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    UNIQUE (story_id, turn_index)
 );
 
 CREATE TYPE turn_action AS ENUM ('pass', 'write', 'finish', 'write_and_finish');
