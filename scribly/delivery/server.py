@@ -96,5 +96,6 @@ async def new_story_submit(request):
             "request": request,
             "title": story.title,
             "intro": story.turns[0].text_written,
+            "story_id": story.id,
         },
     )

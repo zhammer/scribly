@@ -8,7 +8,7 @@
     <form
       id="add-cowriters-form"
       class="simple-form"
-      action="/addcowriters"
+      action="/stories/{{ story_id }}/addcowriters"
       method="post"
     >
       <input name="person-1" id="person-1" required placeholder="person 1" />
@@ -20,7 +20,7 @@
       />
       {% endfor %}
       <br />
-      <button type="submit" action="/new" method="post" id="new-story-button">
+      <button type="submit" id="new-story-button">
         add people
       </button>
     </form>
