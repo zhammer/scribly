@@ -56,7 +56,15 @@ class DatabaseGateway(abc.ABC):
         ...
 
     @abc.abstractmethod
+    async def fetch_users(self, *, usernames: Sequence[str]) -> Sequence[User]:
+        ...
+
+    @abc.abstractmethod
     async def start_story(self, user: User, title: str, body: str) -> Story:
+        ...
+
+    @abc.abstractmethod
+    async def add_cowriters(self, story: Story, cowriters: Sequence[User]) -> Story:
         ...
 
     @abc.abstractmethod

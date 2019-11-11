@@ -8,3 +8,7 @@ class AuthError(ScriblyException):
 
 class StoryNotFound(ScriblyException):
     """Raised when attempting to find a story that doesn't exist."""
+
+
+class InputError(ScriblyException):
+    """Raised upon encountering some bad input from the user.."""
