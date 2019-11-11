@@ -2,6 +2,7 @@ import logging
 import os
 import random
 from typing import Tuple
+from typing import List, Tuple
 
 import asyncpg
 from starlette.applications import Starlette
@@ -13,6 +14,7 @@ from starlette.templating import Jinja2Templates
 from scribly.definitions import Context, User
 from scribly.delivery.constants import STORY_STARTERS
 from scribly.delivery.middleware import BasicAuthBackend, ScriblyMiddleware
+from scribly.use_scribly import Scribly
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
@@ -100,6 +102,18 @@ async def add_cowriters(request):
 
     story_id = int(request.path_params["story_id"])
     logger.info("request to add cowriters to story %s", story_id)
+
+    form = await request.form()
+    cowriter_usernames = [form["person-1"]]
+    if form["person-2"]:
+        cowriter_usernames.append(form["person-2"])
+    if form["person-3"]:
+        cowriter_usernames.append(form["person-3"])
+
+    scribly: Scribly = request.scope["scribly"]
+    await scribly.add_cowriters(request.user, story_id, cowriter_usernames)
+
+    return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
 @app.route("/stories/{story_id}")

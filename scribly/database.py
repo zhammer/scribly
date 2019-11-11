@@ -45,7 +45,7 @@ class Database(DatabaseGateway):
 
         await self.connection.execute(
             """
-            UPDATE users SET state = 'in_progress' UPDATED_AT = NOW()
+            UPDATE stories SET state = 'in_progress', updated_at = NOW()
             WHERE id = $1;
             """,
             story.id,
