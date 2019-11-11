@@ -68,7 +68,7 @@ class DatabaseGateway(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def fetch_story(self, story_id: int) -> Story:
+    async def fetch_story(self, story_id: int, *, for_update: bool = False) -> Story:
         ...
 
     @abc.abstractmethod

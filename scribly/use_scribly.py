@@ -28,7 +28,7 @@ class Scribly:
         self, user: User, story_id: int, cowriter_usernames: Sequence[str]
     ) -> Story:
         async with self.context.database.transaction():
-            story = await self.context.database.fetch_story(story_id)
+            story = await self.context.database.fetch_story(story_id, for_update=True)
 
             policies.require_user_can_add_cowriters(user, story, cowriter_usernames)
 

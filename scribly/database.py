@@ -24,6 +24,42 @@ class Database(DatabaseGateway):
 
         return User(row["id"], row["username"])
 
+    async def fetch_users(self, *, usernames: Sequence[str]) -> Sequence[User]:
+        rows = await self.connection.fetch(
+            "SELECT * FROM users WHERE username = any($1::text[])", usernames
+        )
+
+        return [_pluck_user(row) for row in rows]
+
+    async def add_cowriters(self, story: Story, cowriters: Sequence[User]) -> Story:
+        await self.connection.executemany(
+            """
+            INSERT INTO story_cowriters (story_id, user_id, turn_index)
+            VALUES ($1, $2, $3);
+            """,
+            [
+                (story.id, cowriter.id, index)
+                for index, cowriter in enumerate(cowriters)
+            ],
+        )
+
+        await self.connection.execute(
+            """
+            UPDATE users SET state = 'in_progress' UPDATED_AT = NOW()
+            WHERE id = $1;
+            """,
+            story.id,
+        )
+
+        return Story(
+            id=story.id,
+            title=story.title,
+            state="in_progress",
+            created_by=story.created_by,
+            cowriters=cowriters,
+            turns=story.turns,
+        )
+
     async def start_story(self, user: User, title: str, body: str) -> Story:
         story_record = await self.connection.fetchrow(
             """
@@ -47,10 +83,10 @@ class Database(DatabaseGateway):
         )
         return _pluck_story(story_record, [turn_record], {user.id: user})
 
-    async def fetch_story(self, story_id: int) -> Story:
+    async def fetch_story(self, story_id: int, *, for_update: bool = False) -> Story:
         story_record = await self.connection.fetchrow(
-            """
-            SELECT * FROM stories WHERE id = $1;
+            f"""
+            SELECT * FROM stories WHERE id = $1 {"FOR UPDATE" if for_update else ""};
             """,
             story_id,
         )
