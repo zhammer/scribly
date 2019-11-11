@@ -58,3 +58,11 @@ form.simple-form > label.inline-list > div > input + input {
   resize: vertical;
   margin-top: 1em;
 }
+
+.faded {
+  color: gray;
+}
+
+.flex {
+  display: flex;
+}
