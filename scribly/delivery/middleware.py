@@ -67,6 +67,7 @@ class BasicAuthBackend(AuthenticationBackend):
             return AuthCredentials, None
         except Exception as e:
             logger.error("unknown error when logging in user %s, err: %s", username, e)
+            return AuthCredentials, None
 
         logger.info("request from user %d, %s", user.id, user.username)
         return AuthCredentials(["authenticated"]), user

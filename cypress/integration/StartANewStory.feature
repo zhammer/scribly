@@ -1,7 +1,12 @@
 Feature: Start A New Story
 
+    Background:
+        Given the following users exists
+            | username | password |
+            | zhammer  | password |
+
     Scenario Outline: I start a new story
-        Given I am logged in
+        Given I am logged in as zhammer:password
         When I visit "/new"
         And I click on the "title" input
         And I type "<title>"
