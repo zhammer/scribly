@@ -64,9 +64,10 @@ class BasicAuthBackend(AuthenticationBackend):
             user = await scribly.log_in(username, password)
         except AuthError as e:
             logger.info("bad login attempt from %s, err: %s", username, e)
-            return AuthCredentials, UnauthenticatedUser()
+            return AuthCredentials, None
         except Exception as e:
             logger.error("unknown error when logging in user %s, err: %s", username, e)
+            return AuthCredentials, None
 
         logger.info("request from user %d, %s", user.id, user.username)
-        return AuthCredentials(["authenticated"]), SimpleUser(user.username)
+        return AuthCredentials(["authenticated"]), user

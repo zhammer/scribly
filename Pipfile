@@ -16,6 +16,7 @@ jinja2 = "*"
 gunicorn = "*"
 python-multipart = "*"
 asyncpg = "*"
+typing-extensions = "*"
 
 [requires]
 python_version = "3.7"
