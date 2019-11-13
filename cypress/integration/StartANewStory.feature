@@ -6,7 +6,7 @@ Feature: Start A New Story
             | zhammer  | password |
 
     Scenario Outline: I start a new story
-        Given I am logged in as zhammer:password
+        Given I am logged in as zhammer
         When I visit "/new"
         And I click on the "title" input
         And I type "<title>"

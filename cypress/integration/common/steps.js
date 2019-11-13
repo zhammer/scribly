@@ -10,15 +10,15 @@ beforeEach(() => {
 Given("the following users exist", datatable => {
   const users = datatable.hashes().map(row => ({
     username: row.username,
-    password: row.password
+    password: "password"
   }));
   cy.addusers(users);
 });
 
 Given("I am not logged in", () => {});
 
-Given(/I am logged in as (.*):(.*)/, (username, password) => {
-  cy.wrap({ username, password }).as("loggedInUser");
+Given(/I am logged in as (.*)/, username => {
+  cy.wrap({ username, password: "password" }).as("loggedInUser");
 });
 
 When(`I visit {string}`, path => {
