@@ -7,7 +7,8 @@
   "license": "MIT",
   "dependencies": {
     "cypress": "^3.6.1",
-    "cypress-cucumber-preprocessor": "^1.16.2"
+    "cypress-cucumber-preprocessor": "^1.16.2",
+    "cypress-plugin-tab": "^1.0.3"
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true

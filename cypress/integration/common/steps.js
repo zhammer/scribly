@@ -21,6 +21,14 @@ Given(/I am logged in as (.*)/, username => {
   cy.wrap({ username, password: "password" }).as("loggedInUser");
 });
 
+When("I hit tab", () => {
+  cy.focused().tab();
+});
+
+When("I refresh the page", () => {
+  cy.reload();
+});
+
 When(`I visit {string}`, path => {
   cy.get("@loggedInUser").then(loggedInUser => {
     if (loggedInUser) {
