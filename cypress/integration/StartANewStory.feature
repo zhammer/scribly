@@ -47,7 +47,7 @@ Feature: Start A New Story
         And I click the text "add cowriters"
         And I click on the "person-1" input
         And I type "gsnussbaum"
-        And I click the text "add people"
+        And I click the text "submit"
         Then I am on "/stories/1"
         And I see the text "my title"
         And I see the text "cowriters: zhammer, gsnussbaum"
