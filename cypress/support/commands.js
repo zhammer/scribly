@@ -1,5 +1,13 @@
 Cypress.Commands.add("resetdb", () => {
-  cy.exec("pipenv run python scripts/createdb.py --reset");
+  cy.exec("pipenv run python scripts/createdb.py --reset", {
+    failOnNonZeroExit: false
+  }).then(result => {
+    console.log(result.stdout);
+    console.log(result.stderr);
+    if (result.code) {
+      throw result.stderr;
+    }
+  });
 });
 
 Cypress.Commands.add("addusers", users => {
