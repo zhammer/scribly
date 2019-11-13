@@ -91,6 +91,12 @@ class DatabaseGateway(abc.ABC):
         ...
 
     @abc.abstractmethod
+    async def add_turn_write_and_finish(
+        self, user: User, story: Story, text_written: str
+    ) -> Story:
+        ...
+
+    @abc.abstractmethod
     def transaction(self) -> "AbstractAsyncContextManager[None]":
         ...
 

@@ -69,6 +69,13 @@ def require_user_can_take_turn_finish(user: User, story: Story) -> None:
     _require_user_can_take_turn(user, story)
 
 
+def require_user_can_take_turn_write_and_finish(
+    user: User, story: Story, text_written: str
+) -> None:
+    require_user_can_take_turn_finish(user, story)
+    require_user_can_take_turn_write(user, story, text_written)
+
+
 def _require_user_can_take_turn(user: User, story: Story) -> None:
     if not user.id in {cowriter.id for cowriter in story.cowriters or []}:
         raise AuthError(
