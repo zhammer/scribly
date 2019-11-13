@@ -3,19 +3,37 @@
 import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
 
 beforeEach(() => {
-  cy.wrap(false).as("loggedIn");
+  cy.resetdb();
+  cy.wrap(null).as("loggedInUser");
 });
 
-Given(/I (am|am not) logged in/, amOrAmNot => {
-  const loggedIn = amOrAmNot === "am";
-  cy.wrap(loggedIn).as("loggedIn");
+Given("the following users exist", datatable => {
+  const users = datatable.hashes().map(row => ({
+    username: row.username,
+    password: "password"
+  }));
+  cy.addusers(users);
+});
+
+Given("I am not logged in", () => {});
+
+Given(/I am logged in as (.*)/, username => {
+  cy.wrap({ username, password: "password" }).as("loggedInUser");
+});
+
+When("I hit tab", () => {
+  cy.focused().tab();
+});
+
+When("I refresh the page", () => {
+  cy.reload();
 });
 
 When(`I visit {string}`, path => {
-  cy.get("@loggedIn").then(loggedIn => {
-    if (loggedIn) {
+  cy.get("@loggedInUser").then(loggedInUser => {
+    if (loggedInUser) {
       cy.visit(path, {
-        auth: { username: "zach.the.hammer@gmail.com", password: "password" }
+        auth: loggedInUser
       });
     } else {
       cy.visit(path);
@@ -33,6 +51,10 @@ When(/I click on the "(.*)" (input|textarea)/, (name, formElement) => {
 
 When(`I type {string}`, text => {
   cy.focused().type(text);
+});
+
+When(`I log in as {string}`, username => {
+  cy.wrap({ username, password: "password" }).as("loggedInUser");
 });
 
 Then(`I see the text {string}`, text => {

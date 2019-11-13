@@ -34,3 +34,5 @@ jobs:
       - name: Run cypress tests
         run: |
           yarn run cypress run
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost/scribly

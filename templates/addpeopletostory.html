@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include 'head.html' %}
+  </head>
+  <body>
+    <h1>add cowriters</h1>
+    <form
+      id="add-cowriters-form"
+      class="simple-form"
+      action="/stories/{{ story_id }}/addcowriters"
+      method="post"
+    >
+      <input name="person-1" id="person-1" required placeholder="person 1" />
+      {% for i in range(2, 4) %}
+      <input
+        name="person-{{ i }}"
+        id="person-{{ i }}"
+        placeholder="person {{ i }} (optional)"
+      />
+      {% endfor %}
+      <br />
+      <button type="submit" id="new-story-button">
+        submit
+      </button>
+    </form>
+    <h2>{{ title }}</h2>
+    <p>{{ intro }}</p>
+  </body>
+</html>

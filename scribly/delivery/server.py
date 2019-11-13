@@ -2,17 +2,19 @@ import logging
 import os
 import random
 from typing import Tuple
+from typing import List, Tuple
 
 import asyncpg
 from starlette.applications import Starlette
 from starlette.middleware.authentication import AuthenticationMiddleware
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from scribly.definitions import Context
+from scribly.definitions import Context, User
 from scribly.delivery.constants import STORY_STARTERS
 from scribly.delivery.middleware import BasicAuthBackend, ScriblyMiddleware
+from scribly.use_scribly import Scribly
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 
@@ -29,8 +31,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup")
 async def startup():
+    connection_kwargs = {}
+    if "localhost" in DATABASE_URL:
+        # for cypress testing
+        connection_kwargs["statement_cache_size"] = 0
+
     app.state.connection_pool = await asyncpg.create_pool(
-        dsn=DATABASE_URL, min_size=2, max_size=2
+        dsn=DATABASE_URL, min_size=2, max_size=2, **connection_kwargs
     )
 
 
@@ -46,7 +53,7 @@ async def homepage(request):
 
 @app.route("/me")
 async def me(request):
-    if not request.user.is_authenticated:
+    if not isinstance(request.user, User):
         return RedirectResponse("/")
 
     return templates.TemplateResponse(
@@ -56,7 +63,7 @@ async def me(request):
 
 @app.route("/login", methods=["POST", "GET"])
 async def login(request):
-    if request.user.is_authenticated:
+    if isinstance(request.user, User):
         return RedirectResponse("/me", status_code=303)
 
     return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Site"'})
@@ -64,7 +71,7 @@ async def login(request):
 
 @app.route("/new")
 async def new_story(request):
-    if not request.user.is_authenticated:
+    if not isinstance(request.user, User):
         return RedirectResponse("/")
 
     random_title_suggestion, random_intro_suggestion = random.choice(STORY_STARTERS)
@@ -80,10 +87,63 @@ async def new_story(request):
 
 @app.route("/new", methods=["POST"])
 async def new_story_submit(request):
-    if not request.user.is_authenticated:
+    if not isinstance(request.user, User):
         return RedirectResponse("/", status_code=303)
 
     form = await request.form()
     logger.info("received new story submission: %s", form)
 
-    return Response(status_code=200)
+    scribly = request.scope["scribly"]
+
+    story = await scribly.start_story(request.user, form["title"], form["intro"])
+
+    return RedirectResponse(f"/stories/{story.id}", status_code=303)
+
+
+@app.route("/stories/{story_id}/addcowriters", methods=["POST"])
+async def add_cowriters(request):
+    if not isinstance(request.user, User):
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+    logger.info("request to add cowriters to story %s", story_id)
+
+    form = await request.form()
+    cowriter_usernames = [form["person-1"]]
+    if form["person-2"]:
+        cowriter_usernames.append(form["person-2"])
+    if form["person-3"]:
+        cowriter_usernames.append(form["person-3"])
+
+    scribly: Scribly = request.scope["scribly"]
+    await scribly.add_cowriters(request.user, story_id, cowriter_usernames)
+
+    return RedirectResponse(f"/stories/{story_id}", status_code=303)
+
+
+@app.route("/stories/{story_id}")
+async def story_page(request):
+    if not isinstance(request.user, User):
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+
+    scribly = request.scope["scribly"]
+    story = await scribly.get_story(request.user, story_id)
+
+    if story.state == "draft":
+        return templates.TemplateResponse(
+            "addpeopletostory.html",
+            {
+                "request": request,
+                "title": story.title,
+                "intro": story.turns[0].text_written,
+                "story_id": story.id,
+            },
+        )
+
+    if story.state == "in_progress":
+        return templates.TemplateResponse(
+            "inprogressstory.html",
+            {"request": request, "user": request.user, "story": story,},
+        )
