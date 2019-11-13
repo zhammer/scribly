@@ -26,7 +26,7 @@
     <form
       id="add-turn-form"
       class="simple-form"
-      action="/stories/{{ story_id }}/turn"
+      action="/stories/{{ story.id }}/turn"
       method="post"
     >
       <textarea
@@ -39,6 +39,7 @@
         <button
           type="submit"
           id="write"
+          name="action"
           value="write"
           onclick="return confirm('Once you\'ve submitted your turn, your text can\'t be edited. Are you sure you want to continue?');"
         >
@@ -47,7 +48,8 @@
         <button
           type="submit"
           id="write-and-finish"
-          value="write-and-finish"
+          name="action"
+          value="write_and_finish"
           onclick="return confirm('This will finish the story. Are you sure you want to continue?');"
         >
           write and finish
@@ -55,6 +57,7 @@
         <button
           type="submit"
           id="finish"
+          name="action"
           value="finish"
           onclick="return confirm('This will finish the story and will IGNORE any text you\'ve written for this turn. Are you sure you want to continue?');"
         >
@@ -63,6 +66,7 @@
         <button
           type="submit"
           id="pass"
+          name="action"
           value="pass"
           onclick="return confirm('This will pass over your turn and will IGNORE any text you\'ve written for this turn. Are you sure you want to continue?');"
         >

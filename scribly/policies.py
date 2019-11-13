@@ -87,7 +87,7 @@ def _require_user_can_take_turn(user: User, story: Story) -> None:
             f"Turn cannot be taken for story {story.id} in state {story.state}."
         )
 
-    if not user.id == story.current_writers_turn:
+    if not user.id == story.current_writers_turn.id:
         raise RuntimeError(
             f"User {user.id} cannot take turn as it is user {story.current_writers_turn.id}'s turn."
         )

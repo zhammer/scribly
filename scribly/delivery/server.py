@@ -121,6 +121,33 @@ async def add_cowriters(request):
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
+@app.route("/stories/{story_id}/turn", methods=["POST"])
+async def submit_turn(request):
+    if not isinstance(request.user, User):
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+
+    form = await request.form()
+    action = form["action"]
+    if not action in {"write", "pass", "finish", "write_and_finish"}:
+        raise RuntimeError(
+            f"Unknown turn action {action} from user {request.user.id} for story {story_id}."
+        )
+
+    scribly: Scribly = request.scope["scribly"]
+    if action == "write":
+        await scribly.take_turn_write(request.user, story_id, form["text"])
+    if action == "pass":
+        await scribly.take_turn_pass(request.user, story_id)
+    if action == "finish":
+        await scribly.take_turn_finish(request.user, story_id)
+    if action == "write_and_finish":
+        await scribly.take_turn_write_and_finish(request.user, story_id, form["text"])
+
+    return RedirectResponse(f"/stories/{story_id}", status_code=303)
+
+
 @app.route("/stories/{story_id}")
 async def story_page(request):
     if not isinstance(request.user, User):
