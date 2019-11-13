@@ -65,6 +65,10 @@ def require_user_can_take_turn_write(
         raise InputError(f"Text for a `write` turn cannot be empty.")
 
 
+def require_user_can_take_turn_finish(user: User, story: Story) -> None:
+    _require_user_can_take_turn(user, story)
+
+
 def _require_user_can_take_turn(user: User, story: Story) -> None:
     if not user.id in {cowriter.id for cowriter in story.cowriters or []}:
         raise AuthError(
