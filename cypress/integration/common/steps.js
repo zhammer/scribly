@@ -53,6 +53,10 @@ When(`I type {string}`, text => {
   cy.focused().type(text);
 });
 
+When(`I log in as {string}`, username => {
+  cy.wrap({ username, password: "password" }).as("loggedInUser");
+});
+
 Then(`I see the text {string}`, text => {
   cy.contains(text);
 });

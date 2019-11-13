@@ -53,3 +53,22 @@ Feature: Start A New Story
         And I see the text "cowriters: zhammer, gsnussbaum"
         And I see the text "turn: 1 (gsnussbaum's turn)"
         And I see the text "my intro"
+
+    Scenario: Gabe looks at our story after I add him
+        Given I am logged in as zhammer
+        When I visit "/new"
+        And I click on the "title" input
+        And I type "my title"
+        And I hit tab
+        And I type "my intro"
+        And I click the text "add cowriters"
+        And I click on the "person-1" input
+        And I type "gsnussbaum"
+        And I click the text "submit"
+        And I log in as "gsnussbaum"
+        And I visit "/stories/1"
+        Then I see the text "my title"
+        And I see the text "write"
+        And I see the text "write and finish"
+        And I see the text "finish"
+        And I see the text "pass"
