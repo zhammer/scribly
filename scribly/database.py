@@ -119,6 +119,27 @@ class Database(DatabaseGateway):
             story_record, turn_records, created_by, cowriter_records
         )
 
+    async def add_turn_pass(self, user: User, story: Story) -> Story:
+        turn_record = await self.connection.fetchrow(
+            """
+            INSERT INTO turns (story_id, taken_by, turn_action)
+            VALUES ($1, $2, $3)
+            RETURNING *
+            """,
+            story.id,
+            user.id,
+            "pass",
+        )
+        turn = _pluck_turn(turn_record, {user.id: user})
+        return Story(
+            id=story.id,
+            title=story.title,
+            state=story.state,
+            created_by=story.created_by,
+            cowriters=story.cowriters,
+            turns=(list(story.turns) + [turn]),
+        )
+
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[None]:
         async with self.connection.transaction():

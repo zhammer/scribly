@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from scribly import policies
-from scribly.definitions import Context, Story, User
+from scribly.definitions import Context, Story, TurnAction, User
 from scribly.util import shuffle
 
 
@@ -41,3 +41,11 @@ class Scribly:
             full_cowriters = [user] + list(shuffle(cowriters))
 
             return await self.context.database.add_cowriters(story, full_cowriters)
+
+    async def take_turn_pass(self, user: User, story_id: int) -> Story:
+        async with self.context.database.transaction():
+            story = await self.context.database.fetch_story(story_id, for_update=True)
+
+            policies.require_user_can_take_turn_pass(user, story)
+
+            return await self.context.database.add_turn_pass(user, story)
