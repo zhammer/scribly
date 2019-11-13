@@ -31,8 +31,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup")
 async def startup():
+    connection_kwargs = {}
+    if "localhost" in DATABASE_URL:
+        # for cypress testing
+        connection_kwargs["statement_cache_size"] = 0
+
     app.state.connection_pool = await asyncpg.create_pool(
-        dsn=DATABASE_URL, min_size=2, max_size=2
+        dsn=DATABASE_URL, min_size=2, max_size=2, **connection_kwargs
     )
 
 

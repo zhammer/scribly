@@ -1,7 +1,7 @@
 Feature: Start A New Story
 
     Background:
-        Given the following users exists
+        Given the following users exist
             | username | password |
             | zhammer  | password |
 
@@ -12,9 +12,11 @@ Feature: Start A New Story
         And I type "<title>"
         And I click on the "intro" textarea
         And I type "<intro>"
+        And I click the text "add cowriters"
+        Then I see the text "add cowriters"
+        And I see the text "<title>"
+        And I see the text "<intro>"
 
         Examples:
             | title                    | intro                                                        |
             | The old man and the seed | After a long life of fishing, the old man took up gardening. |
-
-
