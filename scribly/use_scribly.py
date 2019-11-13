@@ -49,3 +49,13 @@ class Scribly:
             policies.require_user_can_take_turn_pass(user, story)
 
             return await self.context.database.add_turn_pass(user, story)
+
+    async def take_turn_write(
+        self, user: User, story_id: int, text_written: str
+    ) -> Story:
+        async with self.context.database.transaction():
+            story = await self.context.database.fetch_story(story_id, for_update=True)
+
+            policies.require_user_can_take_turn_write(user, story, text_written)
+
+            return await self.context.database.add_turn_write(user, story, text_written)
