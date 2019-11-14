@@ -38,7 +38,7 @@ class Scribly:
 
             policies.require_valid_cowriters(cowriters, cowriter_usernames)
 
-            full_cowriters = [user] + list(shuffle(cowriters))
+            full_cowriters = [user] + list(cowriters)
 
             return await self.context.database.add_cowriters(story, full_cowriters)
 
