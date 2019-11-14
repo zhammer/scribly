@@ -9,6 +9,12 @@ from scribly.exceptions import AuthError, StoryNotFound
 
 
 class Database(DatabaseGateway):
+    QUERY_INSERT_TURN = """
+        INSERT INTO turns (story_id, taken_by, action, text_written)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+        """
+
     def __init__(self, connection: asyncpg.Connection) -> None:
         self.connection = connection
 
@@ -72,14 +78,7 @@ class Database(DatabaseGateway):
         )
         story_id = story_record["id"]
         turn_record = await self.connection.fetchrow(
-            """
-            INSERT INTO turns (story_id, taken_by, action, text_written)
-            VALUES ($1, $2, 'write', $3)
-            RETURNING *;
-            """,
-            story_id,
-            user.id,
-            body,
+            self.QUERY_INSERT_TURN, story_id, user.id, "write", body,
         )
         return _pluck_story(story_record, [turn_record], {user.id: user})
 
@@ -117,6 +116,80 @@ class Database(DatabaseGateway):
 
         return _pluck_story_existing(
             story_record, turn_records, created_by, cowriter_records
+        )
+
+    async def add_turn_pass(self, user: User, story: Story) -> Story:
+        turn_record = await self.connection.fetchrow(
+            self.QUERY_INSERT_TURN, story.id, user.id, "pass", ""
+        )
+        turn = _pluck_turn(turn_record, {user.id: user})
+        return Story(
+            id=story.id,
+            title=story.title,
+            state=story.state,
+            created_by=story.created_by,
+            cowriters=story.cowriters,
+            turns=(list(story.turns) + [turn]),
+        )
+
+    async def add_turn_write(
+        self, user: User, story: Story, text_written: str
+    ) -> Story:
+        turn_record = await self.connection.fetchrow(
+            self.QUERY_INSERT_TURN, story.id, user.id, "write", text_written,
+        )
+        turn = _pluck_turn(turn_record, {user.id: user})
+        return Story(
+            id=story.id,
+            title=story.title,
+            state=story.state,
+            created_by=story.created_by,
+            cowriters=story.cowriters,
+            turns=(list(story.turns) + [turn]),
+        )
+
+    async def add_turn_finish(self, user: User, story: Story) -> Story:
+        turn_record = await self.connection.fetchrow(
+            self.QUERY_INSERT_TURN, story.id, user.id, "finish", "",
+        )
+        await self.connection.execute(
+            """
+            UPDATE stories SET state = 'done', updated_at = NOW()
+            WHERE id = $1
+            """,
+            story.id,
+        )
+        turn = _pluck_turn(turn_record, {user.id: user})
+        return Story(
+            id=story.id,
+            title=story.title,
+            state="done",
+            created_by=story.created_by,
+            cowriters=story.cowriters,
+            turns=(list(story.turns) + [turn]),
+        )
+
+    async def add_turn_write_and_finish(
+        self, user: User, story: Story, text_written: str
+    ) -> Story:
+        turn_record = await self.connection.fetchrow(
+            self.QUERY_INSERT_TURN, story.id, user.id, "write_and_finish", text_written,
+        )
+        await self.connection.execute(
+            """
+            UPDATE stories SET state = 'done', updated_at = NOW()
+            WHERE id = $1
+            """,
+            story.id,
+        )
+        turn = _pluck_turn(turn_record, {user.id: user})
+        return Story(
+            id=story.id,
+            title=story.title,
+            state="done",
+            created_by=story.created_by,
+            cowriters=story.cowriters,
+            turns=(list(story.turns) + [turn]),
         )
 
     @asynccontextmanager

@@ -41,8 +41,14 @@ When(`I visit {string}`, path => {
   });
 });
 
-When(`I click the text {string}`, text => {
-  cy.contains(text).click();
+When(/I click the (text|button) "(.*)"/, (elementType, text) => {
+  if (elementType === "text") {
+    cy.contains(text).click();
+  } else {
+    cy.get(elementType)
+      .contains(text)
+      .click();
+  }
 });
 
 When(/I click on the "(.*)" (input|textarea)/, (name, formElement) => {
@@ -50,6 +56,10 @@ When(/I click on the "(.*)" (input|textarea)/, (name, formElement) => {
 });
 
 When(`I type {string}`, text => {
+  cy.focused().type(text);
+});
+
+When("I type:", text => {
   cy.focused().type(text);
 });
 
@@ -67,4 +77,9 @@ Then(`I see the button {string}`, text => {
 
 Then(`I am on {string}`, path => {
   cy.location("pathname").should("eq", path);
+});
+
+Then(/I (can|cannot) see the turn form/, canOrCannot => {
+  const should = canOrCannot === "can" ? "exist" : "not.exist";
+  cy.get("#turn-form").should(should);
 });

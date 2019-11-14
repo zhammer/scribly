@@ -50,3 +50,44 @@ def require_valid_cowriters(
     not_found_cowriters = requested_cowriter_set - fetched_cowriter_set
     if not_found_cowriters:
         raise InputError(f"Could not find users {', '.join(not_found_cowriters)}")
+
+
+def require_user_can_take_turn_pass(user: User, story: Story) -> None:
+    _require_user_can_take_turn(user, story)
+
+
+def require_user_can_take_turn_write(
+    user: User, story: Story, text_written: str
+) -> None:
+    _require_user_can_take_turn(user, story)
+
+    if text_written == "":
+        raise InputError(f"Text for a `write` turn cannot be empty.")
+
+
+def require_user_can_take_turn_finish(user: User, story: Story) -> None:
+    _require_user_can_take_turn(user, story)
+
+
+def require_user_can_take_turn_write_and_finish(
+    user: User, story: Story, text_written: str
+) -> None:
+    require_user_can_take_turn_finish(user, story)
+    require_user_can_take_turn_write(user, story, text_written)
+
+
+def _require_user_can_take_turn(user: User, story: Story) -> None:
+    if not user.id in {cowriter.id for cowriter in story.cowriters or []}:
+        raise AuthError(
+            f"User {user.id} cannot take turn on story {story.id} as they are not a cowriter."
+        )
+
+    if not story.state == "in_progress":
+        raise RuntimeError(
+            f"Turn cannot be taken for story {story.id} in state {story.state}."
+        )
+
+    if not user.id == story.current_writers_turn.id:
+        raise RuntimeError(
+            f"User {user.id} cannot take turn as it is user {story.current_writers_turn.id}'s turn."
+        )

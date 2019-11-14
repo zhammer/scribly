@@ -41,8 +41,13 @@ class Story:
     @property
     def current_writers_turn(self) -> Optional[User]:
         """The person whose turn it is to write. Only exists in `in_progress` state."""
-        if not self.cowriters:
+        if not self.state == "in_progress":
             return None
+
+        if not self.cowriters:
+            raise RuntimeError(
+                f"Story {id} in state {self.state} should have cowriters but has none."
+            )
 
         num_turns = len(self.turns)
         current_writer_index = num_turns % len(self.cowriters)
@@ -69,6 +74,26 @@ class DatabaseGateway(abc.ABC):
 
     @abc.abstractmethod
     async def fetch_story(self, story_id: int, *, for_update: bool = False) -> Story:
+        ...
+
+    @abc.abstractmethod
+    async def add_turn_pass(self, user: User, story: Story) -> Story:
+        ...
+
+    @abc.abstractmethod
+    async def add_turn_finish(self, user: User, story: Story) -> Story:
+        ...
+
+    @abc.abstractmethod
+    async def add_turn_write(
+        self, user: User, story: Story, text_written: str
+    ) -> Story:
+        ...
+
+    @abc.abstractmethod
+    async def add_turn_write_and_finish(
+        self, user: User, story: Story, text_written: str
+    ) -> Story:
         ...
 
     @abc.abstractmethod
