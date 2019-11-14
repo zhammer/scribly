@@ -88,7 +88,7 @@ class Database(DatabaseGateway):
         """
         story_records = await self.connection.fetch(
             """
-            SELECT s.id FROM stories s
+            SELECT DISTINCT s.id FROM stories s
             JOIN story_cowriters sc on sc.story_id = s.id
             WHERE s.created_by = $1
             OR sc.user_id = $1;

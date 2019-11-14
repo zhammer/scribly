@@ -60,6 +60,18 @@ class Me:
     user: User
     stories: Sequence[Story]
 
+    @property
+    def in_progress(self) -> Sequence[Story]:
+        return [story for story in self.stories if story.state == "in_progress"]
+
+    @property
+    def drafts(self) -> Sequence[Story]:
+        return [story for story in self.stories if story.state == "draft"]
+
+    @property
+    def done(self) -> Sequence[Story]:
+        return [story for story in self.stories if story.state == "done"]
+
 
 class DatabaseGateway(abc.ABC):
     @abc.abstractmethod
