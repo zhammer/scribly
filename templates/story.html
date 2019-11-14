@@ -10,19 +10,28 @@
       cowriters: {{ story.cowriters|map(attribute='username')|join(', ')}}
     </h3>
     <h4>
-      turn: {{ story.turns | length }} ({{
-        story.current_writers_turn.username
-      }}'s turn)
+        {% if story.state == "in_progress" %}
+        turn: {{ story.turns | length }} ({{ story.current_writers_turn.username}}'s turn)
+        {% endif %}
+        {% if story.state == "done"  %}
+        story is finished, {{ story.turns | length }} turns
+        {% endif %}
     </h4>
     <hr />
-    {% for turn in story.turns %} {% if turn.action in ["write",
-    "write_and_finish"] %}
+    {% set turn_separator = joiner("~~") %}
+    {% for turn in story.turns %}
+    {{ turn_separator() }}
+    {% if turn.action in ["write", "write_and_finish"] %}
     <p>{{ turn.text_written }}</p>
-    <div>~~</div>
-    {% endif %} {% if turn.action == "pass" %}
-    {{ separator() }}
+    {% endif %}
+    {% if turn.action == "pass" %}
     <p class="faded">pass</p>
-    {% endif %} {% endfor %} {% if story.current_writers_turn.id == user.id %}
+    {% endif %}
+    {% if turn.action in ["finish", "write_and_finish"] %}
+    <p class="faded">fin</p>
+    {% endif %}
+    {% endfor %}
+    {% if story.state == "in_progress" and story.current_writers_turn.id == user.id %}
     <form
       id="add-turn-form"
       class="simple-form"

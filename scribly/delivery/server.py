@@ -169,8 +169,7 @@ async def story_page(request):
             },
         )
 
-    if story.state == "in_progress":
+    if story.state in {"in_progress", "done"}:
         return templates.TemplateResponse(
-            "inprogressstory.html",
-            {"request": request, "user": request.user, "story": story,},
+            "story.html", {"request": request, "user": request.user, "story": story,},
         )
