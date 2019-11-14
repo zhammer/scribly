@@ -160,13 +160,7 @@ async def story_page(request):
 
     if story.state == "draft":
         return templates.TemplateResponse(
-            "addpeopletostory.html",
-            {
-                "request": request,
-                "title": story.title,
-                "intro": story.turns[0].text_written,
-                "story_id": story.id,
-            },
+            "addpeopletostory.html", {"request": request, "story": story},
         )
 
     if story.state in {"in_progress", "done"}:
