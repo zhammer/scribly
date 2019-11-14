@@ -55,6 +55,12 @@ class Story:
         return self.cowriters[current_writer_index]
 
 
+@dataclass
+class Me:
+    user: User
+    stories: Sequence[Story]
+
+
 class DatabaseGateway(abc.ABC):
     @abc.abstractmethod
     async def fetch_user(self, username: str, password: str) -> User:
@@ -74,6 +80,10 @@ class DatabaseGateway(abc.ABC):
 
     @abc.abstractmethod
     async def fetch_story(self, story_id: int, *, for_update: bool = False) -> Story:
+        ...
+
+    @abc.abstractmethod
+    async def fetch_me(self, user: User) -> Me:
         ...
 
     @abc.abstractmethod
