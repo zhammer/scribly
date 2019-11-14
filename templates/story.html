@@ -10,23 +10,29 @@
       cowriters: {{ story.cowriters|map(attribute='username')|join(', ')}}
     </h3>
     <h4>
-      turn: {{ story.turns | length }} ({{
-        story.current_writers_turn.username
-      }}'s turn)
+        {% if story.state == "in_progress" %}
+        turn: {{ story.turns | length }} ({{ story.current_writers_turn.username}}'s turn)
+        {% endif %}
+        {% if story.state == "done"  %}
+        story is finished, {{ story.turns | length }} turns
+        {% endif %}
     </h4>
     <hr />
-    {% for turn in story.turns %} {% if turn.action in ["write",
-    "write_and_finish"] %}
+    {% set turn_separator = joiner("~~") %}
+    {% for turn in story.turns %}
+    {{ turn_separator() }}
+    {% if turn.action in ["write", "write_and_finish"] %}
     <p>{{ turn.text_written }}</p>
-    <div>~~</div>
-    {% endif %} {% if turn.action == "pass" %}
-    {{ separator() }}
+    {% endif %}
+    {% if turn.action == "pass" %}
     <p class="faded">pass</p>
-    {% endif %} {% endfor %} {% if story.current_writers_turn.id == user.id %}
+    {% endif %}
+    {% endfor %}
+    {% if story.state == "in_progress" and story.current_writers_turn.id == user.id %}
     <form
-      id="add-turn-form"
+      id="turn-form"
       class="simple-form"
-      action="/stories/{{ story_id }}/turn"
+      action="/stories/{{ story.id }}/turn"
       method="post"
     >
       <textarea
@@ -39,6 +45,7 @@
         <button
           type="submit"
           id="write"
+          name="action"
           value="write"
           onclick="return confirm('Once you\'ve submitted your turn, your text can\'t be edited. Are you sure you want to continue?');"
         >
@@ -47,7 +54,8 @@
         <button
           type="submit"
           id="write-and-finish"
-          value="write-and-finish"
+          name="action"
+          value="write_and_finish"
           onclick="return confirm('This will finish the story. Are you sure you want to continue?');"
         >
           write and finish
@@ -55,6 +63,7 @@
         <button
           type="submit"
           id="finish"
+          name="action"
           value="finish"
           onclick="return confirm('This will finish the story and will IGNORE any text you\'ve written for this turn. Are you sure you want to continue?');"
         >
@@ -63,6 +72,7 @@
         <button
           type="submit"
           id="pass"
+          name="action"
           value="pass"
           onclick="return confirm('This will pass over your turn and will IGNORE any text you\'ve written for this turn. Are you sure you want to continue?');"
         >
