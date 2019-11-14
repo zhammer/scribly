@@ -53,6 +53,10 @@ When(`I type {string}`, text => {
   cy.focused().type(text);
 });
 
+When("I type:", text => {
+  cy.focused().type(text);
+});
+
 When(`I log in as {string}`, username => {
   cy.wrap({ username, password: "password" }).as("loggedInUser");
 });
@@ -67,4 +71,9 @@ Then(`I see the button {string}`, text => {
 
 Then(`I am on {string}`, path => {
   cy.location("pathname").should("eq", path);
+});
+
+Then(/I (can|cannot) see the turn form/, canOrCannot => {
+  const should = canOrCannot === "can" ? "exist" : "not.exist";
+  cy.get("#turn-form").should(should);
 });

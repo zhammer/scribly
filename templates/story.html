@@ -33,7 +33,7 @@
     {% endfor %}
     {% if story.state == "in_progress" and story.current_writers_turn.id == user.id %}
     <form
-      id="add-turn-form"
+      id="turn-form"
       class="simple-form"
       action="/stories/{{ story.id }}/turn"
       method="post"
