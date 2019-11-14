@@ -175,6 +175,13 @@ class Database(DatabaseGateway):
         turn_record = await self.connection.fetchrow(
             self.QUERY_INSERT_TURN, story.id, user.id, "write_and_finish", text_written,
         )
+        await self.connection.execute(
+            """
+            UPDATE stories SET state = 'done', updated_at = NOW()
+            WHERE id = $1
+            """,
+            story.id,
+        )
         turn = _pluck_turn(turn_record, {user.id: user})
         return Story(
             id=story.id,

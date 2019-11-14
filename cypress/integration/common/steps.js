@@ -41,8 +41,14 @@ When(`I visit {string}`, path => {
   });
 });
 
-When(`I click the text {string}`, text => {
-  cy.contains(text).click();
+When(/I click the (text|button) "(.*)"/, (elementType, text) => {
+  if (elementType === "text") {
+    cy.contains(text).click();
+  } else {
+    cy.get(elementType)
+      .contains(text)
+      .click();
+  }
 });
 
 When(/I click on the "(.*)" (input|textarea)/, (name, formElement) => {

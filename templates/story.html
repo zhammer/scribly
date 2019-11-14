@@ -27,9 +27,6 @@
     {% if turn.action == "pass" %}
     <p class="faded">pass</p>
     {% endif %}
-    {% if turn.action in ["finish", "write_and_finish"] %}
-    <p class="faded">fin</p>
-    {% endif %}
     {% endfor %}
     {% if story.state == "in_progress" and story.current_writers_turn.id == user.id %}
     <form
