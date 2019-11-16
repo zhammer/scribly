@@ -17,6 +17,7 @@ gunicorn = "*"
 python-multipart = "*"
 asyncpg = "*"
 typing-extensions = "*"
+argon2-cffi = "*"
 
 [requires]
 python_version = "3.7"
