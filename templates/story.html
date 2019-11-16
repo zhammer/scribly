@@ -1,7 +1,8 @@
+{% import 'head.html' as head %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    {% include 'head.html' %}
+    {{ head.head('Scribly - ' + story.title) }}
   </head>
   <body>
     <h1>{{ story.title }}</h1>

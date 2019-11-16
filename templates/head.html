@@ -1,4 +1,5 @@
-<title>Scribly</title>
+{% macro head(title="Scribly") -%}
+<title>{{ title }}</title>
 <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,5 +10,6 @@
   rel="stylesheet"
 />
 
-<!-- stylehseet -->
+<!-- stylesheet -->
 <link rel="stylesheet" href="/static/style.css" />
+{%- endmacro %}
