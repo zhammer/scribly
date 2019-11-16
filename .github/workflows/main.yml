@@ -36,3 +36,4 @@ jobs:
           yarn run cypress run --record
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost/scribly
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
