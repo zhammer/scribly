@@ -15,7 +15,7 @@ Feature: Start A New Story
         And I type "<intro>"
         And I click the text "add cowriters"
         Then I am on "/stories/1"
-        And I see the text "add cowriters"
+        And I see the text "cowriters"
         And I see the text "<title>"
         And I see the text "<intro>"
 
