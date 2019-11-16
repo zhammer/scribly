@@ -10,6 +10,7 @@ from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
+from scribly import exceptions
 from scribly.definitions import Context, User
 from scribly.delivery.middleware import BasicAuthBackend, ScriblyMiddleware
 from scribly.use_scribly import Scribly
@@ -66,6 +67,29 @@ async def login(request):
         return RedirectResponse("/me", status_code=303)
 
     return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Site"'})
+
+
+@app.route("/signup", methods=["POST"])
+async def sign_up(request):
+    form = await request.form()
+    username = form["username"]
+    password = form["password"]
+    password_confirmation = form["password_confirmation"]
+    email = form["email"]
+
+    if not password == password_confirmation:
+        raise exceptions.InputError("Passwords do not match!")
+
+    scribly: Scribly = request.scope["scribly"]
+
+    user = await scribly.sign_up(username, password, email)
+
+    return RedirectResponse(f"/me", status_code=303)
+
+
+@app.route("/signup", methods=["GET"])
+async def sign_up_page(request):
+    return templates.TemplateResponse("signup.html", {"request": request})
 
 
 @app.route("/new")

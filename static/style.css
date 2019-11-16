@@ -4,6 +4,14 @@ body {
   color: #191919;
 }
 
+form > * {
+  display: block;
+}
+
+form > * + * {
+  margin-top: 1em;
+}
+
 input,
 textarea {
   color: #191919;

@@ -10,6 +10,8 @@ from typing_extensions import Literal
 class User:
     id: int
     username: str
+    email: str
+    email_verified: bool
 
 
 TurnAction = Literal["pass", "write", "finish", "write_and_finish"]
@@ -76,6 +78,10 @@ class Me:
 class DatabaseGateway(abc.ABC):
     @abc.abstractmethod
     async def fetch_user_with_password_hash(self, username: str) -> Tuple[User, str]:
+        ...
+
+    @abc.abstractmethod
+    async def add_user(self, username: str, password: str, email: str) -> User:
         ...
 
     @abc.abstractmethod

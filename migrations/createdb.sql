@@ -2,6 +2,8 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (id)
