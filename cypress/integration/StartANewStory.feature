@@ -11,11 +11,11 @@ Feature: Start A New Story
         When I visit "/new"
         And I click on the "title" input
         And I type "<title>"
-        And I click on the "intro" textarea
+        And I click on the "body" textarea
         And I type "<intro>"
         And I click the text "add cowriters"
         Then I am on "/stories/1"
-        And I see the text "add cowriters"
+        And I see the text "cowriters"
         And I see the text "<title>"
         And I see the text "<intro>"
 
@@ -33,7 +33,8 @@ Feature: Start A New Story
         And I click the text "add cowriters"
         And I refresh the page
         Then I am on "/stories/1"
-        And I see the text "add cowriters"
+        And I see the text "cowriters"
+        And I see the text "submit"
         And I see the text "my title"
         And I see the text "my intro"
 

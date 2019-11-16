@@ -1,30 +1,29 @@
+{% import 'head.html' as head %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    {% include 'head.html' %}
-  </head>
-  <body>
-    <h1>add cowriters</h1>
-    <form
-      id="add-cowriters-form"
-      class="simple-form"
-      action="/stories/{{ story.id }}/addcowriters"
-      method="post"
-    >
-      <input name="person-1" id="person-1" required placeholder="person 1" />
+
+<head>
+  {{ head.head(story.title + ' - Add Cowriters') }}
+</head>
+
+<body>
+  <div class="page">
+    <h1 class="title">{{ story.title }}</h1>
+    <p class="text">{{ story.turns[0].text_written }}</p>
+    <form id="add-cowriters" class="add-cowriters" action="/stories/{{ story.id }}/addcowriters"
+      method="post">
+      <hr />
+      <h3>cowriters</h3>
+      <input autofocus="true" name="person-1" id="person-1" required placeholder="person 1" />
       {% for i in range(2, 4) %}
-      <input
-        name="person-{{ i }}"
-        id="person-{{ i }}"
-        placeholder="person {{ i }} (optional)"
-      />
+      <input name="person-{{ i }}" id="person-{{ i }}" placeholder="person {{ i }} (optional)" />
       {% endfor %}
       <br />
       <button type="submit" id="new-story-button">
         submit
       </button>
     </form>
-    <h2>{{ story.title }}</h2>
-    <p>{{ story.turns[0].text_written }}</p>
-  </body>
+  </div>
+</body>
+
 </html>

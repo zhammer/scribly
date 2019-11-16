@@ -30,4 +30,4 @@ Feature: Me Page
         When I visit "/me"
         And I click the text "start a new story"
         Then I am on "/new"
-        And I see the text "start a new story"
+        And I see the text "add cowriters (saves current draft)"

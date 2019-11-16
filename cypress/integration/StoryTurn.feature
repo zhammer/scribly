@@ -82,6 +82,5 @@ Feature: Story Turn
         And I see the text "Italy is beautiful in the summers."
         And I see the text "\"Ahhh\", says Alvinci"
         And I see the text "Moricori fully opens the pizza."
-        And I see the text "pass"
         And I see the text "Five years later all anyone will remember"
 
