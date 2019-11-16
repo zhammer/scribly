@@ -1,0 +1,22 @@
+{% import 'head.html' as head %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{ head.head("Scribly - Log in") }}
+</head>
+
+<body>
+  <div class="page">
+    <h1>log in</h1>
+    <form action="/login" method="post">
+      <input name="username" placeholder="username" required />
+      <input name="password" placeholder="password" type="password" required />
+      <button type="submit">
+        log in
+      </button>
+    </form>
+  </div>
+</body>
+
+</html>

@@ -18,6 +18,7 @@ python-multipart = "*"
 asyncpg = "*"
 typing-extensions = "*"
 argon2-cffi = "*"
+itsdangerous = "*"
 
 [requires]
 python_version = "3.7"
