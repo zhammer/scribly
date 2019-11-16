@@ -99,8 +99,13 @@ button:focus {
   color: gray;
 }
 
-.flex {
+.story__turnbuttons {
   display: flex;
+  justify-content: center;
+}
+
+.story__turnbuttons > * {
+  flex: 1 1 0px;
 }
 
 #new-story {
@@ -140,4 +145,5 @@ button:focus {
   background-size: 5em;
   background-repeat: no-repeat;
   background-position: center;
+  margin: 1em 0;
 }
