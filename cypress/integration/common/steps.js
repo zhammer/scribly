@@ -4,13 +4,13 @@ import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
 
 beforeEach(() => {
   cy.resetdb();
-  cy.wrap(null).as("loggedInUser");
 });
 
 Given("the following users exist", datatable => {
   const users = datatable.hashes().map(row => ({
     username: row.username,
-    password: "password"
+    password: "password",
+    email: `${row.username}@mail.com`
   }));
   cy.addusers(users);
 });
@@ -18,7 +18,11 @@ Given("the following users exist", datatable => {
 Given("I am not logged in", () => {});
 
 Given(/I am logged in as (.*)/, username => {
-  cy.wrap({ username, password: "password" }).as("loggedInUser");
+  cy.visit("/login");
+  cy.get("input[name='username']").type(username);
+  cy.get("input[name='password']").type("password");
+  cy.get("button").click();
+  cy.location("pathname").should("eq", "/me");
 });
 
 When("I hit tab", () => {
@@ -30,15 +34,7 @@ When("I refresh the page", () => {
 });
 
 When(`I visit {string}`, path => {
-  cy.get("@loggedInUser").then(loggedInUser => {
-    if (loggedInUser) {
-      cy.visit(path, {
-        auth: loggedInUser
-      });
-    } else {
-      cy.visit(path);
-    }
-  });
+  cy.visit(path);
 });
 
 When(/I click the (text|button) "(.*)"/, (elementType, text) => {
@@ -64,7 +60,13 @@ When("I type:", text => {
 });
 
 When(`I log in as {string}`, username => {
-  cy.wrap({ username, password: "password" }).as("loggedInUser");
+  cy.visit("/logout");
+
+  cy.visit("/login");
+  cy.get("input[name='username']").type(username);
+  cy.get("input[name='password']").type("password");
+  cy.get("button").click();
+  cy.location("pathname").should("eq", "/me");
 });
 
 Then(`I see the text {string}`, text => {

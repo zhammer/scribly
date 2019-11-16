@@ -108,6 +108,12 @@ async def sign_up(request):
     return RedirectResponse(f"/me", status_code=303)
 
 
+@app.route("/logout", methods=["GET", "POST"])
+async def logout(request):
+    request.session = {}
+    return RedirectResponse("/", status_code=303)
+
+
 @app.route("/signup", methods=["GET"])
 async def sign_up_page(request):
     return templates.TemplateResponse("signup.html", {"request": request})
