@@ -13,7 +13,7 @@
     <form id="add-cowriters" class="add-cowriters" action="/stories/{{ story.id }}/addcowriters"
       method="post">
       <hr />
-      <h3>Cowriters</h3>
+      <h3>cowriters</h3>
       <input autofocus="true" name="person-1" id="person-1" required placeholder="person 1" />
       {% for i in range(2, 4) %}
       <input name="person-{{ i }}" id="person-{{ i }}" placeholder="person {{ i }} (optional)" />
