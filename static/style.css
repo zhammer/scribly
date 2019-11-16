@@ -1,6 +1,11 @@
 body {
-  font-family: "Cutive Mono", monospace;
+  font-family: monospace;
   font-size: 16px;
+}
+
+* {
+  font-weight: lighter;
+  font-family: inherit;
 }
 
 .page {
@@ -60,4 +65,49 @@ form.simple-form > label.inline-list > div > input + input {
 
 .flex {
   display: flex;
+}
+
+#new-story {
+  height: 95vh;
+}
+
+.typewriter {
+  display: flex;
+  flex-direction: column;
+}
+
+.typewriter > * {
+  outline: none;
+}
+
+.typewriter > input,
+.typewriter > textarea {
+  width: 100%;
+  resize: none;
+}
+
+.typewriter > * + * {
+  margin-top: 1em;
+}
+
+.typewriter > .title {
+  font-size: 1.75rem;
+  border-width: 0 0 1px 0;
+}
+
+.typewriter > .body {
+  flex-grow: 1;
+  border: none;
+}
+
+.typewriter > button {
+  padding: 1em;
+  background: transparent;
+  cursor: pointer;
+  border: solid 1px;
+}
+
+.typewriter > button:hover,
+.typewriter > button:focus {
+  background: lightgray;
 }
