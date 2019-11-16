@@ -5,26 +5,28 @@
     {{ head.head('Scribly - New Story') }}
   </head>
   <body>
-    <h1>start a new story</h1>
-    <form id="new-story-form" class="simple-form" action="/new" method="post">
-      <input
-        name="title"
-        id="title"
-        required
-        placeholder="{{ random_title_suggestion }}"
-      />
-      <br />
-      <textarea
-        name="intro"
-        id="intro"
-        class="writer"
-        placeholder="{{ random_intro_suggestion }}"
-        required
-      ></textarea>
-      <br />
-      <button type="submit" id="new-story-button">
-        add cowriters (saves current draft)
-      </button>
-    </form>
+    <div class="page">
+      <h1>start a new story</h1>
+      <form id="new-story-form" class="simple-form" action="/new" method="post">
+        <input
+          name="title"
+          id="title"
+          required
+          placeholder="{{ random_title_suggestion }}"
+        />
+        <br />
+        <textarea
+          name="intro"
+          id="intro"
+          class="writer"
+          placeholder="{{ random_intro_suggestion }}"
+          required
+        ></textarea>
+        <br />
+        <button type="submit" id="new-story-button">
+          add cowriters (saves current draft)
+        </button>
+      </form>
+    </div>
   </body>
 </html>

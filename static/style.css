@@ -1,17 +1,12 @@
 body {
-  max-width: 750px;
-  margin: 0 auto;
-  padding: 1em;
-
-  font-family: "Open Sans", sans-serif;
+  font-family: "Cutive Mono", monospace;
   font-size: 16px;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: "Open Sans", sans-serif;
+.page {
+  padding-top: 1em;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 input,
