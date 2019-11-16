@@ -4,7 +4,33 @@
     {% include 'head.html' %}
   </head>
   <body>
-    <h1>{{ username }}'s scribly</h1>
+    <h1>{{ me.user.username }}'s scribly</h1>
+    <div>
+        <h3>drafts</h3>
+        <ul>
+        {% for story in me.drafts %}
+            <li>
+                <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+        <h3>in progress</h3>
+        <ul>
+        {% for story in me.in_progress %}
+        <li>
+            <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+        </li>
+        {% endfor %}
+        </ul>
+        <h3>done</h3>
+        <ul>
+        {% for story in me.done %}
+            <li>
+                <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
     <form action="/new" method="get">
       <button type="submit" id="new-story-button">
         start a new story

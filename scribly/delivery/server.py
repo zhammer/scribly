@@ -56,9 +56,10 @@ async def me(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/")
 
-    return templates.TemplateResponse(
-        "me.html", {"request": request, "username": request.user.username}
-    )
+    scribly: Scribly = request.scope["scribly"]
+    me = await scribly.get_me(request.user)
+
+    return templates.TemplateResponse("me.html", {"request": request, "me": me})
 
 
 @app.route("/login", methods=["POST", "GET"])

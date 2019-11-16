@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from scribly import policies
-from scribly.definitions import Context, Story, TurnAction, User
+from scribly.definitions import Context, Me, Story, TurnAction, User
 from scribly.util import shuffle
 
 
@@ -82,3 +82,5 @@ class Scribly:
                 user, story, text_written
             )
 
+    async def get_me(self, user: User) -> Me:
+        return await self.context.database.fetch_me(user)
