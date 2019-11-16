@@ -1,29 +1,22 @@
+{% import 'head.html' as head %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    {% include 'head.html' %}
-  </head>
-  <body>
-    <h1>start a new story</h1>
-    <form id="new-story-form" class="simple-form" action="/new" method="post">
-      <input
-        name="title"
-        id="title"
-        required
-        placeholder="{{ random_title_suggestion }}"
-      />
-      <br />
-      <textarea
-        name="intro"
-        id="intro"
-        class="writer"
-        placeholder="{{ random_intro_suggestion }}"
-        required
-      ></textarea>
-      <br />
+
+<head>
+  {{ head.head('Scribly - New Story') }}
+</head>
+
+<body>
+  <div class="page page-tall">
+    <form id="new-story" action="/new" method="post" class="typewriter">
+      <input name="title" class="title" required autocomplete="off" autofocus="true" />
+      <textarea name="body" class="body" required></textarea>
       <button type="submit" id="new-story-button">
         add cowriters (saves current draft)
       </button>
     </form>
-  </body>
+    </form>
+  </div>
+</body>
+
 </html>

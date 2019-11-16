@@ -1,56 +1,92 @@
 body {
-  max-width: 750px;
-  margin: 0 auto;
-  padding: 1em;
-
-  font-family: "Open Sans", sans-serif;
+  font-family: monospace;
   font-size: 16px;
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-family: "Open Sans", sans-serif;
+  color: #191919;
 }
 
 input,
 textarea {
+  color: #191919;
+}
+
+.text {
+  white-space: pre-line;
+}
+
+h3 {
+  margin: 0;
+}
+
+* {
+  font-weight: lighter;
   font-family: inherit;
+}
+
+.page {
+  padding-top: 1em;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+input,
+textarea {
   font-size: 16px;
+  padding: 0;
+  outline: none;
+}
+
+input {
+  border: solid 1px;
 }
 
 button {
-  padding: 0.25em 1em;
+  padding: 1em;
+  background: transparent;
+  border: solid 1px;
+  cursor: pointer;
 }
 
-form.simple-form {
-  width: 60%;
+button:hover,
+button:focus {
+  background: lightgray;
 }
 
-form.simple-form > label.inline {
+.add-cowriters > * {
+  display: block;
+  width: 100%;
+}
+
+.add-cowriters > input {
+  border-width: 0 0 1px 0;
+}
+
+.add-cowriters > * + * {
+  display: block;
+  width: 100%;
+  margin-top: 0.5em;
+}
+
+.story {
   display: flex;
+  flex-direction: column;
+  height: 95vh;
 }
 
-form.simple-form > label.inline > *:first-child {
-  margin-right: 1em;
-}
-
-form.simple-form > label.inline > *:nth-child(2) {
+.grow {
   flex-grow: 1;
 }
 
-form.simple-form > label.inline-list > div > input {
-  display: block;
+.story__writer {
+  flex-basis: 100%;
+  border: none;
 }
 
-form.simple-form > label.inline-list > div > input + input {
-  margin-top: 0.25em;
-}
-
-.simple-form > input,
-.simple-form > textarea {
-  width: 100%;
+.story__details {
+  display: flex;
+  justify-content: space-between;
+  border-width: 1px 0 0 0;
+  border-style: solid;
+  font-size: 0.75rem;
 }
 
 .writer {
@@ -63,6 +99,51 @@ form.simple-form > label.inline-list > div > input + input {
   color: gray;
 }
 
-.flex {
+.story__turnbuttons {
   display: flex;
+  justify-content: center;
+}
+
+.story__turnbuttons > * {
+  flex: 1 1 0px;
+}
+
+#new-story {
+  height: 95vh;
+}
+
+.typewriter {
+  display: flex;
+  flex-direction: column;
+}
+
+.typewriter > input,
+.typewriter > textarea {
+  width: 100%;
+  resize: none;
+}
+
+.typewriter > * + * {
+  margin-top: 1em;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  border-style: solid;
+  border-width: 0 0 1px 0;
+}
+
+.typewriter > .body {
+  flex-grow: 1;
+  border: none;
+}
+
+.text-divider {
+  background-image: url("/static/textdivider.svg");
+  height: 2em;
+  background-size: 5em;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin: 1em 0;
 }

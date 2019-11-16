@@ -1,13 +1,9 @@
-<title>Scribly</title>
+{% macro head(title="Scribly") -%}
+<title>{{ title }}</title>
 <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- fonts -->
-<link
-  href="https://fonts.googleapis.com/css?family=Lora|Open+Sans:300&display=swap"
-  rel="stylesheet"
-/>
-
-<!-- stylehseet -->
+<!-- stylesheet -->
 <link rel="stylesheet" href="/static/style.css" />
+{%- endmacro %}

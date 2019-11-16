@@ -1,6 +1,5 @@
 import logging
 import os
-import random
 from typing import Tuple
 from typing import List, Tuple
 
@@ -12,7 +11,6 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from scribly.definitions import Context, User
-from scribly.delivery.constants import STORY_STARTERS
 from scribly.delivery.middleware import BasicAuthBackend, ScriblyMiddleware
 from scribly.use_scribly import Scribly
 
@@ -75,15 +73,7 @@ async def new_story(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/")
 
-    random_title_suggestion, random_intro_suggestion = random.choice(STORY_STARTERS)
-    return templates.TemplateResponse(
-        "newstory.html",
-        {
-            "request": request,
-            "random_title_suggestion": random_title_suggestion,
-            "random_intro_suggestion": random_intro_suggestion,
-        },
-    )
+    return templates.TemplateResponse("newstory.html", {"request": request})
 
 
 @app.route("/new", methods=["POST"])
@@ -96,7 +86,7 @@ async def new_story_submit(request):
 
     scribly = request.scope["scribly"]
 
-    story = await scribly.start_story(request.user, form["title"], form["intro"])
+    story = await scribly.start_story(request.user, form["title"], form["body"])
 
     return RedirectResponse(f"/stories/{story.id}", status_code=303)
 
