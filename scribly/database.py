@@ -4,7 +4,7 @@ from typing import AsyncIterator, Dict, Optional, Sequence
 import asyncpg
 from asyncpg import Record
 
-from scribly.definitions import DatabaseGateway, Story, Turn, User
+from scribly.definitions import DatabaseGateway, Me, Story, Turn, User
 from scribly.exceptions import AuthError, StoryNotFound
 
 
@@ -81,6 +81,27 @@ class Database(DatabaseGateway):
             self.QUERY_INSERT_TURN, story_id, user.id, "write", body,
         )
         return _pluck_story(story_record, [turn_record], {user.id: user})
+
+    async def fetch_me(self, user: User) -> Me:
+        """
+        Slow quick implementation of this at the moment using self.fetch_story.
+        """
+        story_records = await self.connection.fetch(
+            """
+            SELECT DISTINCT s.id FROM stories s
+            JOIN story_cowriters sc on sc.story_id = s.id
+            WHERE s.created_by = $1
+            OR sc.user_id = $1;
+            """,
+            user.id,
+        )
+        story_ids = [story_record["id"] for story_record in story_records]
+
+        # not using asyncio.gather because i don't know if that would work
+        # with one db connection.
+        stories = [await self.fetch_story(story_id) for story_id in story_ids]
+
+        return Me(user=user, stories=stories)
 
     async def fetch_story(self, story_id: int, *, for_update: bool = False) -> Story:
         story_record = await self.connection.fetchrow(
