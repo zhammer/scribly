@@ -11,7 +11,6 @@ class User:
     id: int
     username: str
     email: str
-    email_verified: bool
 
 
 TurnAction = Literal["pass", "write", "finish", "write_and_finish"]

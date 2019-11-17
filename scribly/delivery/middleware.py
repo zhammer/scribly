@@ -51,10 +51,5 @@ class SessionAuthBackend(AuthenticationBackend):
 
         return (
             AuthCredentials(["authenticated"]),
-            User(
-                id=user["id"],
-                username=user["username"],
-                email=user["email"],
-                email_verified=user["email_verified"],
-            ),
+            User(id=user["id"], username=user["username"], email=user["email"]),
         )

@@ -285,7 +285,6 @@ def _pluck_user(user_record: Record) -> User:
         id=user_record["id"],
         username=user_record["username"],
         email=user_record["email"],
-        email_verified=user_record["email_verified"],
     )
 
 

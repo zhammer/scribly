@@ -78,7 +78,6 @@ async def login(request):
         "id": user.id,
         "username": user.username,
         "email": user.email,
-        "email_verified": user.email_verified,
     }
 
     return RedirectResponse("/me", status_code=303)
@@ -102,7 +101,6 @@ async def sign_up(request):
         "id": user.id,
         "username": user.username,
         "email": user.email,
-        "email_verified": user.email_verified,
     }
 
     return RedirectResponse(f"/me", status_code=303)
