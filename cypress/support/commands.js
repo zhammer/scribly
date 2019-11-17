@@ -4,7 +4,7 @@ Cypress.Commands.add("resetdb", () => {
 
 Cypress.Commands.add("addusers", users => {
   const usersArg = users
-    .map(({ username, password }) => `${username}:${password}`)
+    .map(({ username, password, email }) => `${username}:${password}:${email}`)
     .join(" ");
   cy.exec(`pipenv run python scripts/addusers.py ${usersArg}`);
 });

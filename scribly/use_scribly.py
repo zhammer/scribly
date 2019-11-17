@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Sequence
 
-from scribly import policies
+from scribly import auth, exceptions, policies
 from scribly.definitions import Context, Me, Story, TurnAction, User
 from scribly.util import shuffle
 
@@ -11,7 +11,22 @@ class Scribly:
     context: Context
 
     async def log_in(self, username: str, password: str) -> User:
-        return await self.context.database.fetch_user(username, password)
+        user, hash = await self.context.database.fetch_user_with_password_hash(username)
+
+        if not auth.verify_password_hash(hash, password):
+            raise exceptions.AuthError()
+
+        if auth.check_needs_rehash(hash):
+            rehashed_password = auth.hash_password(password)
+            await self.context.database.update_password(user, rehashed_password)
+
+        return user
+
+    async def sign_up(self, username: str, password: str, email: str) -> User:
+        policies.require_valid_signup_info(username, password, email)
+
+        hash = auth.hash_password(password)
+        return await self.context.database.add_user(username, hash, email)
 
     async def start_story(self, user: User, title: str, body: str) -> Story:
         async with self.context.database.transaction():

@@ -1,20 +1,22 @@
 import logging
 import os
-from typing import Tuple
 from typing import List, Tuple
 
 import asyncpg
 from starlette.applications import Starlette
 from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
+from scribly import exceptions
 from scribly.definitions import Context, User
-from scribly.delivery.middleware import BasicAuthBackend, ScriblyMiddleware
+from scribly.delivery.middleware import SessionAuthBackend, ScriblyMiddleware
 from scribly.use_scribly import Scribly
 
 DATABASE_URL = os.environ["DATABASE_URL"]
+SESSION_SECRET_KEY = os.environ["SESSION_SECRET_KEY"]
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +24,9 @@ logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory="templates")
 
 app = Starlette(debug=True)
-app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
+app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
 app.add_middleware(ScriblyMiddleware)
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -46,6 +49,9 @@ async def shutdown():
 
 @app.route("/")
 async def homepage(request):
+    if isinstance(request.user, User):
+        return RedirectResponse("/me")
+
     return templates.TemplateResponse("index.html", {"request": request})
 
 
@@ -60,12 +66,64 @@ async def me(request):
     return templates.TemplateResponse("me.html", {"request": request, "me": me})
 
 
-@app.route("/login", methods=["POST", "GET"])
-async def login(request):
+@app.route("/login")
+async def log_in_page(request):
     if isinstance(request.user, User):
-        return RedirectResponse("/me", status_code=303)
+        return RedirectResponse("/me")
 
-    return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Site"'})
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.route("/login", methods=["POST"])
+async def login(request):
+    form = await request.form()
+    scribly: Scribly = request.scope["scribly"]
+
+    user = await scribly.log_in(form["username"], form["password"])
+    request.session["user"] = {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+    }
+
+    return RedirectResponse("/me", status_code=303)
+
+
+@app.route("/signup", methods=["POST"])
+async def sign_up(request):
+    form = await request.form()
+    username = form["username"]
+    password = form["password"]
+    password_confirmation = form["password_confirmation"]
+    email = form["email"]
+
+    if not password == password_confirmation:
+        raise exceptions.InputError("Passwords do not match!")
+
+    scribly: Scribly = request.scope["scribly"]
+
+    user = await scribly.sign_up(username, password, email)
+    request.session["user"] = {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+    }
+
+    return RedirectResponse(f"/me", status_code=303)
+
+
+@app.route("/logout", methods=["GET", "POST"])
+async def logout(request):
+    request.session.clear()
+    return RedirectResponse("/", status_code=303)
+
+
+@app.route("/signup", methods=["GET"])
+async def sign_up_page(request):
+    if isinstance(request.user, User):
+        return RedirectResponse("/me")
+
+    return templates.TemplateResponse("signup.html", {"request": request})
 
 
 @app.route("/new")

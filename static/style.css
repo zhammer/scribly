@@ -4,6 +4,14 @@ body {
   color: #191919;
 }
 
+form > * {
+  display: block;
+}
+
+form > * + * {
+  margin-top: 1em;
+}
+
 input,
 textarea {
   color: #191919;
@@ -39,16 +47,28 @@ input {
   border: solid 1px;
 }
 
-button {
+button,
+a.button {
   padding: 1em;
   background: transparent;
   border: solid 1px;
   cursor: pointer;
+  font-size: 11px;
 }
 
 button:hover,
-button:focus {
+button:focus,
+a.button:hover,
+a.button:focus {
   background: lightgray;
+}
+
+a.button,
+a.button:hover,
+a.button:focus,
+a.button:visited {
+  color: #191919;
+  text-decoration: none;
 }
 
 .add-cowriters > * {

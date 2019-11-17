@@ -31,9 +31,11 @@ jobs:
           npx wait-on http://localhost:8000
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost/scribly
+          SESSION_SECRET_KEY: ci-session-secret
       - name: Run cypress tests
         run: |
           yarn run cypress run --record
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost/scribly
+          PYTHONPATH: .
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
