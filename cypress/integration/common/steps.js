@@ -18,6 +18,7 @@ Given("the following users exist", datatable => {
 Given("I am not logged in", () => {});
 
 Given(/I am logged in as (.*)/, username => {
+  cy.clearCookies();
   cy.visit("/login");
   cy.get("input[name='username']").type(username);
   cy.get("input[name='password']").type("password");
