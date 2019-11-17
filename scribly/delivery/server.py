@@ -49,6 +49,9 @@ async def shutdown():
 
 @app.route("/")
 async def homepage(request):
+    if isinstance(request.user, User):
+        return RedirectResponse("/me")
+
     return templates.TemplateResponse("index.html", {"request": request})
 
 
@@ -65,6 +68,9 @@ async def me(request):
 
 @app.route("/login")
 async def log_in_page(request):
+    if isinstance(request.user, User):
+        return RedirectResponse("/me")
+
     return templates.TemplateResponse("login.html", {"request": request})
 
 
@@ -114,6 +120,9 @@ async def logout(request):
 
 @app.route("/signup", methods=["GET"])
 async def sign_up_page(request):
+    if isinstance(request.user, User):
+        return RedirectResponse("/me")
+
     return templates.TemplateResponse("signup.html", {"request": request})
 
 
