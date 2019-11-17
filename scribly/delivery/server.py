@@ -110,7 +110,7 @@ async def sign_up(request):
 
 @app.route("/logout", methods=["GET", "POST"])
 async def logout(request):
-    request.session = {}
+    request.session.clear()
     return RedirectResponse("/", status_code=303)
 
 
