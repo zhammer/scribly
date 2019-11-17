@@ -1,7 +1,7 @@
 import abc
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
-from typing import AsyncIterator, Optional, Sequence
+from typing import AsyncIterator, Optional, Sequence, Tuple
 
 from typing_extensions import Literal
 
@@ -10,6 +10,7 @@ from typing_extensions import Literal
 class User:
     id: int
     username: str
+    email: str
 
 
 TurnAction = Literal["pass", "write", "finish", "write_and_finish"]
@@ -75,7 +76,15 @@ class Me:
 
 class DatabaseGateway(abc.ABC):
     @abc.abstractmethod
-    async def fetch_user(self, username: str, password: str) -> User:
+    async def fetch_user_with_password_hash(self, username: str) -> Tuple[User, str]:
+        ...
+
+    @abc.abstractmethod
+    async def add_user(self, username: str, password: str, email: str) -> User:
+        ...
+
+    @abc.abstractmethod
+    async def update_password(self, user: User, password: str) -> None:
         ...
 
     @abc.abstractmethod

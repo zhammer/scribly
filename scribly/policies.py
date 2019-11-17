@@ -1,3 +1,4 @@
+import re
 from typing import Sequence
 
 from scribly.definitions import Story, User
@@ -91,3 +92,36 @@ def _require_user_can_take_turn(user: User, story: Story) -> None:
         raise RuntimeError(
             f"User {user.id} cannot take turn as it is user {story.current_writers_turn.id}'s turn."
         )
+
+
+def require_valid_signup_info(username: str, password: str, email: str) -> None:
+    # require valid password
+    if len(password) < 8 or "zachsucks" in password:
+        raise InputError("Password must be longer than 8 characters.")
+
+    # require valid username
+    if len(username) < 4 or not username.isalnum():
+        raise InputError(
+            "Username must be longer than 4 characters and only consist of alphanumeric characters."
+        )
+
+    # require valid email
+    _require_valid_email(email)
+
+
+def _require_valid_email(email: str) -> None:
+    """
+    >>> _require_valid_email("zach@scribly.com") is None
+    True
+
+    >>> _require_valid_email("z@scribly.com") is None
+    True
+
+    >>> _require_valid_email("zach@scribly")
+    Traceback (most recent call last):
+    ...
+    scribly.exceptions.InputError: Invalid email address format
+    """
+    match = re.match(r"^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$", email)
+    if not match:
+        raise InputError("Invalid email address format")

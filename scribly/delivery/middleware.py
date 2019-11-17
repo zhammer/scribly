@@ -15,7 +15,7 @@ from starlette.authentication import (
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from scribly.database import Database
-from scribly.definitions import Context
+from scribly.definitions import Context, User
 from scribly.exceptions import AuthError
 from scribly.use_scribly import Scribly
 
@@ -42,32 +42,14 @@ class ScriblyMiddleware:
             return await self.app(scope, receive, send)
 
 
-class BasicAuthBackend(AuthenticationBackend):
+class SessionAuthBackend(AuthenticationBackend):
     # from https://www.starlette.io/authentication/
     async def authenticate(self, request):
-        if "Authorization" not in request.headers:
-            return
-
-        auth = request.headers["Authorization"]
-        try:
-            scheme, credentials = auth.split()
-            if scheme.lower() != "basic":
-                return
-            decoded = base64.b64decode(credentials).decode("ascii")
-        except (ValueError, UnicodeDecodeError, binascii.Error) as exc:
-            logger.error("Invalid basic auth credentials: %s", exc)
-            raise AuthenticationError("Invalid basic auth credentials")
-
-        username, _, password = decoded.partition(":")
-        scribly = request.scope["scribly"]
-        try:
-            user = await scribly.log_in(username, password)
-        except AuthError as e:
-            logger.info("bad login attempt from %s, err: %s", username, e)
-            return AuthCredentials, None
-        except Exception as e:
-            logger.error("unknown error when logging in user %s, err: %s", username, e)
+        user = request.session.get("user", None)
+        if not user:
             return AuthCredentials, None
 
-        logger.info("request from user %d, %s", user.id, user.username)
-        return AuthCredentials(["authenticated"]), user
+        return (
+            AuthCredentials(["authenticated"]),
+            User(id=user["id"], username=user["username"], email=user["email"]),
+        )
