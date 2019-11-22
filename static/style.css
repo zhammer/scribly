@@ -17,6 +17,10 @@ textarea {
   color: #191919;
 }
 
+.story .text {
+  min-height: 50%;
+}
+
 .text {
   white-space: pre-line;
 }
