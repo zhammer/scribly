@@ -17,10 +17,6 @@ textarea {
   color: #191919;
 }
 
-.story .text {
-  min-height: 50%;
-}
-
 .text {
   white-space: pre-line;
 }
@@ -93,7 +89,7 @@ a.button:visited {
 .story {
   display: flex;
   flex-direction: column;
-  height: 95vh;
+  min-height: 95vh;
 }
 
 .grow {
@@ -103,6 +99,7 @@ a.button:visited {
 .story__writer {
   flex-basis: 100%;
   border: none;
+  min-height: 25em;
 }
 
 .story__details {
