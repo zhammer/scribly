@@ -6,6 +6,7 @@ module.exports = on => {
   on("file:preprocessor", cucumber());
   on("task", {
     resetDb: db.resetDb,
-    addUsers: db.addUsers
+    addUsers: db.addUsers,
+    addStories: db.addStories
   });
 };

@@ -7,6 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "argon2": "^0.25.1",
+    "casual": "^1.6.2",
     "cypress": "^3.6.1",
     "cypress-cucumber-preprocessor": "^1.16.2",
     "cypress-plugin-tab": "^1.0.3",
