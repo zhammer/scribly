@@ -9,7 +9,6 @@ beforeEach(() => {
 Given("the following users exist", datatable => {
   const users = datatable.hashes().map(row => ({
     username: row.username,
-    password: "password",
     email: `${row.username}@mail.com`
   }));
   cy.addusers(users);
