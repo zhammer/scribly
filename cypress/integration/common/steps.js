@@ -93,3 +93,7 @@ Then(/I (can|cannot) see the turn form/, canOrCannot => {
   const should = canOrCannot === "can" ? "exist" : "not.exist";
   cy.get("#turn-form").should(should);
 });
+
+Then(`I see the title {string}`, title => {
+  cy.get("h1").contains(title);
+});

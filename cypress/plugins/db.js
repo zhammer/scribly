@@ -73,43 +73,49 @@ class DB {
     `,
       [title, state, users[0].id]
     );
-    if (state === "draft") {
-      return null;
-    }
-    // add cowriters
     const storyId = story.rows[0].id;
-    for (const [index, user] of users.entries()) {
-      await client.query(
-        `
-            INSERT INTO story_cowriters (story_id, user_id, turn_index)
-            VALUES ($1, $2, $3)
-        `,
-        [storyId, user.id, index]
-      );
+
+    if (usernames.length > 1) {
+      // add cowriters
+      for (const [index, user] of users.entries()) {
+        await client.query(
+          `
+                INSERT INTO story_cowriters (story_id, user_id, turn_index)
+                VALUES ($1, $2, $3)
+            `,
+          [storyId, user.id, index]
+        );
+      }
     }
 
-    // generate turns
-    let generatedTurns = [];
-    generatedTurns[0] = {
-      user: users[0],
-      action: "write",
-      text: casual.text
-    };
-    for (let index = 1; index < turns - 1; index++) {
-      const isPass = Math.random() < 0.1;
-      const user = users[index % users.length];
-      generatedTurns.push({
+    const generatedTurns = range(turns).map(turnIndex => {
+      const user = users[turnIndex % users.length];
+      // first turn always a write
+      if (turnIndex === 0) {
+        return {
+          user,
+          action: "write",
+          text: casual.text
+        };
+      }
+
+      // if last turn and story complete, a write or write and finish
+      if (complete && turnIndex === turns - 1) {
+        const action = odds(0.5) ? "write_and_finish" : "finish";
+        return {
+          user,
+          action,
+          text: action === "finish" ? "" : casual.text
+        };
+      }
+
+      // otherwise it's either a write or a pass
+      const action = odds(0.1) ? "pass" : "write";
+      return {
         user,
-        action: isPass ? "pass" : "write",
-        text: isPass ? "" : casual.text
-      });
-    }
-    const isWriteAndFinish = Math.random() < 0.5;
-    const user = users[(turns - 1) % users.length];
-    generatedTurns.push({
-      user,
-      action: isWriteAndFinish ? "write_and_finish" : "finish",
-      text: isWriteAndFinish ? casual.text : ""
+        action,
+        text: action === "pass" ? "" : casual.text
+      };
     });
 
     for (const turn of generatedTurns) {
@@ -145,6 +151,14 @@ class DB {
       nestedRows
     );
   };
+}
+
+function odds(likelihood) {
+  return Math.random() <= likelihood;
+}
+
+function range(length) {
+  return [...Array(5).keys()];
 }
 
 module.exports = DB;
