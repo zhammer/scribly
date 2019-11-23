@@ -37,8 +37,8 @@ class Database(DatabaseGateway):
             UPDATE users SET password = $1, updated_at = NOW()
             WHERE id = $2;
             """,
-            user.id,
             password,
+            user.id,
         )
 
     async def fetch_user_with_password_hash(self, username: str) -> Tuple[User, str]:
