@@ -3,26 +3,36 @@ const fs = require("fs");
 const cucumber = require("cypress-cucumber-preprocessor").default;
 const { Client } = require("pg");
 
-let shared_client;
-async function getClient(dbUrl) {
-  if (shared_client) return shared_client;
+const DATABASE_URL = process.env.DATABASE_URL || "postgres://localhost/scribly";
+const DB_SCHEMA = fs.readFileSync("migrations/createdb.sql", "utf8");
 
-  shared_client = new Client(dbUrl);
-  await shared_client.connect();
-  return shared_client;
+let _client;
+async function getClient() {
+  if (_client) return _client;
+
+  _client = new Client(DATABASE_URL);
+  await _client.connect();
+  return _client;
 }
 
-async function resetDb(dbUrl, dbSchema) {
-  const client = await getClient(dbUrl);
+let _hashedPassword;
+async function getHashedPassword() {
+  if (_hashedPassword) return _hashedPassword;
+  _hashedPassword = await argon2.hash("password");
+  return _hashedPassword;
+}
+
+async function resetDb() {
+  const client = await getClient();
   return await client.query(`
     DROP SCHEMA IF EXISTS public CASCADE;
     CREATE SCHEMA public;
-    ${dbSchema}
+    ${DB_SCHEMA}
   `);
 }
 
-async function addUsers(dbUrl, users) {
-  let hashedPassword = await argon2.hash("password");
+async function addUsers(users) {
+  let hashedPassword = await getHashedPassword();
   const values = users.reduce(
     ([usernames, passwords, emails], { username, email }) => [
       [...usernames, username],
@@ -32,7 +42,7 @@ async function addUsers(dbUrl, users) {
     [[], [], []]
   );
 
-  const client = await getClient(dbUrl);
+  const client = await getClient();
   return await client.query(
     `
         INSERT INTO users (username, password, email)
@@ -42,15 +52,10 @@ async function addUsers(dbUrl, users) {
   );
 }
 
-const DB_SCHEMA = fs.readFileSync("migrations/createdb.sql", "utf8");
-module.exports = (on, config) => {
+module.exports = on => {
   on("file:preprocessor", cucumber());
   on("task", {
-    resetDb() {
-      return resetDb(config.env.DATABASE_URL, DB_SCHEMA);
-    },
-    addUsers(users) {
-      return addUsers(config.env.DATABASE_URL, users);
-    }
+    resetDb,
+    addUsers
   });
 };
