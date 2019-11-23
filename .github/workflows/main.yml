@@ -21,6 +21,7 @@ jobs:
         with:
           python-version: "3.7"
       - run: sudo curl https://cli-assets.heroku.com/install.sh | sh
+      - run: sudo apt-get -y install libpq-dev
       - run: sudo pip install pipenv
       - run: yarn install
       - run: pipenv sync
