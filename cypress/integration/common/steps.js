@@ -3,16 +3,12 @@
 import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
 
 beforeEach(() => {
-  cy.resetdb();
+  cy.resetDb();
 });
 
 Given("the following users exist", datatable => {
-  const users = datatable.hashes().map(row => ({
-    username: row.username,
-    password: "password",
-    email: `${row.username}@mail.com`
-  }));
-  cy.addusers(users);
+  const usernames = datatable.hashes().map(row => row.username);
+  cy.addUsers(usernames);
 });
 
 Given("I am not logged in", () => {});
@@ -24,6 +20,17 @@ Given(/I am logged in as (.*)/, username => {
   cy.get("input[name='password']").type("password");
   cy.get("button").click();
   cy.location("pathname").should("eq", "/me");
+});
+
+Given("the following stories exist", datatable => {
+  cy.addStories(
+    datatable.hashes().map(storyRow => ({
+      ...storyRow,
+      usernames: storyRow.users.split(", "),
+      complete: JSON.parse(storyRow.complete),
+      turns: parseInt(storyRow.turns)
+    }))
+  );
 });
 
 When("I hit tab", () => {
@@ -85,4 +92,8 @@ Then(`I am on {string}`, path => {
 Then(/I (can|cannot) see the turn form/, canOrCannot => {
   const should = canOrCannot === "can" ? "exist" : "not.exist";
   cy.get("#turn-form").should(should);
+});
+
+Then(`I see the title {string}`, title => {
+  cy.get("h1").contains(title);
 });
