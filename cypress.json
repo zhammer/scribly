@@ -1,5 +1,8 @@
 {
   "baseUrl": "http://localhost:8000",
   "testFiles": "**/*.feature",
-  "projectId": "nxmvpu"
+  "projectId": "nxmvpu",
+  "env": {
+    "DATABASE_URL": "postgres://localhost/scribly"
+  }
 }
