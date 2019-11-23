@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import binascii
 import logging
@@ -20,6 +21,26 @@ from scribly.exceptions import AuthError
 from scribly.use_scribly import Scribly
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class WaitForStartupCompleteMiddleware:
+    """
+    Middleware that waits for a startup_complete_event asyncio.Event to
+    start handling http requests. (Temporary workaround until
+    https://github.com/encode/starlette/issues/733 is resolved.)
+    """
+
+    def __init__(self, app: ASGIApp, startup_complete_event: asyncio.Event):
+        self.app = app
+        self.startup_complete_event = startup_complete_event
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if not scope["type"] == "http":
+            return await self.app(scope, receive, send)
+
+        await self.startup_complete_event.wait()
+        return await self.app(scope, receive, send)
 
 
 class ScriblyMiddleware:
