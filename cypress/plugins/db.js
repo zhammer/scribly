@@ -27,7 +27,6 @@ class DB {
   };
 
   resetDb = async () => {
-    console.log(this);
     const client = await this._getClient();
     return await client.query(`
       DROP SCHEMA IF EXISTS public CASCADE;
