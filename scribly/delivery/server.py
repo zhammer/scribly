@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from typing import List, Tuple
@@ -12,7 +13,11 @@ from starlette.templating import Jinja2Templates
 
 from scribly import exceptions
 from scribly.definitions import Context, User
-from scribly.delivery.middleware import SessionAuthBackend, ScriblyMiddleware
+from scribly.delivery.middleware import (
+    SessionAuthBackend,
+    ScriblyMiddleware,
+    WaitForStartupCompleteMiddleware,
+)
 from scribly.use_scribly import Scribly
 
 DATABASE_URL = os.environ["DATABASE_URL"]
@@ -24,9 +29,13 @@ logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory="templates")
 
 app = Starlette(debug=True)
+startup_complete_event = asyncio.Event()
 app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
 app.add_middleware(ScriblyMiddleware)
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
+app.add_middleware(
+    WaitForStartupCompleteMiddleware, startup_complete_event=startup_complete_event
+)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -40,6 +49,8 @@ async def startup():
     app.state.connection_pool = await asyncpg.create_pool(
         dsn=DATABASE_URL, min_size=2, max_size=2, **connection_kwargs
     )
+
+    startup_complete_event.set()
 
 
 @app.on_event("shutdown")
