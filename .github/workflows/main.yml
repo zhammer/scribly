@@ -13,6 +13,7 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
           POSTGRES_DB: scribly
+          POSTGRES_USER: runner
 
     steps:
       - uses: actions/checkout@v1
@@ -21,6 +22,7 @@ jobs:
         with:
           python-version: "3.7"
       - run: sudo curl https://cli-assets.heroku.com/install.sh | sh
+      - run: sudo apt-get -y install libpq-dev
       - run: sudo pip install pipenv
       - run: yarn install
       - run: pipenv sync
@@ -30,12 +32,10 @@ jobs:
           pipenv run heroku local -p 8000 &
           npx wait-on http://localhost:8000
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost/scribly
+          DATABASE_URL: postgres://localhost/scribly
           SESSION_SECRET_KEY: ci-session-secret
       - name: Run cypress tests
         run: |
           yarn run cypress run --record
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost/scribly
-          PYTHONPATH: .
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
