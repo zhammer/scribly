@@ -7,11 +7,8 @@ beforeEach(() => {
 });
 
 Given("the following users exist", datatable => {
-  const users = datatable.hashes().map(row => ({
-    username: row.username,
-    email: `${row.username}@mail.com`
-  }));
-  cy.addusers(users);
+  const usernames = datatable.hashes().map(row => row.username);
+  cy.addUsers(usernames);
 });
 
 Given("I am not logged in", () => {});
