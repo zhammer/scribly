@@ -14,9 +14,9 @@
       method="post">
       <hr />
       <h3>cowriters</h3>
-      <input autofocus="true" name="person-1" id="person-1" required placeholder="person 1" />
+      <input type="text" autocorrect="off" autocapitalize="none" autofocus="true" name="person-1" id="person-1" required placeholder="person 1" />
       {% for i in range(2, 4) %}
-      <input name="person-{{ i }}" id="person-{{ i }}" placeholder="person {{ i }} (optional)" />
+      <input type="text" autocorrect="off" autocapitalize="none" name="person-{{ i }}" id="person-{{ i }}" placeholder="person {{ i }} (optional)" />
       {% endfor %}
       <br />
       <button type="submit" id="new-story-button">
