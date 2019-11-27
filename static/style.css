@@ -17,9 +17,7 @@ textarea {
   color: #191919;
 }
 
-.text {
-  white-space: pre-line;
-}
+.text {}
 
 h3 {
   margin: 0;
