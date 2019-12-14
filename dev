@@ -1,0 +1,3 @@
+#!/bin/bash
+
+uvicorn --reload scribly.delivery.server:app
