@@ -25,6 +25,7 @@ jobs:
       - run: sudo apt-get -y install libpq-dev
       - run: yarn install
       - run: pip3 install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -vv
       - name: Start scribly server in background
         run: |
           python scripts/createdb.py
