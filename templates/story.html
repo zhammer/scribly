@@ -17,7 +17,7 @@
         <p class="text">{{ turn.text_written|replace('\n', '<br>'|safe) }}</p>
         {% endif %}
         {% if turn.action == "write" %}
-        <div class="text-divider"></div>
+        <hr class="text-divider">
         {% endif %}
         {% endfor %}
       </div>
