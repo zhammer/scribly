@@ -9,7 +9,7 @@
 <body>
   <div class="page">
     <h1 class="title">{{ story.title }}</h1>
-    <p class="text">{{ story.turns[0].text_written }}</p>
+    <p class="text">{{ story.turns[0].text_written|replace('\n', '<br>'|safe) }}</p>
     <form id="add-cowriters" class="add-cowriters" action="/stories/{{ story.id }}/addcowriters"
       method="post">
       <hr />
