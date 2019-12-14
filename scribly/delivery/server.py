@@ -73,6 +73,14 @@ async def me(request):
 
     scribly: Scribly = request.scope["scribly"]
     me = await scribly.get_me(request.user)
+    user = me.user
+
+    request.session["user"] = {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "email_verification_status": user.email_verification_status,
+    }
 
     return templates.TemplateResponse("me.html", {"request": request, "me": me})
 
@@ -95,6 +103,7 @@ async def login(request):
         "id": user.id,
         "username": user.username,
         "email": user.email,
+        "email_verification_status": user.email_verification_status,
     }
 
     return RedirectResponse("/me", status_code=303)
@@ -118,6 +127,7 @@ async def sign_up(request):
         "id": user.id,
         "username": user.username,
         "email": user.email,
+        "email_verification_status": user.email_verification_status,
     }
 
     return RedirectResponse(f"/me", status_code=303)

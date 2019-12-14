@@ -4,8 +4,15 @@ from typing import AsyncIterator, Dict, Optional, Sequence, Tuple
 import asyncpg
 from asyncpg import Record
 
-from scribly.definitions import DatabaseGateway, Me, Story, Turn, User
-from scribly.exceptions import AuthError, StoryNotFound
+from scribly.definitions import (
+    DatabaseGateway,
+    EmailVerificationState,
+    Me,
+    Story,
+    Turn,
+    User,
+)
+from scribly.exceptions import AuthError, ScriblyException, StoryNotFound
 
 
 class Database(DatabaseGateway):
@@ -86,6 +93,35 @@ class Database(DatabaseGateway):
             cowriters=cowriters,
             turns=story.turns,
         )
+
+    async def update_email_verification_status(
+        self, user: User, status: EmailVerificationState
+    ) -> User:
+        await self.connection.execute(
+            """
+            UPDATE users SET email_verification_status = $1, updated_at = NOW()
+            WHERE id = $1;
+            """,
+            user.id,
+        )
+        return User(
+            id=user.id,
+            username=user.username,
+            email=user.email_verification_status,
+            email_verification_status=status,
+        )
+
+    async def fetch_user(self, user_id: int, for_update: bool = False) -> User:
+        user_record = await self.connection.fetchrow(
+            f"""
+            SELECT * FROM users WHERE id = $1 {"FOR UPDATE" if for_update else ""}
+            """,
+            user_id,
+        )
+        if not user_record:
+            raise ScriblyException(f"User {user_id} doesn't exist.")
+
+        return _pluck_user(user_record)
 
     async def start_story(self, user: User, title: str, body: str) -> Story:
         story_record = await self.connection.fetchrow(
@@ -285,6 +321,7 @@ def _pluck_user(user_record: Record) -> User:
         id=user_record["id"],
         username=user_record["username"],
         email=user_record["email"],
+        email_verification_status=user_record["email_verification_status"],
     )
 
 

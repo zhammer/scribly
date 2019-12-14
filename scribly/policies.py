@@ -1,8 +1,12 @@
 import re
+import time
 from typing import Sequence
 
-from scribly.definitions import Story, User
-from scribly.exceptions import AuthError, InputError
+from scribly.definitions import EmailVerificationTokenPayload, Story, User
+from scribly.exceptions import AuthError, InputError, ScriblyException
+
+
+MAX_EMAIL_VERIFICATION_AGE = 24 * 60 * 60
 
 
 def require_user_can_access_story(user: User, story: Story) -> None:
@@ -77,6 +81,11 @@ def require_user_can_take_turn_write_and_finish(
     require_user_can_take_turn_write(user, story, text_written)
 
 
+def require_can_send_verification_email(user: User) -> None:
+    if user.email_verification_status == "verified":
+        raise ScriblyException("Email already verified.")
+
+
 def _require_user_can_take_turn(user: User, story: Story) -> None:
     if not user.id in {cowriter.id for cowriter in story.cowriters or []}:
         raise AuthError(
@@ -88,9 +97,9 @@ def _require_user_can_take_turn(user: User, story: Story) -> None:
             f"Turn cannot be taken for story {story.id} in state {story.state}."
         )
 
-    if not user.id == story.current_writers_turn.id:
+    if not user.id == story.current_writers_turn.id:  # type: ignore
         raise RuntimeError(
-            f"User {user.id} cannot take turn as it is user {story.current_writers_turn.id}'s turn."
+            f"User {user.id} cannot take turn as it is user {story.current_writers_turn.id}'s turn."  # type: ignore
         )
 
 
@@ -125,3 +134,17 @@ def _require_valid_email(email: str) -> None:
     match = re.match(r"^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$", email)
     if not match:
         raise InputError("Invalid email address format")
+
+
+def require_valid_email_verification(
+    user: User, payload: EmailVerificationTokenPayload
+) -> None:
+    if not user.email_verification_status == "verified":
+        raise ScriblyException("Email already verified.")
+
+    if not payload.email == user.email:
+        raise ScriblyException("Email in payload doesn't match user's email.")
+
+    # lol i am using abs() here _just in case_ i put these in the wrong order..
+    if abs(time.time() - payload.timestamp) > (24 * 60 * 60):
+        raise ScriblyException("Email token expired")

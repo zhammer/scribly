@@ -1,6 +1,16 @@
+import os
+import time
+from typing import Tuple
+
 import argon2
+import itsdangerous
 
+from scribly.definitions import EmailVerificationTokenPayload, User
 
+email_verification_secret = os.environ.get(
+    "EMAIL_VERIFICATION_SECRET", "myemailverificationsecret"
+)
+email_verification_serializer = itsdangerous.Serializer(email_verification_secret)
 password_hasher = argon2.PasswordHasher()
 
 
@@ -27,3 +37,18 @@ def check_needs_rehash(password_hash: str) -> bool:
     Return True if `password_hash` is due for a rehash, as per argon2 spec.
     """
     return password_hasher.check_needs_rehash(password_hash)
+
+
+def build_email_verification_token(user: User) -> str:
+    serialized = email_verification_serializer.dumps(
+        {"user_id": user.id, "email": user.email, "timestamp": time.time()}
+    )
+    return itsdangerous.base64_encode(serialized).decode()
+
+
+def parse_email_verification_token(
+    serialized_token: str,
+) -> EmailVerificationTokenPayload:
+    token = itsdangerous.base64_decode(serialized_token)
+    token_content = email_verification_serializer.loads(token)
+    return EmailVerificationTokenPayload(**token_content)
