@@ -74,6 +74,13 @@ class Me:
         return [story for story in self.stories if story.state == "done"]
 
 
+@dataclass
+class Email:
+    subject: str
+    body: str
+    to: str
+
+
 class DatabaseGateway(abc.ABC):
     @abc.abstractmethod
     async def fetch_user_with_password_hash(self, username: str) -> Tuple[User, str]:
