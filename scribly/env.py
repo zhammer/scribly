@@ -2,8 +2,17 @@
 from functools import lru_cache
 import logging
 import os
+import typing
 
 logger = logging.getLogger(__name__)
+
+if typing.TYPE_CHECKING:
+    DATABASE_URL: str
+    EMAIL_VERIFICATION_SECRET: str
+    SENDGRID_API_KEY: str
+    SENDGRID_BASE_URL: str
+    SESSION_SECRET_KEY: str
+    WEBSITE_URL: str
 
 _DEFAULTS = {
     "DATABASE_URL": "postgres://localhost/scribly",
@@ -31,7 +40,8 @@ def __getattr__(name: str) -> str:
         return os.environ[name]
     except KeyError:
         logger.warning(
-            "environment variable %s requested but not available, falling back to default.",
+            "environment variable '%s' requested but not available, falling back to default: '%s'.",
             name,
+            _DEFAULTS[name],
         )
         return _DEFAULTS[name]
