@@ -191,6 +191,28 @@ async def add_cowriters(request):
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
+@app.route("/email-verification", methods=["POST"])
+async def request_email_verification_email(request):
+    if not isinstance(request.user, User):
+        return RedirectResponse("/", status_code=303)
+
+    scribly: Scribly = request.scope["scribly"]
+    await scribly.send_verification_email(request.user)
+    return templates.TemplateResponse(
+        "emailverificationrequested.html", {"request": request, "user": request.user}
+    )
+
+
+@app.route("/email-verification", methods=["GET"])
+async def verify_email_link(request):
+    token = request.query_params["token"]
+    scribly: Scribly = request.scope["scribly"]
+    email = await scribly.verify_email(token)
+    return templates.TemplateResponse(
+        "emailverificationsuccess.html", {"request": request, "email": email}
+    )
+
+
 @app.route("/stories/{story_id}/turn", methods=["POST"])
 async def submit_turn(request):
     if not isinstance(request.user, User):

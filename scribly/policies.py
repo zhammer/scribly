@@ -139,7 +139,7 @@ def _require_valid_email(email: str) -> None:
 def require_valid_email_verification(
     user: User, payload: EmailVerificationTokenPayload
 ) -> None:
-    if not user.email_verification_status == "verified":
+    if user.email_verification_status == "verified":
         raise ScriblyException("Email already verified.")
 
     if not payload.email == user.email:

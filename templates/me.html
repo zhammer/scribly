@@ -40,9 +40,22 @@
           {% endfor %}
         </ul>
       </section>
+      <a class="button" href="/new">start a new story</a>
     </div>
-    <a class="button" href="/new">start a new story</a>
-    </form>
+    <br>
+    <hr>
+    <div>
+      <h1>settings</h1>
+      <h2>email verification</h2>
+      {% if me.user.email_verification_status == "verified" %}
+      <p>your email is verified!</p>
+      {% else %}
+      <p>verify your email to follow stories you're working on!</p>
+      <form id="verify-email-form" action="/email-verification" method="post">
+        <button type="submit">send verification link</button>
+      </form>
+      {% endif %}
+    </div>
   </div>
 </body>
 

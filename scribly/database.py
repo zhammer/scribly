@@ -99,10 +99,11 @@ class Database(DatabaseGateway):
     ) -> User:
         await self.connection.execute(
             """
-            UPDATE users SET email_verification_status = $1, updated_at = NOW()
+            UPDATE users SET email_verification_status = $2, updated_at = NOW()
             WHERE id = $1;
             """,
             user.id,
+            status,
         )
         return User(
             id=user.id,
@@ -143,6 +144,7 @@ class Database(DatabaseGateway):
         """
         Slow quick implementation of this at the moment using self.fetch_story.
         """
+        user = await self.fetch_user(user.id)
         story_records = await self.connection.fetch(
             """
             SELECT DISTINCT s.id FROM stories s

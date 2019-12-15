@@ -106,7 +106,7 @@ class Scribly:
         email = emails.build_email_verification_email(user, verification_token)
         await self.context.emailer.send_email(email)
 
-    async def verify_email(self, email_verification_token: str) -> None:
+    async def verify_email(self, email_verification_token: str) -> str:
         async with self.context.database.transaction():
             verification_token_payload = auth.parse_email_verification_token(
                 email_verification_token
@@ -118,3 +118,4 @@ class Scribly:
             await self.context.database.update_email_verification_status(
                 user, "verified"
             )
+            return verification_token_payload.email
