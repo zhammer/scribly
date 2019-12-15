@@ -13,3 +13,7 @@ Cypress.Commands.add("addStories", stories => {
 Cypress.Commands.add("listenForEmails", () => {
   cy.task("listenForEmails");
 });
+
+Cypress.Commands.add("getEmails", () => {
+  return cy.task("getEmails");
+});

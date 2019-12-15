@@ -98,3 +98,20 @@ Then(/I (can|cannot) see the turn form/, canOrCannot => {
 Then(`I see the title {string}`, title => {
   cy.get("h1").contains(title);
 });
+
+Then(
+  "I received an email at {string} with the subject {string}",
+  (expectedAddress, expectedSubject) => {
+    cy.getEmails().then(emails => {
+      const email = emails.find(email => {
+        return email.personalizations.find(({ to, subject }) => {
+          return (
+            subject === expectedSubject &&
+            to.find(({ email }) => email === expectedAddress)
+          );
+        });
+      });
+      expect(email).to.exist;
+    });
+  }
+);

@@ -29,7 +29,10 @@ class MockServer {
   };
 
   getRequests = async () => {
-    await superagent.put(`${this.url}/mockserver/retrieve?type=REQUESTS`);
+    const response = await superagent.put(
+      `${this.url}/mockserver/retrieve?type=REQUESTS`
+    );
+    return response.body;
   };
 }
 

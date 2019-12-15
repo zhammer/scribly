@@ -18,6 +18,14 @@ class MockSendGrid {
     });
     return null;
   };
+
+  getEmails = async () => {
+    const requests = await this.mockserver.getRequests();
+    const requestBodies = requests.map(request =>
+      JSON.parse(request.body.string)
+    );
+    return requestBodies;
+  };
 }
 
 module.exports = MockSendGrid;

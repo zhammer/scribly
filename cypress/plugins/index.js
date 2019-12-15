@@ -10,6 +10,7 @@ module.exports = on => {
     resetDb: db.resetDb,
     addUsers: db.addUsers,
     addStories: db.addStories,
-    listenForEmails: sendgrid.listenForEmails
+    listenForEmails: sendgrid.listenForEmails,
+    getEmails: sendgrid.getEmails
   });
 };
