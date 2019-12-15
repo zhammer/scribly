@@ -18,10 +18,11 @@ from scribly.delivery.middleware import (
     ScriblyMiddleware,
     WaitForStartupCompleteMiddleware,
 )
+from scribly import env
 from scribly.use_scribly import Scribly
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgres://localhost/scribly")
-SESSION_SECRET_KEY = os.environ.get("SESSION_SECRET_KEY", "dev_session_secret")
+DATABASE_URL = env.DATABASE_URL
+SESSION_SECRET_KEY = env.SESSION_SECRET_KEY
 
 logger = logging.getLogger(__name__)
 

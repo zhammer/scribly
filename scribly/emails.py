@@ -4,9 +4,10 @@ from jinja2 import Environment, FileSystemLoader
 from premailer import Premailer
 
 from scribly.definitions import Email, User
+from scribly import env
 from scribly.util import read_once
 
-website_url = os.environ.get("WEBSITE_URL", "http://127.0.0.1:8000")
+website_url = env.WEBSITE_URL
 premailer = Premailer(css_text=read_once("static/style.css"))
 jinja_env = Environment(loader=FileSystemLoader("email_templates"))
 

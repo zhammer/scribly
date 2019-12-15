@@ -6,10 +6,9 @@ import argon2
 import itsdangerous
 
 from scribly.definitions import EmailVerificationTokenPayload, User
+from scribly import env
 
-email_verification_secret = os.environ.get(
-    "EMAIL_VERIFICATION_SECRET", "myemailverificationsecret"
-)
+email_verification_secret = env.EMAIL_VERIFICATION_SECRET
 email_verification_serializer = itsdangerous.Serializer(email_verification_secret)
 password_hasher = argon2.PasswordHasher()
 

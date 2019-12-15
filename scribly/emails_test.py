@@ -4,7 +4,12 @@ from scribly.emails import build_email_verification_email
 
 def test_verification_email() -> None:
     # given a token we have generated for a user
-    user = User(id=1, username="zach", email="zach@email.com")
+    user = User(
+        id=1,
+        username="zach",
+        email="zach@email.com",
+        email_verification_status="pending",
+    )
     token = "verification_token"
 
     # when we build an email for the user
