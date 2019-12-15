@@ -4,6 +4,7 @@ import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
 
 beforeEach(() => {
   cy.resetDb();
+  cy.listenForEmails();
 });
 
 Given("the following users exist", datatable => {

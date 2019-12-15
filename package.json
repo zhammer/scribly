@@ -8,11 +8,13 @@
   "dependencies": {
     "argon2": "^0.25.1",
     "casual": "^1.6.2",
-    "cypress": "^3.6.1",
+    "cypress": "3.8.0",
     "cypress-cucumber-preprocessor": "^1.16.2",
     "cypress-plugin-tab": "^1.0.3",
     "pg": "^7.14.0",
-    "pg-native": "^3.0.0"
+    "pg-native": "^3.0.0",
+    "superagent": "^5.1.2",
+    "wait-on": "^3.3.0"
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true
