@@ -42,20 +42,17 @@
       </section>
       <a class="button" href="/new">start a new story</a>
     </div>
+    {% if not me.user.email_verification_status == "verified" %}
     <br>
     <hr>
     <div>
-      <h1>settings</h1>
-      <h2>email verification</h2>
-      {% if me.user.email_verification_status == "verified" %}
-      <p>your email is verified!</p>
-      {% else %}
       <p>verify your email to follow stories you're working on!</p>
       <form id="verify-email-form" action="/email-verification" method="post">
-        <button type="submit">send verification link</button>
+        <button title="Resend email verification link" type="submit">resend verification
+          link</button>
       </form>
-      {% endif %}
     </div>
+    {% endif %}
   </div>
 </body>
 

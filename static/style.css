@@ -46,6 +46,10 @@ input {
   border: solid 1px;
 }
 
+a.button {
+  display: inline-block;
+}
+
 button,
 a.button {
   padding: 1em;
