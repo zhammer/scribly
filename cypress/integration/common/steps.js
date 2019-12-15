@@ -99,18 +99,22 @@ Then(`I see the title {string}`, title => {
   cy.get("h1").contains(title);
 });
 
+function getEmail(emails, expectedAddress, expectedSubject) {
+  return emails.find(email => {
+    return email.personalizations.find(({ to, subject }) => {
+      return (
+        subject === expectedSubject &&
+        to.find(({ email }) => email === expectedAddress)
+      );
+    });
+  });
+}
+
 Then(
   "I received an email at {string} with the subject {string}",
-  (expectedAddress, expectedSubject) => {
+  (address, subject) => {
     cy.getEmails().then(emails => {
-      const email = emails.find(email => {
-        return email.personalizations.find(({ to, subject }) => {
-          return (
-            subject === expectedSubject &&
-            to.find(({ email }) => email === expectedAddress)
-          );
-        });
-      });
+      const email = getEmail(emails, address, subject);
       expect(email).to.exist;
     });
   }
