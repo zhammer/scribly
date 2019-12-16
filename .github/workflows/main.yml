@@ -27,7 +27,7 @@ jobs:
       - run: pip3 install -r requirements.txt -r requirements-dev.txt
       - run: pytest -vv
       - name: Start scribly server in background
-        run: ./test
+        run: ./test &
       - name: Run cypress tests
         run: yarn run cypress run --record
         env:
