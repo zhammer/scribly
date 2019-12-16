@@ -27,15 +27,8 @@ jobs:
       - run: pip3 install -r requirements.txt -r requirements-dev.txt
       - run: pytest -vv
       - name: Start scribly server in background
-        run: |
-          python scripts/createdb.py
-          heroku local -p 8000 &
-          npx wait-on http://localhost:8000
-        env:
-          DATABASE_URL: postgres://localhost/scribly
-          SESSION_SECRET_KEY: ci-session-secret
+        run: ./test
       - name: Run cypress tests
-        run: |
-          yarn run cypress run --record
+        run: yarn run cypress run --record
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
