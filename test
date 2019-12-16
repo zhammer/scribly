@@ -15,7 +15,7 @@ export WEBSITE_URL="http://127.0.0.1:$SCRIBLY_PORT"
 python scripts/createdb.py --reset
 
 # start mock servers
-mockserver -logLevel ERROR -serverPort $MOCK_SENDGRID_PORT &
+docker run --rm -p $MOCK_SENDGRID_PORT:1080 mockserver/mockserver &
 
 # start app
 heroku local -p $SCRIBLY_PORT
