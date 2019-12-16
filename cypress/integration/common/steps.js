@@ -73,7 +73,7 @@ When("I type:", text => {
 });
 
 When(`I log in as {string}`, username => {
-  cy.visit("/logout");
+  cy.clearCookies(); // cy.visit("/logout");
 
   cy.visit("/login");
   cy.get("input[name='username']").type(username);
