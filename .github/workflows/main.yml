@@ -28,7 +28,7 @@ jobs:
       - run: pytest -vv
       - name: Start scribly server in background
         run: ./test &
-      - name: yarn wait-on http://127.0.0.1:8000
+      - run: yarn wait-on http://127.0.0.1:8000
       - name: Run cypress tests
         run: yarn run cypress run --record
         env:
