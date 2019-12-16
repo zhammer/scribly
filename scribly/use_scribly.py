@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Sequence
 
-from scribly import auth, exceptions, policies
+from scribly import auth, emails, exceptions, policies
 from scribly.definitions import Context, Me, Story, TurnAction, User
 from scribly.util import shuffle
 
@@ -99,3 +99,23 @@ class Scribly:
 
     async def get_me(self, user: User) -> Me:
         return await self.context.database.fetch_me(user)
+
+    async def send_verification_email(self, user: User) -> None:
+        policies.require_can_send_verification_email(user)
+        verification_token = auth.build_email_verification_token(user)
+        email = emails.build_email_verification_email(user, verification_token)
+        await self.context.emailer.send_email(email)
+
+    async def verify_email(self, email_verification_token: str) -> str:
+        async with self.context.database.transaction():
+            verification_token_payload = auth.parse_email_verification_token(
+                email_verification_token
+            )
+            user = await self.context.database.fetch_user(
+                verification_token_payload.user_id, for_update=True
+            )
+            policies.require_valid_email_verification(user, verification_token_payload)
+            await self.context.database.update_email_verification_status(
+                user, "verified"
+            )
+            return verification_token_payload.email

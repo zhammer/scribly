@@ -5,12 +5,15 @@ from typing import AsyncIterator, Optional, Sequence, Tuple
 
 from typing_extensions import Literal
 
+EmailVerificationState = Literal["pending", "verified"]
+
 
 @dataclass
 class User:
     id: int
     username: str
     email: str
+    email_verification_status: EmailVerificationState
 
 
 TurnAction = Literal["pass", "write", "finish", "write_and_finish"]
@@ -74,6 +77,20 @@ class Me:
         return [story for story in self.stories if story.state == "done"]
 
 
+@dataclass
+class Email:
+    subject: str
+    body: str
+    to: str
+
+
+@dataclass
+class EmailVerificationTokenPayload:
+    user_id: int
+    email: str
+    timestamp: float
+
+
 class DatabaseGateway(abc.ABC):
     @abc.abstractmethod
     async def fetch_user_with_password_hash(self, username: str) -> Tuple[User, str]:
@@ -85,6 +102,10 @@ class DatabaseGateway(abc.ABC):
 
     @abc.abstractmethod
     async def update_password(self, user: User, password: str) -> None:
+        ...
+
+    @abc.abstractmethod
+    async def fetch_user(self, user_id: int, for_update: bool) -> User:
         ...
 
     @abc.abstractmethod
@@ -131,7 +152,20 @@ class DatabaseGateway(abc.ABC):
     def transaction(self) -> "AbstractAsyncContextManager[None]":
         ...
 
+    @abc.abstractmethod
+    async def update_email_verification_status(
+        self, user: User, status: EmailVerificationState
+    ) -> User:
+        ...
+
+
+class EmailGateway(abc.ABC):
+    @abc.abstractmethod
+    async def send_email(self, email: Email) -> None:
+        ...
+
 
 @dataclass
 class Context:
     database: DatabaseGateway
+    emailer: EmailGateway

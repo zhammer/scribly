@@ -1,8 +1,11 @@
+CREATE TYPE email_verification_state AS ENUM ('pending', 'verified');
+
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
+    email_verification_status email_verification_state NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (id)

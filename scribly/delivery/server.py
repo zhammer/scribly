@@ -18,10 +18,11 @@ from scribly.delivery.middleware import (
     ScriblyMiddleware,
     WaitForStartupCompleteMiddleware,
 )
+from scribly import env
 from scribly.use_scribly import Scribly
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgres://localhost/scribly")
-SESSION_SECRET_KEY = os.environ.get("SESSION_SECRET_KEY", "dev_session_secret")
+DATABASE_URL = env.DATABASE_URL
+SESSION_SECRET_KEY = env.SESSION_SECRET_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,14 @@ async def me(request):
 
     scribly: Scribly = request.scope["scribly"]
     me = await scribly.get_me(request.user)
+    user = me.user
+
+    request.session["user"] = {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "email_verification_status": user.email_verification_status,
+    }
 
     return templates.TemplateResponse("me.html", {"request": request, "me": me})
 
@@ -95,6 +104,7 @@ async def login(request):
         "id": user.id,
         "username": user.username,
         "email": user.email,
+        "email_verification_status": user.email_verification_status,
     }
 
     return RedirectResponse("/me", status_code=303)
@@ -118,6 +128,7 @@ async def sign_up(request):
         "id": user.id,
         "username": user.username,
         "email": user.email,
+        "email_verification_status": user.email_verification_status,
     }
 
     return RedirectResponse(f"/me", status_code=303)
@@ -179,6 +190,28 @@ async def add_cowriters(request):
     await scribly.add_cowriters(request.user, story_id, cowriter_usernames)
 
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
+
+
+@app.route("/email-verification", methods=["POST"])
+async def request_email_verification_email(request):
+    if not isinstance(request.user, User):
+        return RedirectResponse("/", status_code=303)
+
+    scribly: Scribly = request.scope["scribly"]
+    await scribly.send_verification_email(request.user)
+    return templates.TemplateResponse(
+        "emailverificationrequested.html", {"request": request, "user": request.user}
+    )
+
+
+@app.route("/email-verification", methods=["GET"])
+async def verify_email_link(request):
+    token = request.query_params["token"]
+    scribly: Scribly = request.scope["scribly"]
+    email = await scribly.verify_email(token)
+    return templates.TemplateResponse(
+        "emailverificationsuccess.html", {"request": request, "email": email}
+    )
 
 
 @app.route("/stories/{story_id}/turn", methods=["POST"])
