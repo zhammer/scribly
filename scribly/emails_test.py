@@ -31,7 +31,7 @@ a.button:visited {color:#191919;text-decoration:none}</style></head>
 <body style="color:#191919; font-family:monospace; font-size:16px">
   <h1>verify your email</h1>
   <p>zach, click the following link to verify your email</p>
-  <a class="button" href="http://127.0.0.1:8000/email-verification?token=verification_token" style="background:transparent; border:solid 1px; cursor:pointer; font-size:11px; padding:1em; color:#191919; text-decoration:none">verify your email</a>
+  <a class="button" href="http://127.0.0.1:8000/email-verification?token=verification_token" style="display:inline-block; background:transparent; border:solid 1px; cursor:pointer; font-size:11px; padding:1em; color:#191919; text-decoration:none">verify your email</a>
 </body>
 
 </html>

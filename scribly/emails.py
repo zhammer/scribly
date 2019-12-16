@@ -8,7 +8,9 @@ from scribly import env
 from scribly.util import read_once
 
 website_url = env.WEBSITE_URL
-premailer = Premailer(css_text=read_once("static/style.css"))
+premailer = Premailer(
+    css_text=read_once("static/style.css"), cssutils_logging_level="CRITICAL"
+)
 jinja_env = Environment(loader=FileSystemLoader("email_templates"))
 
 
