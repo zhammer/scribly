@@ -46,11 +46,15 @@ When(`I visit {string}`, path => {
   cy.visit(path);
 });
 
-When(/I click the (text|button) "(.*)"/, (elementType, text) => {
+When(/I click the (text|button|link) "(.*)"/, (elementType, text) => {
+  const mapping = {
+    link: "a",
+    button: "button"
+  };
   if (elementType === "text") {
     cy.contains(text).click();
   } else {
-    cy.get(elementType)
+    cy.get(mapping[elementType])
       .contains(text)
       .click();
   }
@@ -80,6 +84,12 @@ When(`I log in as {string}`, username => {
 
 Then(`I see the text {string}`, text => {
   cy.contains(text);
+});
+
+Then(`I do not see the text {string}`, text => {
+  cy.get("body")
+    .contains(text)
+    .should("not.exist");
 });
 
 Then(`I see the button {string}`, text => {
@@ -116,6 +126,18 @@ Then(
     cy.getEmails().then(emails => {
       const email = getEmail(emails, address, subject);
       expect(email).to.exist;
+    });
+  }
+);
+
+When(
+  "I open my email at {string} with the subject {string}",
+  (address, subject) => {
+    cy.getEmails().then(emails => {
+      const email = getEmail(emails, address, subject);
+      const html = email.content[0].value;
+      cy.writeFile("static/tempfile.html", html);
+      cy.visit("static/tempfile.html");
     });
   }
 );
