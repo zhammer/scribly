@@ -4,6 +4,7 @@ import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
 
 beforeEach(() => {
   cy.resetDb();
+  cy.listenForEmails();
 });
 
 Given("the following users exist", datatable => {
@@ -45,11 +46,15 @@ When(`I visit {string}`, path => {
   cy.visit(path);
 });
 
-When(/I click the (text|button) "(.*)"/, (elementType, text) => {
+When(/I click the (text|button|link) "(.*)"/, (elementType, text) => {
+  const mapping = {
+    link: "a",
+    button: "button"
+  };
   if (elementType === "text") {
     cy.contains(text).click();
   } else {
-    cy.get(elementType)
+    cy.get(mapping[elementType])
       .contains(text)
       .click();
   }
@@ -68,7 +73,7 @@ When("I type:", text => {
 });
 
 When(`I log in as {string}`, username => {
-  cy.visit("/logout");
+  cy.clearCookies(); // cy.visit("/logout");
 
   cy.visit("/login");
   cy.get("input[name='username']").type(username);
@@ -79,6 +84,12 @@ When(`I log in as {string}`, username => {
 
 Then(`I see the text {string}`, text => {
   cy.contains(text);
+});
+
+Then(`I do not see the text {string}`, text => {
+  cy.get("body")
+    .contains(text)
+    .should("not.exist");
 });
 
 Then(`I see the button {string}`, text => {
@@ -97,3 +108,36 @@ Then(/I (can|cannot) see the turn form/, canOrCannot => {
 Then(`I see the title {string}`, title => {
   cy.get("h1").contains(title);
 });
+
+function getEmail(emails, expectedAddress, expectedSubject) {
+  return emails.find(email => {
+    return email.personalizations.find(({ to, subject }) => {
+      return (
+        subject === expectedSubject &&
+        to.find(({ email }) => email === expectedAddress)
+      );
+    });
+  });
+}
+
+Then(
+  "I received an email at {string} with the subject {string}",
+  (address, subject) => {
+    cy.getEmails().then(emails => {
+      const email = getEmail(emails, address, subject);
+      expect(email).to.exist;
+    });
+  }
+);
+
+When(
+  "I open my email at {string} with the subject {string}",
+  (address, subject) => {
+    cy.getEmails().then(emails => {
+      const email = getEmail(emails, address, subject);
+      const html = email.content[0].value;
+      cy.writeFile("static/tempfile.html", html);
+      cy.visit("static/tempfile.html");
+    });
+  }
+);

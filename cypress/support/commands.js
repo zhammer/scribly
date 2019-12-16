@@ -9,3 +9,11 @@ Cypress.Commands.add("addUsers", users => {
 Cypress.Commands.add("addStories", stories => {
   cy.task("addStories", stories);
 });
+
+Cypress.Commands.add("listenForEmails", () => {
+  cy.task("listenForEmails");
+});
+
+Cypress.Commands.add("getEmails", () => {
+  return cy.task("getEmails");
+});
