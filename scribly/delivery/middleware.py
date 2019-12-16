@@ -72,16 +72,27 @@ class ScriblyMiddleware:
 class SessionAuthBackend(AuthenticationBackend):
     # from https://www.starlette.io/authentication/
     async def authenticate(self, request):
-        user = request.session.get("user", None)
-        if not user:
+        session_user = request.session.get("user", None)
+        if not session_user:
             return AuthCredentials, None
 
-        return (
-            AuthCredentials(["authenticated"]),
-            User(
-                id=user["id"],
-                username=user["username"],
-                email=user["email"],
-                email_verification_status=user["email_verification_status"],
-            ),
-        )
+        try:
+            user = User(
+                id=session_user["id"],
+                username=session_user["username"],
+                email=session_user["email"],
+                email_verification_status=session_user["email_verification_status"],
+            )
+        except KeyError as e:
+            # in the case that the user structure updates and a user tries to visit the site
+            # using an outdated session, we should clear out the session token and have them
+            # log in again.
+            logger.error(
+                "Error plucking user from session user (%s). Error: %s.",
+                session_user,
+                e,
+            )
+            return AuthCredentials, None
+
+        return (AuthCredentials(["authenticated"]), user)
+
