@@ -17,6 +17,15 @@ class User:
 
 
 TurnAction = Literal["pass", "write", "finish", "write_and_finish"]
+TurnTextComponentType = Literal[
+    "text", "heading", "action", "character", "dialogue", "parenthetical", "transition"
+]
+
+
+@dataclass
+class TurnTextComponent:
+    text: str
+    component: TurnTextComponentType
 
 
 @dataclass
@@ -24,7 +33,7 @@ class Turn:
     taken_by: User
     action: TurnAction
     """Text written by the user on this turn. Only exists on `write` and `write_and_finish` actions."""
-    text_written: Optional[str]
+    text_written: Tuple[TurnTextComponentType, ...]
 
 
 StoryState = Literal["draft", "in_progress", "done"]
