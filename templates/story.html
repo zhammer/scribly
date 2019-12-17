@@ -5,6 +5,7 @@
 
 <head>
   {{ head.head('Scribly - ' + story.title) }}
+  <script src="/static/scriptwriter.js"></script>
 </head>
 
 <body>
@@ -22,8 +23,17 @@
         {% endfor %}
       </div>
       {% if is_users_turn %}
+      {% if request.query_params.get("scriptwriter") %}
+      <noscript>
+        <b style="color: red">enable javascript to use scriptwriter mode!</b>
+      </noscript>
+      <p><em>using experimental scriptwriter mode!</em></p>
+      <div contentEditable="true" name="text" id="text" form="turn-form" autofocus="true"
+        class="story__writer {% if is_users_turn -%} grow {%- endif %}"></div>
+      {% else %}
       <textarea name="text" id="text" form="turn-form" autofocus="true"
         class="story__writer {% if is_users_turn -%} grow {%- endif %}"></textarea>
+      {% endif %}
       <form id="turn-form" action="/stories/{{ story.id }}/turn" method="post">
         <div class="story__turnbuttons">
           <button type="submit" id="write" name="action" value="write"
@@ -61,6 +71,9 @@
       </div>
     </div>
   </div>
+  <script type="text/javascript">
+    const editor = scriptwriter.edit("text");
+  </script>
 </body>
 
 </html>

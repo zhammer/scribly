@@ -172,3 +172,44 @@ a.button:visited {
   margin: 1em 0;
   border: none;
 }
+
+/*
+    -~-+=-~-+=-~-+=-~-+=-~-
+    S C R I P T W R I T E R
+    -~-+=-~-+=-~-+=-~-+=-~-
+*/
+
+/* EXT. BARN. SUNNY. */
+.heading {
+  text-align: left;
+  text-transform: uppercase;
+}
+
+/* A cow walks out of the barn. */
+.action {
+}
+
+/*     COW */
+.character {
+  text-align: center;
+}
+
+/*   (Coyly) */
+.parenthetical {
+  width: 30%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/*  Moo! */
+.dialogue {
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/*          FADE TO WHITE. WITH BLACK SPOTS */
+.transition {
+  text-align: right;
+  text-transform: uppercase;
+}
