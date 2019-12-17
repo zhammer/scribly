@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from scribly import auth, emails, exceptions, policies
-from scribly.definitions import Context, Me, Story, TurnAction, User
+from scribly.definitions import Context, Me, Story, TurnAction, TurnText, User
 from scribly.util import shuffle
 
 
@@ -28,7 +28,7 @@ class Scribly:
         hash = auth.hash_password(password)
         return await self.context.database.add_user(username, hash, email)
 
-    async def start_story(self, user: User, title: str, body: str) -> Story:
+    async def start_story(self, user: User, title: str, body: TurnText) -> Story:
         async with self.context.database.transaction():
             return await self.context.database.start_story(user, title, body)
 
@@ -66,7 +66,7 @@ class Scribly:
             return await self.context.database.add_turn_pass(user, story)
 
     async def take_turn_write(
-        self, user: User, story_id: int, text_written: str
+        self, user: User, story_id: int, text_written: TurnText
     ) -> Story:
         async with self.context.database.transaction():
             story = await self.context.database.fetch_story(story_id, for_update=True)
@@ -84,7 +84,7 @@ class Scribly:
             return await self.context.database.add_turn_finish(user, story)
 
     async def take_turn_write_and_finish(
-        self, user: User, story_id: int, text_written: str
+        self, user: User, story_id: int, text_written: TurnText
     ) -> Story:
         async with self.context.database.transaction():
             story = await self.context.database.fetch_story(story_id, for_update=True)

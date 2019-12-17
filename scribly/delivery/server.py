@@ -13,6 +13,7 @@ from starlette.templating import Jinja2Templates
 
 from scribly import exceptions
 from scribly.definitions import Context, User
+from scribly.delivery import custom_formatters
 from scribly.delivery.middleware import (
     SessionAuthBackend,
     ScriblyMiddleware,
@@ -38,6 +39,7 @@ app.add_middleware(
     WaitForStartupCompleteMiddleware, startup_complete_event=startup_complete_event
 )
 app.mount("/static", StaticFiles(directory="static"), name="static")
+templates.env.filters["format_turn_text"] = custom_formatters.format_turn_text
 
 
 @app.on_event("startup")
@@ -164,9 +166,11 @@ async def new_story_submit(request):
     form = await request.form()
     logger.info("received new story submission: %s", form)
 
-    scribly = request.scope["scribly"]
+    scribly: Scribly = request.scope["scribly"]
 
-    story = await scribly.start_story(request.user, form["title"], form["body"])
+    story = await scribly.start_story(
+        request.user, form["title"], custom_formatters.pluck_story_text(form["body"])
+    )
 
     return RedirectResponse(f"/stories/{story.id}", status_code=303)
 
@@ -229,14 +233,16 @@ async def submit_turn(request):
         )
 
     scribly: Scribly = request.scope["scribly"]
+
+    turn_text = custom_formatters.pluck_story_text(form["text"])
     if action == "write":
-        await scribly.take_turn_write(request.user, story_id, form["text"])
+        await scribly.take_turn_write(request.user, story_id, turn_text)
     if action == "pass":
         await scribly.take_turn_pass(request.user, story_id)
     if action == "finish":
         await scribly.take_turn_finish(request.user, story_id)
     if action == "write_and_finish":
-        await scribly.take_turn_write_and_finish(request.user, story_id, form["text"])
+        await scribly.take_turn_write_and_finish(request.user, story_id, turn_text)
 
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 

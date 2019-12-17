@@ -10,6 +10,8 @@ from scribly.definitions import (
     Me,
     Story,
     Turn,
+    TurnText,
+    TurnTextComponent,
     User,
 )
 from scribly.exceptions import AuthError, ScriblyException, StoryNotFound
@@ -124,7 +126,7 @@ class Database(DatabaseGateway):
 
         return _pluck_user(user_record)
 
-    async def start_story(self, user: User, title: str, body: str) -> Story:
+    async def start_story(self, user: User, title: str, body: TurnText) -> Story:
         story_record = await self.connection.fetchrow(
             """
             INSERT INTO stories (title, state, created_by)
@@ -136,7 +138,11 @@ class Database(DatabaseGateway):
         )
         story_id = story_record["id"]
         turn_record = await self.connection.fetchrow(
-            self.QUERY_INSERT_TURN, story_id, user.id, "write", body,
+            self.QUERY_INSERT_TURN,
+            story_id,
+            user.id,
+            "write",
+            _build_text_written(body),
         )
         return _pluck_story(story_record, [turn_record], {user.id: user})
 
@@ -213,10 +219,14 @@ class Database(DatabaseGateway):
         )
 
     async def add_turn_write(
-        self, user: User, story: Story, text_written: str
+        self, user: User, story: Story, text_written: TurnText
     ) -> Story:
         turn_record = await self.connection.fetchrow(
-            self.QUERY_INSERT_TURN, story.id, user.id, "write", text_written,
+            self.QUERY_INSERT_TURN,
+            story.id,
+            user.id,
+            "write",
+            _build_text_written(text_written),
         )
         turn = _pluck_turn(turn_record, {user.id: user})
         return Story(
@@ -250,10 +260,14 @@ class Database(DatabaseGateway):
         )
 
     async def add_turn_write_and_finish(
-        self, user: User, story: Story, text_written: str
+        self, user: User, story: Story, text_written: TurnText
     ) -> Story:
         turn_record = await self.connection.fetchrow(
-            self.QUERY_INSERT_TURN, story.id, user.id, "write_and_finish", text_written,
+            self.QUERY_INSERT_TURN,
+            story.id,
+            user.id,
+            "write_and_finish",
+            _build_text_written(text_written),
         )
         await self.connection.execute(
             """
@@ -331,5 +345,28 @@ def _pluck_turn(turn_record: Record, user_by_id: Dict[int, User]) -> Turn:
     return Turn(
         taken_by=user_by_id[turn_record["taken_by"]],
         action=turn_record["action"],
-        text_written=turn_record["text_written"],
+        text_written=_pluck_text_written(turn_record),
     )
+
+
+def _pluck_text_written(turn_record: Record) -> TurnText:
+    raw_text = turn_record["text_written"]
+
+    # null text written means no text attached to turn
+    if raw_text is None:
+        return tuple()
+
+    # TEMPORARY, return the entire thing back as one blob
+    return tuple([TurnTextComponent(raw_text, "text")])
+
+
+def _build_text_written(text: TurnText) -> str:
+    if not text:
+        return ""
+
+    if not len(text) == 1 and text[0].component == "text":
+        raise NotImplementedError(
+            "formatting a turn that is not just one text block is not yet supported!"
+        )
+
+    return text[0].text

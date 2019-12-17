@@ -2,7 +2,7 @@ import re
 import time
 from typing import Sequence
 
-from scribly.definitions import EmailVerificationTokenPayload, Story, User
+from scribly.definitions import EmailVerificationTokenPayload, Story, TurnText, User
 from scribly.exceptions import AuthError, InputError, ScriblyException
 
 
@@ -62,11 +62,11 @@ def require_user_can_take_turn_pass(user: User, story: Story) -> None:
 
 
 def require_user_can_take_turn_write(
-    user: User, story: Story, text_written: str
+    user: User, story: Story, text_written: TurnText
 ) -> None:
     _require_user_can_take_turn(user, story)
 
-    if text_written == "":
+    if not text_written:
         raise InputError(f"Text for a `write` turn cannot be empty.")
 
 
@@ -75,7 +75,7 @@ def require_user_can_take_turn_finish(user: User, story: Story) -> None:
 
 
 def require_user_can_take_turn_write_and_finish(
-    user: User, story: Story, text_written: str
+    user: User, story: Story, text_written: TurnText
 ) -> None:
     require_user_can_take_turn_finish(user, story)
     require_user_can_take_turn_write(user, story, text_written)

@@ -28,12 +28,15 @@ class TurnTextComponent:
     component: TurnTextComponentType
 
 
+TurnText = Tuple[TurnTextComponent, ...]
+
+
 @dataclass
 class Turn:
     taken_by: User
     action: TurnAction
     """Text written by the user on this turn. Only exists on `write` and `write_and_finish` actions."""
-    text_written: Tuple[TurnTextComponentType, ...]
+    text_written: TurnText
 
 
 StoryState = Literal["draft", "in_progress", "done"]
@@ -122,7 +125,7 @@ class DatabaseGateway(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def start_story(self, user: User, title: str, body: str) -> Story:
+    async def start_story(self, user: User, title: str, body: TurnText) -> Story:
         ...
 
     @abc.abstractmethod
@@ -147,13 +150,13 @@ class DatabaseGateway(abc.ABC):
 
     @abc.abstractmethod
     async def add_turn_write(
-        self, user: User, story: Story, text_written: str
+        self, user: User, story: Story, text_written: TurnText
     ) -> Story:
         ...
 
     @abc.abstractmethod
     async def add_turn_write_and_finish(
-        self, user: User, story: Story, text_written: str
+        self, user: User, story: Story, text_written: TurnText
     ) -> Story:
         ...
 
