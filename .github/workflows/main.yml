@@ -64,12 +64,11 @@ jobs:
       - run: sudo apt-get -y install libpq-dev
       - run: yarn install
       - run: pip3 install -r requirements.txt -r requirements-dev.txt
-      - run: pwd && ls
       - uses: cypress-io/github-action@v1
         with:
           record: true
           parallel: true
-          start: "./test"
+          start: "bash ./test"
           wait-on: "http://127.0.0.1:8000"
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
