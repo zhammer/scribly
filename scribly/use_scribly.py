@@ -26,7 +26,10 @@ class Scribly:
         policies.require_valid_signup_info(username, password, email)
 
         hash = auth.hash_password(password)
-        return await self.context.database.add_user(username, hash, email)
+        user = await self.context.database.add_user(username, hash, email)
+
+        await self.context.message_gateway.announce_user_created(user)
+        return user
 
     async def start_story(self, user: User, title: str, body: str) -> Story:
         async with self.context.database.transaction():
