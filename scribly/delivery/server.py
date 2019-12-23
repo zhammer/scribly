@@ -3,6 +3,7 @@ import logging
 import os
 from typing import List, Tuple
 
+import aio_pika
 import asyncpg
 from starlette.applications import Starlette
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -43,13 +44,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.on_event("startup")
 async def startup():
     connection_kwargs = {}
-    if "localhost" in DATABASE_URL:
+    if "pass@db/scribly" in DATABASE_URL:
         # for cypress testing
         connection_kwargs["statement_cache_size"] = 0
-
     app.state.connection_pool = await asyncpg.create_pool(
         dsn=DATABASE_URL, min_size=2, max_size=2, **connection_kwargs
     )
+
+    app.state.rabbit_connection = await aio_pika.connect_robust(env.CLOUDAMQP_URL)
 
     startup_complete_event.set()
 
@@ -57,6 +59,7 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await app.state.connection_pool.close()
+    await app.state.rabbit_connection.close()
 
 
 @app.route("/")
