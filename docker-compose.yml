@@ -1,0 +1,47 @@
+version: "2.4"
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # for a hack where cypress dumps email html bodies into /static to interact with emails
+      # as a workaround for: https://github.com/cypress-io/cypress/issues/2918
+      - "./static:/project/static"
+    environment:
+      DATABASE_URL: postgres://scribly:pass@db/scribly
+      WEBSITE_URL: http://127.0.0.1:8000
+      SENDGRID_BASE_URL: http://mocksendgrid:1080
+    depends_on:
+      db:
+        condition: service_healthy
+      mocksendgrid:
+        condition: service_healthy
+    command: bash -c "python scripts/createdb.py && gunicorn -b 0.0.0.0:8000 -w 4 -k uvicorn.workers.UvicornWorker --log-level debug scribly.delivery.server:app"
+  db:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: scribly
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: scribly
+    healthcheck:
+      test: pg_isready -U scribly
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  mocksendgrid:
+    image: mockserver/mockserver
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mocksendgrid.json
+      LOG_LEVEL: "OFF"
+    ports:
+      - "9991:1080"
+    volumes:
+      - "./mocksendgrid.json:/config/mocksendgrid.json"
+    healthcheck:
+      test: wget --method=PUT http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS
+      interval: 15s
+      timeout: 10s
+      retries: 3
