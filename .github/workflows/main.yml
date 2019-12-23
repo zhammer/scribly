@@ -34,29 +34,18 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
           POSTGRES_DB: scribly
-          POSTGRES_USER: runner
+          POSTGRES_USER: scribly
+          POSTGRES_PASSWORD: pass
 
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
-      - uses: actions/setup-python@v1
-        with:
-          python-version: "3.7"
-      - name: cache dependencies (pip)
-        uses: actions/cache@v1
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - run: sudo curl https://cli-assets.heroku.com/install.sh | sh
       - run: sudo apt-get -y install libpq-dev
-      - run: pip3 install -r requirements.txt -r requirements-dev.txt
       - uses: cypress-io/github-action@v1
         with:
           record: true
           parallel: true
-          start: "bash ./test"
+          start: "docker-compose up"
           wait-on: "http://127.0.0.1:8000"
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
