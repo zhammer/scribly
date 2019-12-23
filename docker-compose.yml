@@ -1,4 +1,4 @@
-version: "2.4"
+version: "3.7"
 services:
   web:
     build: .
@@ -13,10 +13,8 @@ services:
       WEBSITE_URL: http://127.0.0.1:8000
       SENDGRID_BASE_URL: http://mocksendgrid:1080
     depends_on:
-      db:
-        condition: service_healthy
-      mocksendgrid:
-        condition: service_healthy
+      - db
+      - mocksendgrid
     command: bash -c "python scripts/createdb.py && gunicorn -b 0.0.0.0:8000 -w 4 -k uvicorn.workers.UvicornWorker --log-level debug scribly.delivery.server:app"
   db:
     image: postgres:latest
@@ -26,11 +24,6 @@ services:
       POSTGRES_USER: scribly
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: scribly
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U scribly"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
   mocksendgrid:
     image: mockserver/mockserver
     environment:
@@ -40,8 +33,3 @@ services:
       - "9991:1080"
     volumes:
       - "./mocksendgrid.json:/config/mocksendgrid.json"
-    healthcheck:
-      test: wget --post-data "foo=bar" http://localhost:1080/v3/mail/send
-      interval: 15s
-      timeout: 10s
-      retries: 3
