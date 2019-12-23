@@ -46,7 +46,7 @@ jobs:
       - uses: actions/download-artifact@v1
         with:
           name: scribly_build
-      - run: docker load -i scribly_build.tar
+      - run: docker load -i scribly_build/scribly_build.tar
       - uses: cypress-io/github-action@v1
         with:
           record: true
