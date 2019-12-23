@@ -7,6 +7,7 @@ import typing
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
+    CLOUDAMQP_URL: str
     DATABASE_URL: str
     EMAIL_VERIFICATION_SECRET: str
     SENDGRID_API_KEY: str
@@ -15,6 +16,7 @@ if typing.TYPE_CHECKING:
     WEBSITE_URL: str
 
 _DEFAULTS = {
+    "CLOUDAMQP_URL": "amqp://guest:guest@localhost:5672/%2F",
     "DATABASE_URL": "postgres://localhost/scribly",
     "EMAIL_VERIFICATION_SECRET": "myemailverificationsecret",
     "SENDGRID_API_KEY": "test_sendgrid_api_key",

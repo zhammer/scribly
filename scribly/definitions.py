@@ -91,6 +91,12 @@ class EmailVerificationTokenPayload:
     timestamp: float
 
 
+class MessageGateway(abc.ABC):
+    @abc.abstractmethod
+    async def announce_user_created(self, user: User) -> None:
+        ...
+
+
 class DatabaseGateway(abc.ABC):
     @abc.abstractmethod
     async def fetch_user_with_password_hash(self, username: str) -> Tuple[User, str]:
@@ -169,3 +175,4 @@ class EmailGateway(abc.ABC):
 class Context:
     database: DatabaseGateway
     emailer: EmailGateway
+    message_gateway: MessageGateway

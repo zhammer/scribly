@@ -15,3 +15,4 @@ Feature: Sign up
         And I click the button "sign up"
         Then I am on "/me"
         And I see the text "zach's scribly"
+        And I received an email at "zach@mail.com" with the subject "Verify your email"

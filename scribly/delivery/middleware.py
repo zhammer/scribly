@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass
 from typing import Callable, Optional
 
+import aio_pika
 import aiohttp
 import asyncpg
 from starlette.authentication import (
@@ -19,6 +20,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from scribly.database import Database
 from scribly.definitions import Context, User
 from scribly import env
+from scribly.message_gateway import MessageGateway
 from scribly.exceptions import AuthError
 from scribly.sendgrid import SendGrid
 from scribly.use_scribly import Scribly
@@ -58,12 +60,19 @@ class ScriblyMiddleware:
         if not connection_pool:
             raise RuntimeError("Requires an app with a connection pool")
 
-        async with connection_pool.acquire() as connection, aiohttp.ClientSession() as sendgrid_session:
-            database = Database(connection)
+        rabbit_connection = scope["app"].state.rabbit_connection
+        if not rabbit_connection:
+            raise RuntimeError("Requires an app with a rabbit connection")
+
+        # why does this work as a context manager when the context manager exits?
+        async with connection_pool.acquire() as db_connection, aiohttp.ClientSession() as sendgrid_session:
+            channel = await rabbit_connection.channel()
+            database = Database(db_connection)
             emailer = SendGrid(
                 env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session
             )
-            context = Context(database, emailer)
+            message_gateway = MessageGateway(channel)
+            context = Context(database, emailer, message_gateway)
             scope["scribly"] = Scribly(context)
 
             return await self.app(scope, receive, send)
