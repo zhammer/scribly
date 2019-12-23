@@ -7,7 +7,7 @@ services:
     environment:
       DATABASE_URL: postgres://scribly:pass@db/scribly
       WEBSITE_URL: http://127.0.0.1:8000
-      SENDGRID_BASE_URL: http://mocksendgrid:9991
+      SENDGRID_BASE_URL: http://mocksendgrid:1080
     depends_on:
       db:
         condition: service_healthy
