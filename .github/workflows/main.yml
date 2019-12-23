@@ -21,20 +21,8 @@ jobs:
       - run: pip3 install -r requirements.txt -r requirements-dev.txt
       - run: pytest -vv
 
-  docker-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - run: docker build -t scribly_build .
-      - run: docker save scribly_build > scribly_build.tar
-      - uses: actions/upload-artifact@v1
-        with:
-          name: scribly_build
-          path: scribly_build.tar
-
   cypress-tests:
     runs-on: ubuntu-latest
-    needs: docker-build
     strategy:
       matrix:
         containers: [1, 2, 3]
@@ -43,15 +31,11 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
       - run: sudo apt-get -y install libpq-dev
-      - uses: actions/download-artifact@v1
-        with:
-          name: scribly_build
-      - run: docker load -i scribly_build/scribly_build.tar
       - uses: cypress-io/github-action@v1
         with:
           record: true
           parallel: true
-          start: "docker-compose -f docker-compose.yml -f docker-compose.ci.yml up"
+          start: "docker-compose up"
           wait-on: "http://127.0.0.1:8000"
           wait-on-timeout: 180
         env:
