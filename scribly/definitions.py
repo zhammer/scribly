@@ -1,7 +1,7 @@
 import abc
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
-from typing import AsyncIterator, Optional, Sequence, Tuple
+from typing import AsyncIterator, List, Optional, Sequence, Tuple
 
 from typing_extensions import Literal
 
@@ -40,7 +40,7 @@ class Story:
     """In order list of users cowriting the story. Includes creator. Empty in `draft` state."""
     cowriters: Optional[Sequence[User]]
     """All of the turns taken by writers to get to the story's current state."""
-    turns: Sequence[Turn]
+    turns: List[Turn]
 
     @property
     def current_writers_turn(self) -> Optional[User]:

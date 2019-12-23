@@ -1,8 +1,9 @@
+import asyncio
 from dataclasses import dataclass
 from typing import Sequence
 
 from scribly import auth, emails, exceptions, policies
-from scribly.definitions import Context, Me, Story, TurnAction, User
+from scribly.definitions import Context, Me, Story, Turn, TurnAction, User
 from scribly.util import shuffle
 
 
@@ -108,6 +109,15 @@ class Scribly:
         verification_token = auth.build_email_verification_token(user)
         email = emails.build_email_verification_email(user, verification_token)
         await self.context.emailer.send_email(email)
+
+    async def send_turn_email_notifications(
+        self, story_id: int, turn_number: int
+    ) -> None:
+        story = await self.context.database.fetch_story(story_id)
+        emails_to_send = emails.build_turn_email_notifications(story, turn_number)
+        await asyncio.gather(
+            *[self.context.emailer.send_email(email) for email in emails_to_send]
+        )
 
     async def verify_email(self, email_verification_token: str) -> str:
         async with self.context.database.transaction():
