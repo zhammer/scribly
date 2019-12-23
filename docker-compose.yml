@@ -8,9 +8,6 @@ services:
       # for a hack where cypress dumps email html bodies into /static to interact with emails
       # as a workaround for: https://github.com/cypress-io/cypress/issues/2918
       - "./static:/project/static"
-      # this should probably be moved  to a docker-compose.actions.yml file to not mount on
-      # devs (especially on mac, which uses ~/Library/Caches/pip)
-      - "~/.cache/pip:/root/.cache/pip"
     environment:
       DATABASE_URL: postgres://scribly:pass@db/scribly
       WEBSITE_URL: http://127.0.0.1:8000
