@@ -24,6 +24,7 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
       - run: docker build -t scribly_build .
       - run: docker save scribly_build > scribly_build.tar
       - uses: actions/upload-artifact@v1
