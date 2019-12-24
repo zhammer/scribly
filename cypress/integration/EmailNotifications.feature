@@ -9,7 +9,7 @@ Feature: Email Notifications
             | gabe     | verified                  |
             | rakesh   | verified                  |
 
-    Scenario Outline: Email notifications are sent after someone takes a turn
+    Scenario Outline: Email notification is sent to <recipient> when rakesh takes turn <turnAction>
         Given the following stories exist
             | title       | turns | users              | complete |
             | Black Truck | 5     | zach, gabe, rakesh | false    |
@@ -18,7 +18,7 @@ Feature: Email Notifications
         And I click on the "text" textarea
         # turn text is ignored on "pass" or "finish" actions
         And I type "I've been through the fires. I've felt embers down my spine."
-        And I click the button "^\\s\\*<turnAction>\\s\\*$"
+        And I click the button "^\W*<turnAction>\W*$"
         And I wait .5 seconds
         And I log in as "<recipient>"
         And I open my email at "<recipient>@mail.com" with the subject "<subject>"

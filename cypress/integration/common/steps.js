@@ -54,15 +54,17 @@ When(`I visit {string}`, path => {
 });
 
 When(/I click the (text|button|link) "(.*)"/, (elementType, text) => {
+  const regex = new RegExp(text);
+  console.log(regex);
   const mapping = {
     link: "a",
     button: "button"
   };
   if (elementType === "text") {
-    cy.contains(new RegExp(text, "g")).click();
+    cy.contains(regex).click();
   } else {
     cy.get(mapping[elementType])
-      .contains(new RegExp(text, "g"))
+      .contains(regex)
       .click();
   }
 });
