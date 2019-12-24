@@ -59,10 +59,10 @@ When(/I click the (text|button|link) "(.*)"/, (elementType, text) => {
     button: "button"
   };
   if (elementType === "text") {
-    cy.contains(new RegExp(`^\\s\\*${text}\\s\\*$`, "g")).click();
+    cy.contains(new RegExp(text, "g")).click();
   } else {
     cy.get(mapping[elementType])
-      .contains(new RegExp(`^\\s*${text}\\s*$`, "g"))
+      .contains(new RegExp(text, "g"))
       .click();
   }
 });
