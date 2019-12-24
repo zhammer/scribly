@@ -2,8 +2,8 @@ Feature: Email Verification
 
     Background:
         Given the following users exist
-            | username |
-            | zach     |
+            | username | email_verification_status |
+            | zach     | pending                   |
 
     Scenario: I am prompted to verify my email on the me page
         Given I am logged in as zach

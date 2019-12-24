@@ -1,6 +1,11 @@
+import logging
+
 import aiohttp
 
 from scribly.definitions import Email, EmailGateway
+
+
+logger = logging.getLogger(__name__)
 
 
 class SendGrid(EmailGateway):
@@ -14,6 +19,7 @@ class SendGrid(EmailGateway):
         self.base_url = base_url
 
     async def send_email(self, email: Email) -> None:
+        logger.info("Sending email %s", email)
         url = f"{self.base_url}/v3/mail/send"
         body = {
             "personalizations": [
