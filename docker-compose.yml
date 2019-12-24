@@ -63,7 +63,7 @@ services:
     image: mockserver/mockserver
     environment:
       MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mocksendgrid.json
-      LOG_LEVEL: "OFF"
+      LOG_LEVEL: "INFO"
     ports:
       - "9991:1080"
     volumes:
