@@ -18,5 +18,5 @@ Feature: Email Notifications
         And I click on the "text" textarea
         And I type "I've been through the fires. I've felt embers down my spine."
         And I click the button "write"
-        And I wait 1 seconds
+        And I wait 1.0 seconds
         And I open my email at "zach@mail.com" with the subject "It's your turn on Black Truck!"
