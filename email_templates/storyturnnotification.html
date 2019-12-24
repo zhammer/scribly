@@ -21,9 +21,9 @@
       {% endif %}
     </span>
     {% if turn.action in ("write", "pass") %}
-    <span> it's
-      {{ "your" if story.current_writers_turn.id == recipient.id else story.current_writers_turn.username }}
-      turn</span>
+    <span>{{- " " -}}it's
+      {{- " " -}}{{- "your" if story.current_writers_turn.id == recipient.id else story.current_writers_turn.username + "'s" -}}
+      {{- " " -}}turn</span>
     {% endif %}
   </p>
   {% if turn.action in ("write", "write_and_finish") %}

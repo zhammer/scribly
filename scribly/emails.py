@@ -19,8 +19,13 @@ def build_turn_email_notifications(story: Story, turn_number: int) -> List[Email
     assert story.turns and len(story.turns) >= turn_number
     assert story.cowriters
 
-    turn = story.turns[turn_number]
-    recipients = [user for user in story.cowriters if not user.id == turn.taken_by.id]
+    turn = story.turns[turn_number - 1]
+    recipients = [
+        user
+        for user in story.cowriters
+        if (user.email_verification_status == "verified")
+        and (not user.id == turn.taken_by.id)
+    ]
 
     return [
         _build_turn_email_notification(story, turn, recipient)
@@ -39,11 +44,11 @@ def _build_turn_email_notification(story: Story, turn: Turn, recipient: User) ->
     subject: str
     if turn.action in ("pass", "write"):
         assert story.current_writers_turn
-        if story.current_writers_turn.id == recipient:
+        if story.current_writers_turn.id == recipient.id:
             subject = f"It's your turn on {story.title}!"
         else:
-            subject = f"{story.current_writers_turn.username} took their turn on {story.title}!"
-    if turn.action in ("write", "write_and_finish"):
+            subject = f"{turn.taken_by.username} took their turn on {story.title}!"
+    if turn.action in ("write_and_finish", "finish"):
         subject = f"{story.title} is done!"
 
     return Email(subject=subject, body=body, to=recipient.email)
