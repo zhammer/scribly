@@ -1,9 +1,15 @@
+import logging
+
+import asyncio
 from dataclasses import dataclass
 from typing import Sequence
 
 from scribly import auth, emails, exceptions, policies
-from scribly.definitions import Context, Me, Story, TurnAction, User
+from scribly.definitions import Context, Me, Story, Turn, TurnAction, User
 from scribly.util import shuffle
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -66,7 +72,9 @@ class Scribly:
 
             policies.require_user_can_take_turn_pass(user, story)
 
-            return await self.context.database.add_turn_pass(user, story)
+            story = await self.context.database.add_turn_pass(user, story)
+            await self.context.message_gateway.announce_turn_taken(story)
+            return story
 
     async def take_turn_write(
         self, user: User, story_id: int, text_written: str
@@ -76,7 +84,17 @@ class Scribly:
 
             policies.require_user_can_take_turn_write(user, story, text_written)
 
-            return await self.context.database.add_turn_write(user, story, text_written)
+            story = await self.context.database.add_turn_write(
+                user, story, text_written
+            )
+            logger.info(
+                "[TURN-STORY-%d-USER-%d] Turn added to story. Announcing turn.",
+                story.id,
+                user.id,
+            )
+            await self.context.message_gateway.announce_turn_taken(story)
+            logger.info("[TURN-STORY-%d-USER-%d] Turn announced.", story.id, user.id)
+            return story
 
     async def take_turn_finish(self, user: User, story_id: int) -> Story:
         async with self.context.database.transaction():
@@ -84,7 +102,9 @@ class Scribly:
 
             policies.require_user_can_take_turn_finish(user, story)
 
-            return await self.context.database.add_turn_finish(user, story)
+            story = await self.context.database.add_turn_finish(user, story)
+            await self.context.message_gateway.announce_turn_taken(story)
+            return story
 
     async def take_turn_write_and_finish(
         self, user: User, story_id: int, text_written: str
@@ -96,9 +116,11 @@ class Scribly:
                 user, story, text_written
             )
 
-            return await self.context.database.add_turn_write_and_finish(
+            story = await self.context.database.add_turn_write_and_finish(
                 user, story, text_written
             )
+            await self.context.message_gateway.announce_turn_taken(story)
+            return story
 
     async def get_me(self, user: User) -> Me:
         return await self.context.database.fetch_me(user)
@@ -108,6 +130,15 @@ class Scribly:
         verification_token = auth.build_email_verification_token(user)
         email = emails.build_email_verification_email(user, verification_token)
         await self.context.emailer.send_email(email)
+
+    async def send_turn_email_notifications(
+        self, story_id: int, turn_number: int
+    ) -> None:
+        story = await self.context.database.fetch_story(story_id)
+        emails_to_send = emails.build_turn_email_notifications(story, turn_number)
+        await asyncio.gather(
+            *[self.context.emailer.send_email(email) for email in emails_to_send]
+        )
 
     async def verify_email(self, email_verification_token: str) -> str:
         async with self.context.database.transaction():

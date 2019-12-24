@@ -6,7 +6,10 @@ import aio_pika
 import aiohttp
 import asyncpg
 
-from scribly.consumers.constants import ANNOUNCE_USER_CREATED_EXCHANGE
+from scribly.consumers.constants import (
+    ANNOUNCE_USER_CREATED_EXCHANGE,
+    ANNOUNCE_TURN_TAKEN_EXCHANGE,
+)
 from scribly.definitions import Context, User
 from scribly.database import Database
 from scribly.message_gateway import MessageGateway
@@ -14,6 +17,7 @@ from scribly.sendgrid import SendGrid
 from scribly import env
 from scribly.use_scribly import Scribly
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -23,11 +27,28 @@ class SendVerificationEmailConsumer:
 
     async def consume(self, message: aio_pika.IncomingMessage) -> None:
         async with message.process():
+            logger.info("Consuming message %s", message.body)
             user = User(**json.loads(message.body.decode()))
             await self.scribly.send_verification_email(user)
 
 
+class SendTurnNotificationEmailsConsumer:
+    def __init__(self, scribly: Scribly) -> None:
+        self.scribly = scribly
+
+    async def consume(self, message: aio_pika.IncomingMessage) -> None:
+        async with message.process():
+            logger.info("Consuming message %s", message.body)
+            body = json.loads(message.body.decode())
+            await self.scribly.send_turn_email_notifications(
+                body["story_id"], body["turn_number"]
+            )
+
+
 async def main():
+    logger.info("Starting consumers")
+
+    logger.info("Creating an instance of Scribly")
     # make scribly
     db_connection_kwargs = {}
     if "pass@db/scribly" in env.DATABASE_URL:
@@ -44,16 +65,30 @@ async def main():
     emailer = SendGrid(env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session)
     scribly = Scribly(Context(database, emailer, message_gateway))
 
+    logger.info("Setting up exchanges")
     # announce user created exchange
-    exchange = await channel.declare_exchange(
+    announce_user_created_exchange = await channel.declare_exchange(
         ANNOUNCE_USER_CREATED_EXCHANGE, aio_pika.ExchangeType.FANOUT
     )
 
-    email_verification_queue = await channel.declare_queue("email-verification-queue")
+    # announce turn taken exchange
+    announce_turn_taken_exchange = await channel.declare_exchange(
+        ANNOUNCE_TURN_TAKEN_EXCHANGE, aio_pika.ExchangeType.FANOUT
+    )
 
-    await email_verification_queue.bind(exchange)
+    logger.info("Setting up queues")
+    email_verification_queue = await channel.declare_queue("email-verification-queue")
+    await email_verification_queue.bind(announce_user_created_exchange)
     await email_verification_queue.consume(
         SendVerificationEmailConsumer(scribly).consume
+    )
+
+    turn_notification_email_queue = await channel.declare_queue(
+        "turn-notification-email-queue"
+    )
+    await turn_notification_email_queue.bind(announce_turn_taken_exchange)
+    await turn_notification_email_queue.consume(
+        SendTurnNotificationEmailsConsumer(scribly).consume
     )
 
 

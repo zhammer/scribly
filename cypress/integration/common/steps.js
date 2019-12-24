@@ -8,8 +8,11 @@ beforeEach(() => {
 });
 
 Given("the following users exist", datatable => {
-  const usernames = datatable.hashes().map(row => row.username);
-  cy.addUsers(usernames);
+  const users = datatable.hashes().map(row => ({
+    username: row.username,
+    email_verification_status: row.email_verification_status || "verified"
+  }));
+  cy.addUsers(users);
 });
 
 Given("I am not logged in", () => {});
@@ -34,6 +37,10 @@ Given("the following stories exist", datatable => {
   );
 });
 
+When("I wait {float} seconds", seconds => {
+  cy.wait(seconds * 1000);
+});
+
 When("I hit tab", () => {
   cy.focused().tab();
 });
@@ -47,15 +54,17 @@ When(`I visit {string}`, path => {
 });
 
 When(/I click the (text|button|link) "(.*)"/, (elementType, text) => {
+  const regex = new RegExp(text);
+  console.log(regex);
   const mapping = {
     link: "a",
     button: "button"
   };
   if (elementType === "text") {
-    cy.contains(text).click();
+    cy.contains(regex).click();
   } else {
     cy.get(mapping[elementType])
-      .contains(text)
+      .contains(regex)
       .click();
   }
 });
@@ -82,7 +91,7 @@ When(`I log in as {string}`, username => {
   cy.location("pathname").should("eq", "/me");
 });
 
-Then(`I see the text {string}`, text => {
+Then(/I (?:do )?see the text "(.*)"/, text => {
   cy.contains(text);
 });
 
@@ -121,7 +130,7 @@ function getEmail(emails, expectedAddress, expectedSubject) {
 }
 
 Then(
-  "I received an email at {string} with the subject {string}",
+  /(?:I received|there is) an email at "(.*)" with the subject "(.*)"/,
   (address, subject) => {
     cy.getEmails().then(emails => {
       const email = getEmail(emails, address, subject);
