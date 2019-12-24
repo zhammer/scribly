@@ -8,8 +8,11 @@ beforeEach(() => {
 });
 
 Given("the following users exist", datatable => {
-  const usernames = datatable.hashes().map(row => row.username);
-  cy.addUsers(usernames);
+  const users = datatable.hashes().map(row => ({
+    username: row.username,
+    email_verification_status: row.email_verification_status || "verified"
+  }));
+  cy.addUsers(users);
 });
 
 Given("I am not logged in", () => {});
@@ -32,6 +35,10 @@ Given("the following stories exist", datatable => {
       turns: parseInt(storyRow.turns)
     }))
   );
+});
+
+When("I wait {float} seconds", seconds => {
+  cy.wait(seconds * 1000);
 });
 
 When("I hit tab", () => {
@@ -121,7 +128,7 @@ function getEmail(emails, expectedAddress, expectedSubject) {
 }
 
 Then(
-  "I received an email at {string} with the subject {string}",
+  /(?:I received|there is) an email at "(.*)" with the subject "(.*)"/,
   (address, subject) => {
     cy.getEmails().then(emails => {
       const email = getEmail(emails, address, subject);

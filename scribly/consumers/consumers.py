@@ -17,6 +17,7 @@ from scribly.sendgrid import SendGrid
 from scribly import env
 from scribly.use_scribly import Scribly
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +27,7 @@ class SendVerificationEmailConsumer:
 
     async def consume(self, message: aio_pika.IncomingMessage) -> None:
         async with message.process():
+            logger.info("Consuming message %s", message.body)
             user = User(**json.loads(message.body.decode()))
             await self.scribly.send_verification_email(user)
 
@@ -36,6 +38,7 @@ class SendTurnNotificationEmailsConsumer:
 
     async def consume(self, message: aio_pika.IncomingMessage) -> None:
         async with message.process():
+            logger.info("Consuming message %s", message.body)
             body = json.loads(message.body.decode())
             await self.scribly.send_turn_email_notifications(
                 body["story_id"], body["turn_number"]
@@ -43,6 +46,9 @@ class SendTurnNotificationEmailsConsumer:
 
 
 async def main():
+    logger.info("Starting consumers")
+
+    logger.info("Creating an instance of Scribly")
     # make scribly
     db_connection_kwargs = {}
     if "pass@db/scribly" in env.DATABASE_URL:
@@ -59,6 +65,7 @@ async def main():
     emailer = SendGrid(env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session)
     scribly = Scribly(Context(database, emailer, message_gateway))
 
+    logger.info("Setting up exchanges")
     # announce user created exchange
     announce_user_created_exchange = await channel.declare_exchange(
         ANNOUNCE_USER_CREATED_EXCHANGE, aio_pika.ExchangeType.FANOUT
@@ -69,6 +76,7 @@ async def main():
         ANNOUNCE_TURN_TAKEN_EXCHANGE, aio_pika.ExchangeType.FANOUT
     )
 
+    logger.info("Setting up queues")
     email_verification_queue = await channel.declare_queue("email-verification-queue")
     await email_verification_queue.bind(announce_user_created_exchange)
     await email_verification_queue.consume(

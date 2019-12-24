@@ -21,7 +21,7 @@ services:
         condition: service_healthy
       rabbit:
         condition: service_healthy
-    command: bash -c "python scripts/createdb.py && gunicorn -b 0.0.0.0:8000 -w 4 -k uvicorn.workers.UvicornWorker --log-level debug scribly.delivery.server:app"
+    command: bash -c "python scripts/createdb.py && gunicorn -b 0.0.0.0:8000 --log-level trace -w 4 -k uvicorn.workers.UvicornWorker scribly.delivery.server:app"
   worker:
     # reuse image built by web
     image: scribly/scribly

@@ -1,3 +1,5 @@
+import logging
+
 import asyncio
 from dataclasses import dataclass
 from typing import Sequence
@@ -5,6 +7,9 @@ from typing import Sequence
 from scribly import auth, emails, exceptions, policies
 from scribly.definitions import Context, Me, Story, Turn, TurnAction, User
 from scribly.util import shuffle
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -82,7 +87,13 @@ class Scribly:
             story = await self.context.database.add_turn_write(
                 user, story, text_written
             )
+            logger.info(
+                "[TURN-STORY-%d-USER-%d] Turn added to story. Announcing turn.",
+                story.id,
+                user.id,
+            )
             await self.context.message_gateway.announce_turn_taken(story)
+            logger.info("[TURN-STORY-%d-USER-%d] Turn announced.", story.id, user.id)
             return story
 
     async def take_turn_finish(self, user: User, story_id: int) -> Story:
