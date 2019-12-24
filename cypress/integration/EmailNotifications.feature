@@ -9,7 +9,7 @@ Feature: Email Notifications
             | gabe     | verified                  |
             | rakesh   | verified                  |
 
-    Scenario: Email notifications are sent after someone takes a turn
+    Scenario Outline: Email notifications are sent after someone takes a turn
         Given the following stories exist
             | title       | turns | users              | complete |
             | Black Truck | 5     | zach, gabe, rakesh | false    |
@@ -18,5 +18,14 @@ Feature: Email Notifications
         And I click on the "text" textarea
         And I type "I've been through the fires. I've felt embers down my spine."
         And I click the button "write"
-        And I wait .5 seconds
-        And I open my email at "zach@mail.com" with the subject "It's your turn on Black Truck!"
+        And I log in as "<recipient>"
+        And I open my email at "<recipient>@mail.com" with the subject "<subject>"
+        Then I see the text "rakesh wrote a section!"
+        And I see the text "<emailText>"
+        And I see the text "I've been through the fires. I've felt embers down my spine."
+
+        Examples:
+            | recipient | subject                                | emailText1              | emailText        |
+            | zach      | It's your turn on Black Truck!         | rakesh wrote a section! | it's your turn   |
+            | gabe      | rakesh took their turn on Black Truck! | rakesh wrote a section! | it's zach's turn |
+
