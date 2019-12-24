@@ -18,7 +18,7 @@ Feature: Email Notifications
         And I click on the "text" textarea
         # turn text is ignored on "pass" or "finish" actions
         And I type "I've been through the fires. I've felt embers down my spine."
-        And I click the button "<turnAction>"
+        And I click the button "^\\s\\*<turnAction>\\s\\*$"
         And I wait .5 seconds
         And I log in as "<recipient>"
         And I open my email at "<recipient>@mail.com" with the subject "<subject>"
