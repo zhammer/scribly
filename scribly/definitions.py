@@ -96,6 +96,10 @@ class MessageGateway(abc.ABC):
     async def announce_user_created(self, user: User) -> None:
         ...
 
+    @abc.abstractmethod
+    async def announce_turn_taken(self, story: Story) -> None:
+        ...
+
 
 class DatabaseGateway(abc.ABC):
     @abc.abstractmethod

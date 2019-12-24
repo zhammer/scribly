@@ -67,7 +67,9 @@ class Scribly:
 
             policies.require_user_can_take_turn_pass(user, story)
 
-            return await self.context.database.add_turn_pass(user, story)
+            story = await self.context.database.add_turn_pass(user, story)
+            await self.context.message_gateway.announce_turn_taken(story)
+            return story
 
     async def take_turn_write(
         self, user: User, story_id: int, text_written: str
@@ -77,7 +79,11 @@ class Scribly:
 
             policies.require_user_can_take_turn_write(user, story, text_written)
 
-            return await self.context.database.add_turn_write(user, story, text_written)
+            story = await self.context.database.add_turn_write(
+                user, story, text_written
+            )
+            await self.context.message_gateway.announce_turn_taken(story)
+            return story
 
     async def take_turn_finish(self, user: User, story_id: int) -> Story:
         async with self.context.database.transaction():
@@ -85,7 +91,9 @@ class Scribly:
 
             policies.require_user_can_take_turn_finish(user, story)
 
-            return await self.context.database.add_turn_finish(user, story)
+            story = await self.context.database.add_turn_finish(user, story)
+            await self.context.message_gateway.announce_turn_taken(story)
+            return story
 
     async def take_turn_write_and_finish(
         self, user: User, story_id: int, text_written: str
@@ -97,9 +105,11 @@ class Scribly:
                 user, story, text_written
             )
 
-            return await self.context.database.add_turn_write_and_finish(
+            story = await self.context.database.add_turn_write_and_finish(
                 user, story, text_written
             )
+            await self.context.message_gateway.announce_turn_taken(story)
+            return story
 
     async def get_me(self, user: User) -> Me:
         return await self.context.database.fetch_me(user)
