@@ -59,10 +59,10 @@ When(/I click the (text|button|link) "(.*)"/, (elementType, text) => {
     button: "button"
   };
   if (elementType === "text") {
-    cy.contains(text).click();
+    cy.contains(new RegExp(`^\\s\\*${text}\\s\\*$`, "g")).click();
   } else {
     cy.get(mapping[elementType])
-      .contains(text)
+      .contains(new RegExp(`^\\s*${text}\\s*$`, "g"))
       .click();
   }
 });
@@ -89,7 +89,7 @@ When(`I log in as {string}`, username => {
   cy.location("pathname").should("eq", "/me");
 });
 
-Then(`I see the text {string}`, text => {
+Then(/I (?:do )?see the text "(.*)"/, text => {
   cy.contains(text);
 });
 
