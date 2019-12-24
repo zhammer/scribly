@@ -121,6 +121,29 @@ class TestTurnNotificationEmail:
         )
         assert expected_rakesh_email_regex.match(rakesh_email.body)
 
+    def test_doesnt_send_email_to_non_verified(self) -> None:
+        # given
+        zach = make_user("zach", "verified")
+        gabe = make_user("gabe", "verified")
+        rakesh = make_user("rakesh", "pending")
+        cowriters = [zach, gabe, rakesh]
+
+        story = Story(
+            id=1,
+            title="A god walks into a bar",
+            state="in_progress",
+            created_by=zach,
+            cowriters=cowriters,
+            turns=list(make_turns(["write", "write"], cowriters)),
+        )
+
+        # when
+        emails = build_turn_email_notifications(story, turn_number=2)
+
+        # then rakesh doesn't receive an email as his email is not verified
+        assert len(emails) == 1
+        assert emails[0].to == zach.email
+
 
 user_id = 1
 
