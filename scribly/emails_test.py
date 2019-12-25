@@ -6,6 +6,7 @@ from faker import Faker
 
 from scribly.definitions import EmailVerificationState, Story, Turn, TurnAction, User
 from scribly.emails import (
+    build_added_to_story_emails,
     build_email_verification_email,
     build_turn_email_notifications,
 )
@@ -89,8 +90,8 @@ class TestTurnNotificationEmail:
                 r"<span> it's rakesh's turn</span>\s*"
                 r"</p>\s*"
                 r"<hr>\s*<em>"
-                f"{story.turns[-1].text_written}"
-                r"</em>\s*"
+                + story.turns[-1].text_written.replace("\n", "<br>")
+                + r"</em>\s*"
                 r"</body>\s*"
                 r"</html>$"
             ),
@@ -112,8 +113,8 @@ class TestTurnNotificationEmail:
                 r"<span> it's your turn</span>\s*"
                 r"</p>\s*"
                 r"<hr>\s*<em>"
-                f"{story.turns[-1].text_written}"
-                r"</em>\s*"
+                + story.turns[-1].text_written.replace("\n", "<br>")
+                + r"</em>\s*"
                 r"</body>\s*"
                 r"</html>$"
             ),
@@ -184,8 +185,8 @@ class TestTurnNotificationEmail:
                 r"<span>\s*gabe wrote a section and finished the story!\s*</span>\s*"
                 r"</p>\s*"
                 r"<hr>\s*<em>"
-                f"{story.turns[-1].text_written}"
-                r"</em>\s*"
+                + story.turns[-1].text_written.replace("\n", "<br>")
+                + r"</em>\s*"
                 r"</body>\s*"
                 r"</html>$"
             ),
@@ -302,6 +303,96 @@ class TestTurnNotificationEmail:
             re.DOTALL,
         )
         assert expected_zach_email_regex.match(zach_email.body)
+
+
+class TestAddedToStoryEmail:
+    def test_builds_added_to_story_emails(self) -> None:
+        # given
+        zach = make_user("zach", "verified")
+        gabe = make_user("gabe", "verified")
+        rakesh = make_user("rakesh", "verified")
+        cowriters = [zach, gabe, rakesh]
+
+        story = Story(
+            id=1,
+            title="Phaedrus",
+            state="in_progress",
+            created_by=zach,
+            cowriters=cowriters,
+            turns=[
+                Turn(
+                    taken_by=zach,
+                    action="write",
+                    text_written="We find Phaedrus.\nIn his caveus.",
+                )
+            ],
+        )
+
+        # when
+        emails = build_added_to_story_emails(story)
+
+        # then
+        assert len(emails) == 2
+        gabe_email = emails[0]
+        rakesh_email = emails[1]
+
+        assert gabe_email.to == gabe.email
+        assert gabe_email.subject == "zach started the story Phaedrus - it's your turn!"
+
+        assert rakesh_email.to == rakesh.email
+        assert rakesh_email.subject == "zach started the story Phaedrus"
+
+        expected_gabe_email_regex = re.compile(
+            (
+                r"<!DOCTYPE html>\s*<html lang=\"en\">\s*"
+                r"<head><style.*>.*</style></head>\s*"
+                r"<body.*>\s*"
+                r"<p>\s*"
+                r"<span>zach started the story <a\s*href=\"http://127.0.0.1:8000/stories/1\">Phaedrus</a>!\s*</span>\s*"
+                r"<span> it's your turn</span>\s*"
+                r"</p>\s*"
+                r"<div>\s*"
+                r"<h3.*>cowriters:</h3>\s*"
+                r"<ul>\s*"
+                r"<li>zach</li>\s*"
+                r"<li>gabe</li>\s*"
+                r"<li>rakesh</li>\s*"
+                r"</ul>\s*"
+                r"</div>\s*"
+                r"<hr>\s*"
+                r"<h1.*>Phaedrus</h1>\s*"
+                r"<p>We find Phaedrus.<br>In his caveus.</p>\s*"
+                r"</body>\s*"
+            ),
+            re.DOTALL,
+        )
+        assert expected_gabe_email_regex.match(gabe_email.body)
+
+        expected_rakesh_email_regex = re.compile(
+            (
+                r"<!DOCTYPE html>\s*<html lang=\"en\">\s*"
+                r"<head><style.*>.*</style></head>\s*"
+                r"<body.*>\s*"
+                r"<p>\s*"
+                r"<span>zach started the story <a\s*href=\"http://127.0.0.1:8000/stories/1\">Phaedrus</a>!\s*</span>\s*"
+                r"<span> it's gabe's turn</span>\s*"
+                r"</p>\s*"
+                r"<div>\s*"
+                r"<h3.*>cowriters:</h3>\s*"
+                r"<ul>\s*"
+                r"<li>zach</li>\s*"
+                r"<li>gabe</li>\s*"
+                r"<li>rakesh</li>\s*"
+                r"</ul>\s*"
+                r"</div>\s*"
+                r"<hr>\s*"
+                r"<h1.*>Phaedrus</h1>\s*"
+                r"<p>We find Phaedrus.<br>In his caveus.</p>\s*"
+                r"</body>\s*"
+            ),
+            re.DOTALL,
+        )
+        assert expected_rakesh_email_regex.match(rakesh_email.body)
 
 
 user_id = 1

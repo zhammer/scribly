@@ -64,7 +64,9 @@ class Scribly:
 
             full_cowriters = [user] + list(cowriters)
 
-            return await self.context.database.add_cowriters(story, full_cowriters)
+            story = await self.context.database.add_cowriters(story, full_cowriters)
+            await self.context.message_gateway.announce_cowriters_added(story)
+            return story
 
     async def take_turn_pass(self, user: User, story_id: int) -> Story:
         async with self.context.database.transaction():
@@ -136,6 +138,13 @@ class Scribly:
     ) -> None:
         story = await self.context.database.fetch_story(story_id)
         emails_to_send = emails.build_turn_email_notifications(story, turn_number)
+        await asyncio.gather(
+            *[self.context.emailer.send_email(email) for email in emails_to_send]
+        )
+
+    async def send_added_to_story_emails(self, story_id: int) -> None:
+        story = await self.context.database.fetch_story(story_id)
+        emails_to_send = emails.build_added_to_story_emails(story)
         await asyncio.gather(
             *[self.context.emailer.send_email(email) for email in emails_to_send]
         )

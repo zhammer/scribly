@@ -15,8 +15,31 @@ premailer = Premailer(
 jinja_env = Environment(loader=FileSystemLoader("email_templates"))
 
 
+def build_added_to_story_emails(story: Story) -> List[Email]:
+    assert story.cowriters
+
+    recipients = [
+        user
+        for user in story.cowriters
+        if user.email_verification_status == "verified"
+        and not (user.id == story.created_by.id)
+    ]
+
+    return [_build_added_to_story_email(story, recipient) for recipient in recipients]
+
+
+def _build_added_to_story_email(story: Story, recipient: User) -> Email:
+    body = _render_template_with_css(
+        "addedtostory.html", story=story, recipient=recipient, website_url=website_url
+    )
+    subject = f"{story.created_by.username} started the story {story.title}"
+    if story.current_writers_turn.id == recipient.id:
+        subject += " - it's your turn!"
+    return Email(subject=subject, body=body, to=recipient.email)
+
+
 def build_turn_email_notifications(story: Story, turn_number: int) -> List[Email]:
-    assert story.turns and len(story.turns) >= turn_number
+    assert len(story.turns) >= turn_number
     assert story.cowriters
 
     turn = story.turns[turn_number - 1]

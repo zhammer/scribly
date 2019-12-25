@@ -7,6 +7,7 @@ import aiohttp
 import asyncpg
 
 from scribly.consumers.constants import (
+    ANNOUNCE_COWRITERS_ADDED_EXCHANGE,
     ANNOUNCE_USER_CREATED_EXCHANGE,
     ANNOUNCE_TURN_TAKEN_EXCHANGE,
 )
@@ -45,6 +46,17 @@ class SendTurnNotificationEmailsConsumer:
             )
 
 
+class SendAddedToStoryEmailsConsumer:
+    def __init__(self, scribly: Scribly) -> None:
+        self.scribly = scribly
+
+    async def consume(self, message: aio_pika.IncomingMessage) -> None:
+        async with message.process():
+            logger.info("Consuming message %s", message.body)
+            body = json.loads(message.body.decode())
+            await self.scribly.send_added_to_story_emails(body["story_id"])
+
+
 async def main():
     logger.info("Starting consumers")
 
@@ -66,14 +78,14 @@ async def main():
     scribly = Scribly(Context(database, emailer, message_gateway))
 
     logger.info("Setting up exchanges")
-    # announce user created exchange
     announce_user_created_exchange = await channel.declare_exchange(
         ANNOUNCE_USER_CREATED_EXCHANGE, aio_pika.ExchangeType.FANOUT
     )
-
-    # announce turn taken exchange
     announce_turn_taken_exchange = await channel.declare_exchange(
         ANNOUNCE_TURN_TAKEN_EXCHANGE, aio_pika.ExchangeType.FANOUT
+    )
+    announce_cowriters_added_exchange = await channel.declare_exchange(
+        ANNOUNCE_COWRITERS_ADDED_EXCHANGE, aio_pika.ExchangeType.FANOUT
     )
 
     logger.info("Setting up queues")
@@ -89,6 +101,16 @@ async def main():
     await turn_notification_email_queue.bind(announce_turn_taken_exchange)
     await turn_notification_email_queue.consume(
         SendTurnNotificationEmailsConsumer(scribly).consume
+    )
+
+    added_to_story_notification_email_queue = await channel.declare_queue(
+        "added-to-story-notification-email-queue"
+    )
+    await added_to_story_notification_email_queue.bind(
+        announce_cowriters_added_exchange
+    )
+    await added_to_story_notification_email_queue.consume(
+        SendAddedToStoryEmailsConsumer(scribly).consume
     )
 
 

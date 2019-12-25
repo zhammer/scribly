@@ -1,0 +1,5 @@
+{% macro whose_turn_text(story, recipient) -%}
+it's{{- " " -}}
+{{- "your" if story.current_writers_turn.id == recipient.id else story.current_writers_turn.username + "'s" -}}
+{{- " " -}}turn
+{%- endmacro %}
