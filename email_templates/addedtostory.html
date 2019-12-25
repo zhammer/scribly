@@ -1,0 +1,25 @@
+{% import 'helpers.html' as helpers %}
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+  <p>
+    <span>{{ story.created_by.username }} started the story <a
+        href="{{ website_url }}/stories/{{ story.id }}">{{ story.title }}</a>!</span>
+    <span>{{ " " + helpers.whose_turn_text(story, recipient) }}</span>
+  </p>
+  <div>
+    <h3>cowriters:</h3>
+    <ul>
+      {% for cowriter in story.cowriters %}
+      <li>{{ cowriter.username }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <hr>
+  <h1>{{ story.title }}</h1>
+  <p>{{ story.turns[0].text_written|replace('\n', '<br>'|safe) }}</p>
+
+</body>
+
+</html>

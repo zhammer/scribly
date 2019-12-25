@@ -3,7 +3,8 @@ const fs = require("fs");
 const { Client } = require("pg");
 const casual = require("casual");
 
-const DATABASE_URL = process.env.DATABASE_URL || "postgres://localhost/scribly";
+const DATABASE_URL =
+  process.env.DATABASE_URL || "postgres://scribly:pass@localhost/scribly";
 const DB_SCHEMA = fs.readFileSync("migrations/createdb.sql", "utf8");
 
 class DB {
