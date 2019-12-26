@@ -18,7 +18,7 @@ from starlette.authentication import (
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from scribly.database import Database
-from scribly.definitions import Context, User
+from scribly.definitions import User
 from scribly import env
 from scribly.message_gateway import MessageGateway
 from scribly.exceptions import AuthError
@@ -72,8 +72,7 @@ class ScriblyMiddleware:
                 env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session
             )
             message_gateway = MessageGateway(channel)
-            context = Context(database, emailer, message_gateway)
-            scope["scribly"] = Scribly(context)
+            scope["scribly"] = Scribly(database, emailer, message_gateway)
 
             return await self.app(scope, receive, send)
 

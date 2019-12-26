@@ -177,10 +177,3 @@ class EmailGateway(abc.ABC):
     @abc.abstractmethod
     async def send_email(self, email: Email) -> None:
         ...
-
-
-@dataclass
-class Context:
-    database: DatabaseGateway
-    emailer: EmailGateway
-    message_gateway: MessageGateway

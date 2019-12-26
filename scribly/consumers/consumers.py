@@ -11,7 +11,7 @@ from scribly.consumers.constants import (
     ANNOUNCE_USER_CREATED_EXCHANGE,
     ANNOUNCE_TURN_TAKEN_EXCHANGE,
 )
-from scribly.definitions import Context, User
+from scribly.definitions import User
 from scribly.database import Database
 from scribly.message_gateway import MessageGateway
 from scribly.sendgrid import SendGrid
@@ -75,7 +75,7 @@ async def main():
     message_gateway = MessageGateway(channel)
     database = Database(db_connection)
     emailer = SendGrid(env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session)
-    scribly = Scribly(Context(database, emailer, message_gateway))
+    scribly = Scribly(database, emailer, message_gateway)
 
     logger.info("Setting up exchanges")
     announce_user_created_exchange = await channel.declare_exchange(

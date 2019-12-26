@@ -13,7 +13,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from scribly import exceptions
-from scribly.definitions import Context, User
+from scribly.definitions import User
 from scribly.delivery.middleware import (
     SessionAuthBackend,
     ScriblyMiddleware,
