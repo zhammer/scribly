@@ -8,13 +8,13 @@ from scribly.consumers.constants import (
     ANNOUNCE_TURN_TAKEN_EXCHANGE,
     ANNOUNCE_USER_CREATED_EXCHANGE,
 )
-from scribly.definitions import MessageGateway as MessageGatewayABC
+from scribly.definitions import MessageGateway
 from scribly.definitions import Story, User
 
 logger = logging.getLogger(__name__)
 
 
-class MessageGateway(MessageGatewayABC):
+class Rabbit(MessageGateway):
     def __init__(self, channel: aio_pika.RobustChannel):
         self.channel = channel
 
