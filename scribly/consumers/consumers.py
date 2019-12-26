@@ -1,28 +1,51 @@
 import asyncio
 import json
 import logging
+from typing import List
 
 import aio_pika
 import aiohttp
 import asyncpg
+from typing_extensions import Type, Protocol
 
+from scribly import env
 from scribly.consumers.constants import (
     ANNOUNCE_COWRITERS_ADDED_EXCHANGE,
-    ANNOUNCE_USER_CREATED_EXCHANGE,
     ANNOUNCE_TURN_TAKEN_EXCHANGE,
+    ANNOUNCE_USER_CREATED_EXCHANGE,
 )
-from scribly.definitions import Context, User
 from scribly.database import Database
-from scribly.message_gateway import MessageGateway
+from scribly.definitions import User
+from scribly.rabbit import Rabbit
 from scribly.sendgrid import SendGrid
-from scribly import env
 from scribly.use_scribly import Scribly
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class SendVerificationEmailConsumer:
+EXCHANGES = [
+    ANNOUNCE_USER_CREATED_EXCHANGE,
+    ANNOUNCE_TURN_TAKEN_EXCHANGE,
+    ANNOUNCE_COWRITERS_ADDED_EXCHANGE,
+]
+
+
+class ScriblyConsumer(Protocol):
+    QUEUE_NAME: str
+    BOUND_TO: str
+
+    def __init__(self, scribly: Scribly) -> None:
+        ...
+
+    async def consume(self, message: aio_pika.IncomingMessage) -> None:
+        ...
+
+
+class SendVerificationEmailConsumer(ScriblyConsumer):
+    QUEUE_NAME = "email-verification-queue"
+    BOUND_TO = ANNOUNCE_USER_CREATED_EXCHANGE
+
     def __init__(self, scribly: Scribly) -> None:
         self.scribly = scribly
 
@@ -33,7 +56,10 @@ class SendVerificationEmailConsumer:
             await self.scribly.send_verification_email(user)
 
 
-class SendTurnNotificationEmailsConsumer:
+class SendTurnNotificationEmailsConsumer(ScriblyConsumer):
+    QUEUE_NAME = "turn-notification-email-queue"
+    BOUND_TO = ANNOUNCE_TURN_TAKEN_EXCHANGE
+
     def __init__(self, scribly: Scribly) -> None:
         self.scribly = scribly
 
@@ -46,7 +72,10 @@ class SendTurnNotificationEmailsConsumer:
             )
 
 
-class SendAddedToStoryEmailsConsumer:
+class SendAddedToStoryEmailsConsumer(ScriblyConsumer):
+    QUEUE_NAME = "added-to-story-notification-email-queue"
+    BOUND_TO = ANNOUNCE_COWRITERS_ADDED_EXCHANGE
+
     def __init__(self, scribly: Scribly) -> None:
         self.scribly = scribly
 
@@ -55,6 +84,13 @@ class SendAddedToStoryEmailsConsumer:
             logger.info("Consuming message %s", message.body)
             body = json.loads(message.body.decode())
             await self.scribly.send_added_to_story_emails(body["story_id"])
+
+
+CONSUMERS: List[Type[ScriblyConsumer]] = [
+    SendVerificationEmailConsumer,
+    SendTurnNotificationEmailsConsumer,
+    SendAddedToStoryEmailsConsumer,
+]
 
 
 async def main():
@@ -72,50 +108,28 @@ async def main():
     sendgrid_session = aiohttp.ClientSession()
     channel = await rabbit_connection.channel()
 
-    message_gateway = MessageGateway(channel)
+    message_gateway = Rabbit(channel)
     database = Database(db_connection)
     emailer = SendGrid(env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session)
-    scribly = Scribly(Context(database, emailer, message_gateway))
+    scribly = Scribly(database, emailer, message_gateway)
 
     logger.info("Setting up exchanges")
-    announce_user_created_exchange = await channel.declare_exchange(
-        ANNOUNCE_USER_CREATED_EXCHANGE, aio_pika.ExchangeType.FANOUT
-    )
-    announce_turn_taken_exchange = await channel.declare_exchange(
-        ANNOUNCE_TURN_TAKEN_EXCHANGE, aio_pika.ExchangeType.FANOUT
-    )
-    announce_cowriters_added_exchange = await channel.declare_exchange(
-        ANNOUNCE_COWRITERS_ADDED_EXCHANGE, aio_pika.ExchangeType.FANOUT
-    )
+    exchange_by_name = {
+        exchange_name: await channel.declare_exchange(
+            exchange_name, aio_pika.ExchangeType.FANOUT
+        )
+        for exchange_name in EXCHANGES
+    }
 
-    logger.info("Setting up queues")
-    email_verification_queue = await channel.declare_queue("email-verification-queue")
-    await email_verification_queue.bind(announce_user_created_exchange)
-    await email_verification_queue.consume(
-        SendVerificationEmailConsumer(scribly).consume
-    )
-
-    turn_notification_email_queue = await channel.declare_queue(
-        "turn-notification-email-queue"
-    )
-    await turn_notification_email_queue.bind(announce_turn_taken_exchange)
-    await turn_notification_email_queue.consume(
-        SendTurnNotificationEmailsConsumer(scribly).consume
-    )
-
-    added_to_story_notification_email_queue = await channel.declare_queue(
-        "added-to-story-notification-email-queue"
-    )
-    await added_to_story_notification_email_queue.bind(
-        announce_cowriters_added_exchange
-    )
-    await added_to_story_notification_email_queue.consume(
-        SendAddedToStoryEmailsConsumer(scribly).consume
-    )
+    logger.info("Setting up consumers")
+    for consumer in CONSUMERS:
+        exchange = exchange_by_name[consumer.BOUND_TO]
+        queue = await channel.declare_queue(consumer.QUEUE_NAME)
+        await queue.bind(exchange)
+        await queue.consume(consumer(scribly).consume)
 
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(main())
     loop.run_forever()
-

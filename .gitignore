@@ -105,3 +105,9 @@ venv.bak/
 
 # used in cypress tests
 static/tempfile.html
+
+# cypress videos
+cypress/videos
+
+# vscode
+.vscode
