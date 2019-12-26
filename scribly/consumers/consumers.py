@@ -125,7 +125,7 @@ async def main():
     for consumer in CONSUMERS:
         exchange = exchange_by_name[consumer.BOUND_TO]
         queue = await channel.declare_queue(consumer.QUEUE_NAME)
-        queue.bind(exchange)
+        await queue.bind(exchange)
         await queue.consume(consumer(scribly).consume)
 
 
