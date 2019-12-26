@@ -104,4 +104,3 @@ class SessionAuthBackend(AuthenticationBackend):
             return AuthCredentials, None
 
         return (AuthCredentials(["authenticated"]), user)
-
