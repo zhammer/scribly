@@ -1,0 +1,75 @@
+version: "2.4"
+services:
+  web:
+    build: .
+    image: scribly/scribly
+    ports:
+      - "8000:8000"
+    volumes:
+      # for a hack where cypress dumps email html bodies into /static to interact with emails
+      # as a workaround for: https://github.com/cypress-io/cypress/issues/2918
+      - "./static:/project/static"
+    environment:
+      DATABASE_URL: postgres://scribly:pass@db/scribly
+      WEBSITE_URL: http://127.0.0.1:8000
+      SENDGRID_BASE_URL: http://mocksendgrid:1080
+      CLOUDAMQP_URL: amqp://guest:guest@rabbit:5672
+    depends_on:
+      db:
+        condition: service_healthy
+      mocksendgrid:
+        condition: service_healthy
+      rabbit:
+        condition: service_healthy
+    command: bash -c "python scripts/createdb.py && gunicorn -b 0.0.0.0:8000 --log-level trace -w 4 -k uvicorn.workers.UvicornWorker scribly.delivery.server:app"
+  worker:
+    # reuse image built by web
+    image: scribly/scribly
+    depends_on:
+      web:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://scribly:pass@db/scribly
+      WEBSITE_URL: http://127.0.0.1:8000
+      SENDGRID_BASE_URL: http://mocksendgrid:1080
+      CLOUDAMQP_URL: amqp://guest:guest@rabbit:5672
+    command: bash -c "PYTHONPATH=. python scribly/consumers/consumers.py"
+  rabbit:
+    image: rabbitmq:3.8.2-management-alpine
+    hostname: scriblyrabbit
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    healthcheck:
+      test: nc -z localhost 5672
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  db:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: scribly
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: scribly
+    healthcheck:
+      test: pg_isready -U scribly
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  mocksendgrid:
+    image: mockserver/mockserver
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mocksendgrid.json
+      LOG_LEVEL: "INFO"
+    ports:
+      - "9991:1080"
+    volumes:
+      - "./mocksendgrid.json:/config/mocksendgrid.json"
+    healthcheck:
+      test: wget --method=PUT http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS
+      interval: 15s
+      timeout: 10s
+      retries: 3

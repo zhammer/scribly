@@ -19,7 +19,11 @@ async def main():
             """
         )
 
-    await connection.execute(sql)
+    try:
+        await connection.execute(sql)
+    except asyncpg.exceptions.DuplicateObjectError:
+        print("db already exists, skipping migration")
+
     await connection.close()
 
 

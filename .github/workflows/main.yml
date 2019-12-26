@@ -3,33 +3,42 @@ name: CI
 on: [push]
 
 jobs:
-  build:
+  python-tests:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:11.5
-        ports: ["5432:5432"]
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        env:
-          POSTGRES_DB: scribly
-          POSTGRES_USER: runner
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: "3.7"
+      - name: cache dependencies (pip)
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - run: pip3 install -r requirements.txt -r requirements-dev.txt
+      - run: black --check .
+      - run: pytest -vv
+
+  cypress-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        containers: [1, 2, 3]
 
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
-      - uses: actions/setup-python@v1
-        with:
-          python-version: "3.7"
-      - run: sudo curl https://cli-assets.heroku.com/install.sh | sh
       - run: sudo apt-get -y install libpq-dev
-      - run: yarn install
-      - run: pip3 install -r requirements.txt -r requirements-dev.txt
-      - run: pytest -vv
-      - name: Start scribly server in background
-        run: ./test &
-      - run: yarn wait-on http://127.0.0.1:8000
-      - name: Run cypress tests
-        run: yarn run cypress run --record
+      - uses: cypress-io/github-action@v1
+        with:
+          record: true
+          parallel: true
+          start: "docker-compose up"
+          wait-on: "http://127.0.0.1:8000"
+          wait-on-timeout: 180
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          DATABASE_URL: postgres://scribly:pass@localhost/scribly

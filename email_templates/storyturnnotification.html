@@ -1,0 +1,35 @@
+{% import 'helpers.html' as helpers %}
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+  <p>
+    <a href="{{ website_url }}/stories/{{ story.id }}">go to your story</a>
+  </p>
+  <p>
+    <span>
+      {% if turn.action == "write" %}
+      {{ turn.taken_by.username }} wrote a section!
+      {% endif %}
+      {% if turn.action == "write_and_finish" %}
+      {{ turn.taken_by.username }} wrote a section and finished the story!
+      {% endif %}
+      {% if turn.action == "pass" %}
+      {{ turn.taken_by.username }} passed!
+      {% endif %}
+      {% if turn.action == "finish" %}
+      {{ turn.taken_by.username }} finished the story!
+      {% endif %}
+    </span>
+    {% if turn.action in ("write", "pass") %}
+    <span>{{ " " + helpers.whose_turn_text(story, recipient) }}</span>
+    {% endif %}
+  </p>
+  {% if turn.action in ("write", "write_and_finish") %}
+  <hr>
+  <em>{{ turn.text_written|replace('\n', '<br>'|safe) }}</em>
+  {% endif %}
+
+</body>
+
+</html>

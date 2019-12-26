@@ -1,7 +1,7 @@
 import abc
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
-from typing import AsyncIterator, Optional, Sequence, Tuple
+from typing import AsyncIterator, List, Optional, Sequence, Tuple
 
 from typing_extensions import Literal
 
@@ -52,7 +52,7 @@ class Story:
     """In order list of users cowriting the story. Includes creator. Empty in `draft` state."""
     cowriters: Optional[Sequence[User]]
     """All of the turns taken by writers to get to the story's current state."""
-    turns: Sequence[Turn]
+    turns: List[Turn]
 
     @property
     def current_writers_turn(self) -> Optional[User]:
@@ -101,6 +101,20 @@ class EmailVerificationTokenPayload:
     user_id: int
     email: str
     timestamp: float
+
+
+class MessageGateway(abc.ABC):
+    @abc.abstractmethod
+    async def announce_user_created(self, user: User) -> None:
+        ...
+
+    @abc.abstractmethod
+    async def announce_turn_taken(self, story: Story) -> None:
+        ...
+
+    @abc.abstractmethod
+    async def announce_cowriters_added(self, story: Story) -> None:
+        ...
 
 
 class DatabaseGateway(abc.ABC):
@@ -175,9 +189,3 @@ class EmailGateway(abc.ABC):
     @abc.abstractmethod
     async def send_email(self, email: Email) -> None:
         ...
-
-
-@dataclass
-class Context:
-    database: DatabaseGateway
-    emailer: EmailGateway

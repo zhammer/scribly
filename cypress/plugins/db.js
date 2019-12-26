@@ -3,7 +3,8 @@ const fs = require("fs");
 const { Client } = require("pg");
 const casual = require("casual");
 
-const DATABASE_URL = process.env.DATABASE_URL || "postgres://localhost/scribly";
+const DATABASE_URL =
+  process.env.DATABASE_URL || "postgres://scribly:pass@localhost/scribly";
 const DB_SCHEMA = fs.readFileSync("migrations/createdb.sql", "utf8");
 
 class DB {
@@ -131,22 +132,23 @@ class DB {
     return null;
   };
 
-  addUsers = async usernames => {
+  addUsers = async users => {
     const passwordHash = await this._getPasswordHash();
-    const nestedRows = usernames.reduce(
-      ([usernames, passwords, emails], username) => [
-        [...usernames, username],
+    const nestedRows = users.reduce(
+      ([usernames, passwords, emails, email_verification_statuses], user) => [
+        [...usernames, user.username],
         [...passwords, passwordHash],
-        [...emails, `${username}@mail.com`]
+        [...emails, `${user.username}@mail.com`],
+        [...email_verification_statuses, user.email_verification_status]
       ],
-      [[], [], []]
+      [[], [], [], []]
     );
 
     const client = await this._getClient();
     return await client.query(
       `
-            INSERT INTO users (username, password, email)
-            SELECT * FROM UNNEST ($1::text[], $2::text[], $3::text[])
+            INSERT INTO users (username, password, email, email_verification_status)
+            SELECT * FROM UNNEST ($1::text[], $2::text[], $3::text[], $4::email_verification_state[])
         `,
       nestedRows
     );

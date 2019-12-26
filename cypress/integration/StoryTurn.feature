@@ -50,7 +50,7 @@ Feature: Story Turn
         And I click on the "text" textarea
         And I type:
             """
-            "Ahhh", says Alvinci, putting his fingers behind his head and stretching
+            'Ahhh', says Alvinci, putting his fingers behind his head and stretching
             back. "I do love me some pizza. I also love italy."
             """
         And I click the button "write"
@@ -80,7 +80,7 @@ Feature: Story Turn
         And I see the text "cowriters: zach, gabe, rakesh"
         And I see the text "story is finished, 5 turns"
         And I see the text "Italy is beautiful in the summers."
-        And I see the text "\"Ahhh\", says Alvinci"
+        And I see the text "'Ahhh', says Alvinci"
         And I see the text "Moricori fully opens the pizza."
         And I see the text "Five years later all anyone will remember"
 

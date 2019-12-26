@@ -1,0 +1,11 @@
+[
+  {
+    "httpRequest": {
+      "path": "/v3/mail/send",
+      "method": "POST"
+    },
+    "httpResponse": {
+      "statusCode": 202
+    }
+  }
+]
