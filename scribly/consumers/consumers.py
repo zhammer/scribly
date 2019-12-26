@@ -13,7 +13,7 @@ from scribly.consumers.constants import (
 )
 from scribly.definitions import User
 from scribly.database import Database
-from scribly.message_gateway import MessageGateway
+from scribly.rabbit import Rabbit
 from scribly.sendgrid import SendGrid
 from scribly import env
 from scribly.use_scribly import Scribly
@@ -72,7 +72,7 @@ async def main():
     sendgrid_session = aiohttp.ClientSession()
     channel = await rabbit_connection.channel()
 
-    message_gateway = MessageGateway(channel)
+    message_gateway = Rabbit(channel)
     database = Database(db_connection)
     emailer = SendGrid(env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session)
     scribly = Scribly(database, emailer, message_gateway)
