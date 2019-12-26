@@ -108,3 +108,6 @@ static/tempfile.html
 
 # cypress videos
 cypress/videos
+
+# vscode
+.vscode
