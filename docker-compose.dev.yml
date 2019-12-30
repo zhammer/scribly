@@ -5,6 +5,8 @@
 version: "2.4"
 services:
   web:
+    stdin_open: true
+    tty: true
     volumes:
       # add a mount of our host code directory directly to docker so we
       # can update code in the docker container live
