@@ -11,13 +11,31 @@
     <h1>There was an error!</h1>
     <p>Scribly is a growing project and doesn't handle every error cleanly. Below is the error that
       occurred.</p>
-    <p><em>(Feel free to report this error by <a
+    <p><i>(Feel free to report this error by <a
           href="mailto:zach.the.hammer@gmail.com?subject=Scribly Bug!" target="_blank"
           rel="noopener noreferrer">sending an
           email</a> or, if you're familiar with GitHub, <a target="_blank" rel="noopener noreferrer"
-          href="https://github.com/zhammer/scribly">make an issue and/or write some code!</a>)</em>
+          href="https://github.com/zhammer/scribly">make an issue and/or write some code!</a>)</i>
     </p>
     <hr>
+    <h2>
+      {{ traceback.exc_type.__name__}}: {{ traceback }}
+    </h2>
+    {% for frame_info in frame_infos|reverse %}
+    <div style="background:lightgray">
+      <p>
+        {{ frame_info.frame.filename }}, line <i>{{ frame_info.frame.lineno }}</i>, in
+        <b>{{ frame_info.frame.function }}</b>
+      </p>
+      <div>
+        {% for code_line in frame_info.code_lines %}
+        <p {% if code_line.center %}style="background:lightblue" {% endif %}>
+          {{ code_line.line_number }}. {{ code_line.line }}</p>
+        {% endfor %}
+      </div>
+    </div>
+    <hr>
+    {% endfor %}
 </body>
 
 </html>

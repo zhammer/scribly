@@ -1,7 +1,10 @@
 import asyncio
+import inspect
 import logging
 import os
-from typing import List, Tuple
+import traceback
+from inspect import FrameInfo
+from typing import Dict, List, Tuple
 
 import aio_pika
 import asyncpg
@@ -12,14 +15,13 @@ from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from scribly import exceptions
+from scribly import env, exceptions
 from scribly.definitions import User
 from scribly.delivery.middleware import (
-    SessionAuthBackend,
     ScriblyMiddleware,
+    SessionAuthBackend,
     WaitForStartupCompleteMiddleware,
 )
-from scribly import env
 from scribly.use_scribly import Scribly
 
 DATABASE_URL = env.DATABASE_URL
@@ -272,4 +274,38 @@ async def exception(request):
 
 @app.exception_handler(500)
 async def server_error(request, exception: Exception):
-    return templates.TemplateResponse("exception.html", {"request": request}, status_code=500)
+
+    # most of this is copied from the debug starlette error page (https://github.com/encode/starlette/blob/c80558e04d06e6f55831fbe6c38dfcc5393fc56d/starlette/middleware/errors.py#L210-L227)
+    # main purpose is to remake that page but with scribly styles
+    limit = 7
+    traceback_obj = traceback.TracebackException.from_exception(
+        exception, capture_locals=True
+    )
+    frames = inspect.getinnerframes(
+        traceback_obj.exc_traceback, limit  # type: ignore
+    )
+    center_line_number = int((limit - 1) / 2)
+    return templates.TemplateResponse(
+        "exception.html",
+        {
+            "request": request,
+            "frame_infos": [
+                _build_frame_info(frame, center_line_number) for frame in frames
+            ],
+            "traceback": traceback_obj,
+        },
+        status_code=500,
+    )
+
+
+def _build_frame_info(frame: FrameInfo, center_line_number: int) -> Dict:
+    code_lines = [
+        {
+            "line": line,
+            "line_number": frame.lineno + (position - center_line_number),
+            "center": position == center_line_number,
+        }
+        for position, line in enumerate(frame.code_context or [])
+    ]
+
+    return {"frame": frame, "code_lines": code_lines}
