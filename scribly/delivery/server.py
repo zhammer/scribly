@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 templates = Jinja2Templates(directory="templates")
 
-app = Starlette(debug=True)
+app = Starlette()
 startup_complete_event = asyncio.Event()
 app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
 app.add_middleware(ScriblyMiddleware)
@@ -263,3 +263,13 @@ async def story_page(request):
         return templates.TemplateResponse(
             "story.html", {"request": request, "user": request.user, "story": story,},
         )
+
+
+@app.route("/exception")
+async def exception(request):
+    raise Exception("Raising an exception, intentionally!")
+
+
+@app.exception_handler(500)
+async def server_error(request, exception: Exception):
+    return templates.TemplateResponse("exception.html", {"request": request}, status_code=500)
