@@ -53,6 +53,10 @@ When(`I visit {string}`, path => {
   cy.visit(path);
 });
 
+When(`I visit {string} expecting a non-200 response`, path => {
+  cy.visit(path, { failOnStatusCode: false });
+});
+
 When(/I click the (text|button|link) "(.*)"/, (elementType, text) => {
   const regex = new RegExp(text);
   console.log(regex);
