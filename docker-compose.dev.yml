@@ -1,0 +1,18 @@
+# docker compose override file with dev settings, specifically mounting the host code
+# directory to the container so that code changes to the host code directory will reload
+# the container's server. (seems like this is quite slow on macs: https://stackoverflow.com/a/38889958)
+
+version: "2.4"
+services:
+  web:
+    stdin_open: true
+    tty: true
+    volumes:
+      # add a mount of our host code directory directly to docker so we
+      # can update code in the docker container live
+      - type: bind
+        source: "."
+        target: "/project"
+        read_only: true
+    # run uvicorn with hot relaoad enabled
+    command: bash -c "python scripts/createdb.py && uvicorn --host 0.0.0.0 --port 8000 --reload scribly.delivery.server:app"
