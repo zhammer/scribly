@@ -9,6 +9,11 @@
       background: lightgray;
     }
 
+    .frame__title {
+      padding: 5px;
+      border-bottom: solid 2px;
+    }
+
     .code-line {
       white-space: pre-wrap;
     }
@@ -40,7 +45,7 @@
     </h2>
     {% for frame_info in frame_infos|reverse %}
     <div class="frame">
-      <p>
+      <p class="frame__title">
         {{ frame_info.frame.filename }}, line <i>{{ frame_info.frame.lineno }}</i>, in
         <b>{{ frame_info.frame.function }}</b>
       </p>
