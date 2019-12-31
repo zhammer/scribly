@@ -4,6 +4,19 @@
 
 <head>
   {{ head.head("Uh oh!") }}
+  <style type='text/css'>
+    .frame {
+      background: lightgray;
+    }
+
+    .code-line {
+      white-space: pre-wrap;
+    }
+
+    .code-line--center {
+      background: lightyellow;
+    }
+  </style>
 </head>
 
 <body>
@@ -22,16 +35,16 @@
       {{ traceback.exc_type.__name__}}: {{ traceback }}
     </h2>
     {% for frame_info in frame_infos|reverse %}
-    <div style="background:lightgray">
+    <div class="frame">
       <p>
         {{ frame_info.frame.filename }}, line <i>{{ frame_info.frame.lineno }}</i>, in
         <b>{{ frame_info.frame.function }}</b>
       </p>
       <div>
-        {% for code_line in frame_info.code_lines %}
-        <p {% if code_line.center %}style="background:lightblue" {% endif %}>
-          {{ code_line.line_number }}. {{ code_line.line }}</p>
-        {% endfor %}
+        {%- for code_line in frame_info.code_lines -%}
+        <p class="code-line {% if code_line.center %}code-line--center{% endif %}">
+          {{- code_line.line_number -}}. {{ code_line.line }}</p>
+        {%- endfor -%}
       </div>
     </div>
     <hr>
