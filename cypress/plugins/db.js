@@ -160,7 +160,7 @@ function odds(likelihood) {
 }
 
 function range(length) {
-  return [...Array(5).keys()];
+  return [...Array(length).keys()];
 }
 
 module.exports = DB;

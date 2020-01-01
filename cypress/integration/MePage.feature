@@ -46,9 +46,11 @@ Feature: Me Page
         Then the "drafts" section has the stories
             | title             |
             | Waiting for Dotty |
-        And the "in progress" section has the stories
+        And the "your turn" section has the stories
+            | title        |
+            | The cool dog |
+        And the "waiting for others" section has the stories
             | title           |
-            | The cool dog    |
             | Debussys peanut |
         And the "done" section has the stories
             | title     |
