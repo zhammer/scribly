@@ -1,7 +1,7 @@
 import abc
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
-from typing import AsyncIterator, List, Optional, Sequence, Tuple
+from typing import AsyncIterator, List, Optional, Sequence, Tuple, cast
 
 from typing_extensions import Literal
 
@@ -63,6 +63,22 @@ class Story:
 class Me:
     user: User
     stories: Sequence[Story]
+
+    @property
+    def your_turn(self) -> Sequence[Story]:
+        return [
+            story
+            for story in self.in_progress
+            if story.current_writers_turn.id == self.user.id  # type: ignore
+        ]
+
+    @property
+    def waiting_for_others(self) -> Sequence[Story]:
+        return [
+            story
+            for story in self.in_progress
+            if not story.current_writers_turn.id == self.user.id  # type: ignore
+        ]
 
     @property
     def in_progress(self) -> Sequence[Story]:
