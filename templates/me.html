@@ -21,9 +21,19 @@
         </ul>
       </section>
       <section>
-        <h3>in progress</h3>
+        <h3>your turn</h3>
         <ul>
-          {% for story in me.in_progress %}
+          {% for story in me.your_turn %}
+          <li>
+            <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section>
+        <h3>waiting for others</h3>
+        <ul>
+          {% for story in me.waiting_for_others %}
           <li>
             <a href="/stories/{{ story.id }}">{{ story.title }}</a>
           </li>
