@@ -12,6 +12,11 @@
     .frame__title {
       padding: 5px;
       border-bottom: solid 2px;
+      word-wrap: break-word;
+    }
+
+    .frame__code {
+      overflow-x: scroll;
     }
 
     .code-line {
@@ -48,7 +53,7 @@
         {{ frame_info.frame.filename }}, line <i>{{ frame_info.frame.lineno }}</i>, in
         <b>{{ frame_info.frame.function }}</b>
       </p>
-      <div>
+      <div class="frame__code">
         {%- for code_line in frame_info.code_lines -%}
         <p class="code-line {% if code_line.center %}code-line--center{% endif %}">
           {{- code_line.line_number -}}. {{ code_line.line }}</p>
