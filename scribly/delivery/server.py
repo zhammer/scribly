@@ -14,6 +14,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from starlette.routing import Route
 
 from scribly import env, exceptions
 from scribly.definitions import User
@@ -32,18 +33,7 @@ logger = logging.getLogger(__name__)
 
 templates = Jinja2Templates(directory="templates")
 
-app = Starlette()
-startup_complete_event = asyncio.Event()
-app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
-app.add_middleware(ScriblyMiddleware)
-app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
-app.add_middleware(
-    WaitForStartupCompleteMiddleware, startup_complete_event=startup_complete_event
-)
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
-@app.on_event("startup")
 async def startup():
     connection_kwargs = {}
     if "pass@db/scribly" in DATABASE_URL:
@@ -58,13 +48,11 @@ async def startup():
     startup_complete_event.set()
 
 
-@app.on_event("shutdown")
 async def shutdown():
     await app.state.connection_pool.close()
     await app.state.rabbit_connection.close()
 
 
-@app.route("/")
 async def homepage(request):
     if isinstance(request.user, User):
         return RedirectResponse("/me")
@@ -72,7 +60,6 @@ async def homepage(request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.route("/me")
 async def me(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/")
@@ -91,7 +78,6 @@ async def me(request):
     return templates.TemplateResponse("me.html", {"request": request, "me": me})
 
 
-@app.route("/login")
 async def log_in_page(request):
     if isinstance(request.user, User):
         return RedirectResponse("/me")
@@ -99,7 +85,6 @@ async def log_in_page(request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-@app.route("/login", methods=["POST"])
 async def login(request):
     form = await request.form()
     scribly: Scribly = request.scope["scribly"]
@@ -115,7 +100,6 @@ async def login(request):
     return RedirectResponse("/me", status_code=303)
 
 
-@app.route("/signup", methods=["POST"])
 async def sign_up(request):
     form = await request.form()
     username = form["username"]
@@ -139,13 +123,11 @@ async def sign_up(request):
     return RedirectResponse(f"/me", status_code=303)
 
 
-@app.route("/logout", methods=["GET", "POST"])
 async def logout(request):
     request.session.clear()
     return RedirectResponse("/", status_code=303)
 
 
-@app.route("/signup", methods=["GET"])
 async def sign_up_page(request):
     if isinstance(request.user, User):
         return RedirectResponse("/me")
@@ -153,7 +135,6 @@ async def sign_up_page(request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
 
-@app.route("/new")
 async def new_story(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/")
@@ -161,7 +142,6 @@ async def new_story(request):
     return templates.TemplateResponse("newstory.html", {"request": request})
 
 
-@app.route("/new", methods=["POST"])
 async def new_story_submit(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/", status_code=303)
@@ -176,7 +156,6 @@ async def new_story_submit(request):
     return RedirectResponse(f"/stories/{story.id}", status_code=303)
 
 
-@app.route("/stories/{story_id}/addcowriters", methods=["POST"])
 async def add_cowriters(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/", status_code=303)
@@ -197,7 +176,6 @@ async def add_cowriters(request):
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
-@app.route("/email-verification", methods=["POST"])
 async def request_email_verification_email(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/", status_code=303)
@@ -209,7 +187,6 @@ async def request_email_verification_email(request):
     )
 
 
-@app.route("/email-verification", methods=["GET"])
 async def verify_email_link(request):
     token = request.query_params["token"]
     scribly: Scribly = request.scope["scribly"]
@@ -219,7 +196,6 @@ async def verify_email_link(request):
     )
 
 
-@app.route("/stories/{story_id}/turn", methods=["POST"])
 async def submit_turn(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/", status_code=303)
@@ -246,7 +222,6 @@ async def submit_turn(request):
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
-@app.route("/stories/{story_id}")
 async def story_page(request):
     if not isinstance(request.user, User):
         return RedirectResponse("/", status_code=303)
@@ -267,12 +242,10 @@ async def story_page(request):
         )
 
 
-@app.route("/exception")
 async def exception(request):
     raise Exception("Raising an exception, intentionally!")
 
 
-@app.exception_handler(500)
 async def server_error(request, exception: Exception):
 
     # most of this is copied from the debug starlette error page (https://github.com/encode/starlette/blob/c80558e04d06e6f55831fbe6c38dfcc5393fc56d/starlette/middleware/errors.py#L210-L227)
@@ -309,3 +282,37 @@ def _build_frame_info(frame: FrameInfo, center_line_number: int) -> Dict:
     ]
 
     return {"frame": frame, "code_lines": code_lines}
+
+
+app = Starlette(
+    on_startup=[startup],
+    on_shutdown=[shutdown],
+    routes=[
+        Route("/", homepage),
+        Route("/me", me),
+        Route("/login", log_in_page),
+        Route("/login", login, methods=["POST"]),
+        Route("/signup", sign_up, methods=["POST"]),
+        Route("/logout", logout, methods=["GET", "POST"]),
+        Route("/signup", sign_up_page),
+        Route("/new", new_story),
+        Route("/new", new_story_submit, methods=["POST"]),
+        Route("/stories/{story_id}/addcowriters", add_cowriters, methods=["POST"]),
+        Route(
+            "/email-verification", request_email_verification_email, methods=["POST"]
+        ),
+        Route("/email-verification", verify_email_link),
+        Route("/stories/{story_id}/turn", submit_turn, methods=["POST"]),
+        Route("/stories/{story_id}", story_page),
+        Route("/exception", exception),
+    ],
+    exception_handlers={500: server_error},
+)
+startup_complete_event = asyncio.Event()
+app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
+app.add_middleware(ScriblyMiddleware)
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
+app.add_middleware(
+    WaitForStartupCompleteMiddleware, startup_complete_event=startup_complete_event
+)
+app.mount("/static", StaticFiles(directory="static"), name="static")
