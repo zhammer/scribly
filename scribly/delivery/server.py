@@ -21,7 +21,6 @@ from scribly.definitions import User
 from scribly.delivery.middleware import (
     ScriblyMiddleware,
     SessionAuthBackend,
-    WaitForStartupCompleteMiddleware,
 )
 from scribly.use_scribly import Scribly
 
@@ -44,8 +43,6 @@ async def startup():
     )
 
     app.state.rabbit_connection = await aio_pika.connect_robust(env.CLOUDAMQP_URL)
-
-    startup_complete_event.set()
 
 
 async def shutdown():
@@ -308,11 +305,7 @@ app = Starlette(
     ],
     exception_handlers={500: server_error},
 )
-startup_complete_event = asyncio.Event()
 app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
 app.add_middleware(ScriblyMiddleware)
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
-app.add_middleware(
-    WaitForStartupCompleteMiddleware, startup_complete_event=startup_complete_event
-)
 app.mount("/static", StaticFiles(directory="static"), name="static")
