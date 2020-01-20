@@ -44,8 +44,6 @@ async def startup():
 
     app.state.rabbit_connection = await aio_pika.connect_robust(env.CLOUDAMQP_URL)
 
-    startup_complete_event.set()
-
 
 async def shutdown():
     await app.state.connection_pool.close()
