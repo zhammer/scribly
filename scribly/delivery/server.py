@@ -12,16 +12,14 @@ from starlette.applications import Starlette
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import HTMLResponse, RedirectResponse, Response
+from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from starlette.routing import Route
 
 from scribly import env, exceptions
 from scribly.definitions import User
-from scribly.delivery.middleware import (
-    ScriblyMiddleware,
-    SessionAuthBackend,
-)
+from scribly.delivery.middleware import ScriblyMiddleware, SessionAuthBackend
+from scribly.jinja_helpers import RemoveNewlines
 from scribly.use_scribly import Scribly
 
 DATABASE_URL = env.DATABASE_URL
@@ -31,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 templates = Jinja2Templates(directory="templates")
+templates.env.add_extension(RemoveNewlines)
 
 
 async def startup():
