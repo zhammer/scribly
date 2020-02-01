@@ -45,4 +45,15 @@ Feature: Nudge
             | it's my turn          | false    |
             | the story is finished | true     |
 
-    Scenario Outline: Nudge fails
+    Scenario: Nudge fails if nudgee's email isn't verified
+        Given the following users exist
+            | username | email_verification_status |
+            | zach     | verified                  |
+            | gabe     | pending                   |
+        And the following stories exist
+            | title       | turns | users      | complete |
+            | Assume Form | 1     | zach, gabe | false    |
+        And I am logged in as zach
+        And I visit "/stories/1"
+        And I click the button "nudge"
+        Then I see the text "gabe hasn't verified their email yet!"
