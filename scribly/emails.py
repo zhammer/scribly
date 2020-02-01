@@ -34,7 +34,7 @@ def build_added_to_story_emails(story: Story) -> List[Email]:
 
 def _build_added_to_story_email(story: Story, recipient: User) -> Email:
     body = _render_template_with_css(
-        "addedtostory.html", story=story, recipient=recipient, website_url=website_url
+        "addedtostory.html", story=story, recipient=recipient
     )
     subject = f"{story.created_by.username} started the story {story.title}"
     if story.current_writers_turn.id == recipient.id:
@@ -62,11 +62,7 @@ def build_turn_email_notifications(story: Story, turn_number: int) -> List[Email
 
 def _build_turn_email_notification(story: Story, turn: Turn, recipient: User) -> Email:
     body = _render_template_with_css(
-        "storyturnnotification.html",
-        story=story,
-        turn=turn,
-        recipient=recipient,
-        website_url=website_url,
+        "storyturnnotification.html", story=story, turn=turn, recipient=recipient
     )
     subject: str
     if turn.action in ("pass", "write"):
