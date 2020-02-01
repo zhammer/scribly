@@ -22,4 +22,3 @@ def test_remove_new_lines() -> None:
 </div>
 """
     assert output == expected
-
