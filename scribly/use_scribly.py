@@ -167,3 +167,11 @@ class Scribly:
             policies.require_valid_email_verification(user, verification_token_payload)
             await self.database.update_email_verification_status(user, "verified")
             return verification_token_payload.email
+
+    async def nudge(self, nudger: User, nudgee_id: int, story_id: int) -> None:
+        nudgee = await self.database.fetch_user(nudgee_id, for_update=False)
+        story = await self.database.fetch_story(story_id, for_update=False)
+        policies.require_can_nudge(nudger, nudgee, story)
+
+        nudge_email = emails.build_nudge_email(nudger, nudgee, story)
+        await self.emailer.send_email(nudge_email)

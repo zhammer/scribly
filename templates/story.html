@@ -48,6 +48,13 @@
         </div>
       </form>
       {% endif %}
+      {% if story.state == "in_progress" and not story.current_writers_turn == user %}
+      <form id="nudge-form"
+        action="/stories/{{ story.id }}/nudge/{{ story.current_writers_turn.id }}" method="post">
+        <button type="submit">nudge {{ story.current_writers_turn.username }} to take their
+          turn</button>
+      </form>
+      {% endif %}
       <div class="story__details">
         <p>cowriters: {{ story.cowriters|map(attribute='username')|join(', ')}}</p>
         <p>
