@@ -148,3 +148,20 @@ def require_valid_email_verification(
     # lol i am using abs() here _just in case_ i put these in the wrong order..
     if abs(time.time() - payload.timestamp) > (24 * 60 * 60):
         raise ScriblyException("Email token expired")
+
+
+def require_can_nudge(nudger: User, nudgee: User, story: Story) -> None:
+    if not story.state == "in_progress":
+        raise ScriblyException("You can only send a nudge if the story is in progress.")
+
+    assert story.cowriters
+    if not nudger in story.cowriters:
+        raise ScriblyException(
+            "You can't send a nudge for a story you're not a part of!"
+        )
+
+    if not nudgee == story.current_writers_turn:
+        raise ScriblyException(f"It's not {nudgee.username}'s turn!")
+
+    if not nudgee.email_verification_status == "verified":
+        raise ScriblyException(f"{nudgee.username} hasn't verified their email yet!")

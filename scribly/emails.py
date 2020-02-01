@@ -16,6 +16,7 @@ premailer = Premailer(
 jinja_env = Environment(
     loader=FileSystemLoader("email_templates"), extensions=[RemoveNewlines]
 )
+jinja_env.globals["website_url"] = website_url
 
 
 def build_added_to_story_emails(story: Story) -> List[Email]:
@@ -86,6 +87,14 @@ def build_email_verification_email(user: User, token: str) -> Email:
         "verification.html", verification_link=verification_link, user=user
     )
     return Email(subject="Verify your email", body=body, to=user.email)
+
+
+def build_nudge_email(nudger: User, nudgee: User, story: Story) -> Email:
+    subject = f"{nudger.username} nudged you to take your turn on {story.title}"
+    body = _render_template_with_css(
+        "nudge.html", nudger=nudger, nudgee=nudgee, story=story
+    )
+    return Email(subject, body, to=nudgee.email)
 
 
 def _render_template_with_css(template_name: str, **template_kwargs):
