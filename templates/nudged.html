@@ -1,0 +1,16 @@
+{% import 'head.html' as head %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {{ head.head('Nudge delivered') }}
+</head>
+
+<body>
+  <div class="page">
+    <h3>{{ user.username }}, your nudge has been delivered.</h3>
+    <a href="/story/{{ story.id }}">go back to story.</a>
+  </div>
+</body>
+
+</html>

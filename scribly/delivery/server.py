@@ -239,6 +239,21 @@ async def story_page(request):
         )
 
 
+async def nudge(request):
+    if not isinstance(request.user, User):
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+    nudgee_id = int(request.path_params["nudgee_id"])
+
+    scribly: Scribly = request.scope["scribly"]
+    story = await scribly.nudge(request.user, nudgee_id, story_id)
+
+    return templates.TemplateResponse(
+        "nudged.html", {"request": request, "story_id": story, "user": user}
+    )
+
+
 async def exception(request):
     raise Exception("Raising an exception, intentionally!")
 
@@ -301,6 +316,7 @@ app = Starlette(
         Route("/email-verification", verify_email_link),
         Route("/stories/{story_id}/turn", submit_turn, methods=["POST"]),
         Route("/stories/{story_id}", story_page),
+        Route("/stories/{story_id}/nudge/{nudgee_id}", nudge),
         Route("/exception", exception),
     ],
     exception_handlers={500: server_error},
