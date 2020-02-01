@@ -3,3 +3,7 @@ it's{{- " " -}}
 {{- "your" if story.current_writers_turn.id == recipient.id else story.current_writers_turn.username + "'s" -}}
 {{- " " -}}turn
 {%- endmacro %}
+
+{% macro story_link(story) -%}
+<a href="{{ website_url }}/stories/{{ story.id }}">{{ story.title }}</a>
+{%- endmacro %}
