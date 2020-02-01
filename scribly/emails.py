@@ -6,13 +6,16 @@ from premailer import Premailer
 
 from scribly import env
 from scribly.definitions import Email, Story, Turn, User
+from scribly.jinja_helpers import RemoveNewlines
 from scribly.util import read_once
 
 website_url = env.WEBSITE_URL
 premailer = Premailer(
     css_text=read_once("static/style.css"), cssutils_logging_level="CRITICAL"
 )
-jinja_env = Environment(loader=FileSystemLoader("email_templates"))
+jinja_env = Environment(
+    loader=FileSystemLoader("email_templates"), extensions=[RemoveNewlines]
+)
 jinja_env.globals["website_url"] = website_url
 
 
