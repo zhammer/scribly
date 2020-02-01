@@ -16,9 +16,7 @@ def test_remove_new_lines() -> None:
 
     expected = """
 <div>
-    <p>
-        this is a paragraph with long text. i'm adding a newline, but i don't want the newline to appear in the rendered output.
-    </p>
+    <p>this is a paragraph with long text. i'm adding a newline, but i don't want the newline to appear in the rendered output.</p>
 </div>
 """
     assert output == expected
