@@ -247,10 +247,10 @@ async def nudge(request):
     nudgee_id = int(request.path_params["nudgee_id"])
 
     scribly: Scribly = request.scope["scribly"]
-    story = await scribly.nudge(request.user, nudgee_id, story_id)
+    await scribly.nudge(request.user, nudgee_id, story_id)
 
     return templates.TemplateResponse(
-        "nudged.html", {"request": request, "story_id": story, "user": user}
+        "nudged.html", {"request": request, "story_id": story_id, "user": request.user}
     )
 
 
@@ -316,7 +316,7 @@ app = Starlette(
         Route("/email-verification", verify_email_link),
         Route("/stories/{story_id}/turn", submit_turn, methods=["POST"]),
         Route("/stories/{story_id}", story_page),
-        Route("/stories/{story_id}/nudge/{nudgee_id}", nudge),
+        Route("/stories/{story_id}/nudge/{nudgee_id}", nudge, methods=["POST"]),
         Route("/exception", exception),
     ],
     exception_handlers={500: server_error},
