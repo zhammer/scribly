@@ -1,12 +1,10 @@
-import os
 import time
-from typing import Tuple
 
 import argon2
 import itsdangerous
 
-from scribly.definitions import EmailVerificationTokenPayload, User
 from scribly import env
+from scribly.definitions import EmailVerificationTokenPayload, User
 
 email_verification_secret = env.EMAIL_VERIFICATION_SECRET
 email_verification_serializer = itsdangerous.Serializer(email_verification_secret)

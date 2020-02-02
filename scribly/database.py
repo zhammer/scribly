@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from typing import AsyncIterator, Dict, Optional, Sequence, Tuple
 
 import asyncpg
@@ -85,14 +86,7 @@ class Database(DatabaseGateway):
             story.id,
         )
 
-        return Story(
-            id=story.id,
-            title=story.title,
-            state="in_progress",
-            created_by=story.created_by,
-            cowriters=cowriters,
-            turns=story.turns,
-        )
+        return replace(story, state="in_progress", cowriters=cowriters)
 
     async def update_email_verification_status(
         self, user: User, status: EmailVerificationState
@@ -105,12 +99,7 @@ class Database(DatabaseGateway):
             user.id,
             status,
         )
-        return User(
-            id=user.id,
-            username=user.username,
-            email=user.email_verification_status,
-            email_verification_status=status,
-        )
+        return replace(user, email_verification_status=status)
 
     async def fetch_user(self, user_id: int, for_update: bool = False) -> User:
         user_record = await self.connection.fetchrow(
@@ -203,14 +192,7 @@ class Database(DatabaseGateway):
             self.QUERY_INSERT_TURN, story.id, user.id, "pass", ""
         )
         turn = _pluck_turn(turn_record, {user.id: user})
-        return Story(
-            id=story.id,
-            title=story.title,
-            state=story.state,
-            created_by=story.created_by,
-            cowriters=story.cowriters,
-            turns=(list(story.turns) + [turn]),
-        )
+        return replace(story, turns=story.turns + [turn])
 
     async def add_turn_write(
         self, user: User, story: Story, text_written: str
@@ -219,14 +201,7 @@ class Database(DatabaseGateway):
             self.QUERY_INSERT_TURN, story.id, user.id, "write", text_written,
         )
         turn = _pluck_turn(turn_record, {user.id: user})
-        return Story(
-            id=story.id,
-            title=story.title,
-            state=story.state,
-            created_by=story.created_by,
-            cowriters=story.cowriters,
-            turns=(list(story.turns) + [turn]),
-        )
+        return replace(story, turns=story.turns + [turn])
 
     async def add_turn_finish(self, user: User, story: Story) -> Story:
         turn_record = await self.connection.fetchrow(
@@ -240,14 +215,7 @@ class Database(DatabaseGateway):
             story.id,
         )
         turn = _pluck_turn(turn_record, {user.id: user})
-        return Story(
-            id=story.id,
-            title=story.title,
-            state="done",
-            created_by=story.created_by,
-            cowriters=story.cowriters,
-            turns=(list(story.turns) + [turn]),
-        )
+        return replace(story, state="done", turns=story.turns + [turn])
 
     async def add_turn_write_and_finish(
         self, user: User, story: Story, text_written: str
@@ -263,14 +231,7 @@ class Database(DatabaseGateway):
             story.id,
         )
         turn = _pluck_turn(turn_record, {user.id: user})
-        return Story(
-            id=story.id,
-            title=story.title,
-            state="done",
-            created_by=story.created_by,
-            cowriters=story.cowriters,
-            turns=(list(story.turns) + [turn]),
-        )
+        return replace(story, state="done", turns=story.turns + [turn])
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[None]:

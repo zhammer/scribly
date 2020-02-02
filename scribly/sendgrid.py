@@ -4,7 +4,6 @@ import aiohttp
 
 from scribly.definitions import Email, EmailGateway
 
-
 logger = logging.getLogger(__name__)
 
 
