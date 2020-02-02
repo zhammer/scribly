@@ -5,7 +5,7 @@ import os
 import traceback
 from contextlib import asynccontextmanager
 from inspect import FrameInfo
-from typing import AsyncGenerator, AsyncIterator, Dict, List, Tuple
+from typing import AsyncGenerator, AsyncIterator, Dict, List, Optional, Tuple
 
 import aio_pika
 import aiohttp
@@ -21,7 +21,6 @@ from starlette.templating import Jinja2Templates
 from scribly import env, exceptions
 from scribly.database import Database
 from scribly.definitions import User
-from scribly.delivery.middleware import SessionAuthBackend
 from scribly.jinja_helpers import RemoveNewlines
 from scribly.rabbit import Rabbit
 from scribly.sendgrid import SendGrid
@@ -68,34 +67,49 @@ async def get_scribly(app: Starlette) -> AsyncGenerator[Scribly, None]:
     await rabbit_channel.close()
 
 
+def get_session_user(request) -> Optional[User]:
+    session_user = request.session.get("user", None)
+    if not session_user:
+        return None
+
+    try:
+        return User(**session_user)
+    except Exception as e:
+        print(f"Error plucking user from session: {e}")
+        return None
+
+
+def set_session_user(request, user: User) -> None:
+    request.session["user"] = user.__dict__
+
+
+def clear_session_user(request) -> None:
+    del request.session["user"]
+
+
 async def homepage(request):
-    if isinstance(request.user, User):
+    user = get_session_user(request)
+    if user:
         return RedirectResponse("/me")
 
     return templates.TemplateResponse("index.html", {"request": request})
 
 
 async def me(request):
-    if not isinstance(request.user, User):
+    user = get_session_user(request)
+    if not user:
         return RedirectResponse("/")
 
     async with get_scribly(request.app) as scribly:
-        me = await scribly.get_me(request.user)
+        me = await scribly.get_me(user)
 
-    user = me.user
-
-    request.session["user"] = {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "email_verification_status": user.email_verification_status,
-    }
-
+    set_session_user(request, me.user)
     return templates.TemplateResponse("me.html", {"request": request, "me": me})
 
 
 async def log_in_page(request):
-    if isinstance(request.user, User):
+    user = get_session_user(request)
+    if user:
         return RedirectResponse("/me")
 
     return templates.TemplateResponse("login.html", {"request": request})
@@ -107,13 +121,7 @@ async def login(request):
     async with get_scribly(request.app) as scribly:
         user = await scribly.log_in(form["username"], form["password"])
 
-    request.session["user"] = {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "email_verification_status": user.email_verification_status,
-    }
-
+    set_session_user(request, user)
     return RedirectResponse("/me", status_code=303)
 
 
@@ -130,50 +138,49 @@ async def sign_up(request):
     async with get_scribly(request.app) as scribly:
         user = await scribly.sign_up(username, password, email)
 
-    request.session["user"] = {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "email_verification_status": user.email_verification_status,
-    }
+    set_session_user(request, user)
 
     return RedirectResponse(f"/me", status_code=303)
 
 
 async def logout(request):
-    request.session.clear()
+    clear_session_user(request)
     return RedirectResponse("/", status_code=303)
 
 
 async def sign_up_page(request):
-    if isinstance(request.user, User):
+    user = get_session_user(request)
+    if user:
         return RedirectResponse("/me")
 
     return templates.TemplateResponse("signup.html", {"request": request})
 
 
 async def new_story(request):
-    if not isinstance(request.user, User):
+    user = get_session_user(request)
+    if not user:
         return RedirectResponse("/")
 
     return templates.TemplateResponse("newstory.html", {"request": request})
 
 
 async def new_story_submit(request):
-    if not isinstance(request.user, User):
+    user = get_session_user(request)
+    if not user:
         return RedirectResponse("/", status_code=303)
 
     form = await request.form()
     logger.info("received new story submission: %s", form)
 
     async with get_scribly(request.app) as scribly:
-        story = await scribly.start_story(request.user, form["title"], form["body"])
+        story = await scribly.start_story(user, form["title"], form["body"])
 
     return RedirectResponse(f"/stories/{story.id}", status_code=303)
 
 
 async def add_cowriters(request):
-    if not isinstance(request.user, User):
+    user = get_session_user(request)
+    if not user:
         return RedirectResponse("/", status_code=303)
 
     story_id = int(request.path_params["story_id"])
@@ -187,20 +194,21 @@ async def add_cowriters(request):
         cowriter_usernames.append(form["person-3"])
 
     async with get_scribly(request.app) as scribly:
-        await scribly.add_cowriters(request.user, story_id, cowriter_usernames)
+        await scribly.add_cowriters(user, story_id, cowriter_usernames)
 
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
 async def request_email_verification_email(request):
-    if not isinstance(request.user, User):
+    user = get_session_user(request)
+    if not user:
         return RedirectResponse("/", status_code=303)
 
     async with get_scribly(request.app) as scribly:
-        await scribly.send_verification_email(request.user)
+        await scribly.send_verification_email(user)
 
     return templates.TemplateResponse(
-        "emailverificationrequested.html", {"request": request, "user": request.user}
+        "emailverificationrequested.html", {"request": request, "user": user}
     )
 
 
@@ -215,7 +223,8 @@ async def verify_email_link(request):
 
 
 async def submit_turn(request):
-    if not isinstance(request.user, User):
+    user = get_session_user(request)
+    if not user:
         return RedirectResponse("/", status_code=303)
 
     story_id = int(request.path_params["story_id"])
@@ -224,32 +233,31 @@ async def submit_turn(request):
     action = form["action"]
     if not action in {"write", "pass", "finish", "write_and_finish"}:
         raise RuntimeError(
-            f"Unknown turn action {action} from user {request.user.id} for story {story_id}."
+            f"Unknown turn action {action} from user {user.id} for story {story_id}."
         )
 
     async with get_scribly(request.app) as scribly:
         if action == "write":
-            await scribly.take_turn_write(request.user, story_id, form["text"])
+            await scribly.take_turn_write(user, story_id, form["text"])
         if action == "pass":
-            await scribly.take_turn_pass(request.user, story_id)
+            await scribly.take_turn_pass(user, story_id)
         if action == "finish":
-            await scribly.take_turn_finish(request.user, story_id)
+            await scribly.take_turn_finish(user, story_id)
         if action == "write_and_finish":
-            await scribly.take_turn_write_and_finish(
-                request.user, story_id, form["text"]
-            )
+            await scribly.take_turn_write_and_finish(user, story_id, form["text"])
 
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
 async def story_page(request):
-    if not isinstance(request.user, User):
+    user = get_session_user(request)
+    if not user:
         return RedirectResponse("/", status_code=303)
 
     story_id = int(request.path_params["story_id"])
 
     async with get_scribly(request.app) as scribly:
-        story = await scribly.get_story(request.user, story_id)
+        story = await scribly.get_story(user, story_id)
 
     if story.state == "draft":
         return templates.TemplateResponse(
@@ -258,22 +266,23 @@ async def story_page(request):
 
     if story.state in {"in_progress", "done"}:
         return templates.TemplateResponse(
-            "story.html", {"request": request, "user": request.user, "story": story,},
+            "story.html", {"request": request, "user": user, "story": story,},
         )
 
 
 async def nudge(request):
-    if not isinstance(request.user, User):
+    user = get_session_user(request)
+    if not user:
         return RedirectResponse("/", status_code=303)
 
     story_id = int(request.path_params["story_id"])
     nudgee_id = int(request.path_params["nudgee_id"])
 
     async with get_scribly(request.app) as scribly:
-        await scribly.nudge(request.user, nudgee_id, story_id)
+        await scribly.nudge(user, nudgee_id, story_id)
 
     return templates.TemplateResponse(
-        "nudged.html", {"request": request, "story_id": story_id, "user": request.user}
+        "nudged.html", {"request": request, "story_id": story_id, "user": user}
     )
 
 
@@ -344,6 +353,5 @@ app = Starlette(
     ],
     exception_handlers={500: server_error},
 )
-app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 app.mount("/static", StaticFiles(directory="static"), name="static")
