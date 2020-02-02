@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 from jinja2 import Environment, FileSystemLoader

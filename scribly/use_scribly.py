@@ -1,6 +1,5 @@
-import logging
-
 import asyncio
+import logging
 from dataclasses import dataclass
 from typing import Sequence
 
@@ -8,15 +7,14 @@ from scribly import auth, emails, exceptions, policies
 from scribly.definitions import (
     DatabaseGateway,
     EmailGateway,
-    MessageGateway,
     Me,
+    MessageGateway,
     Story,
     Turn,
     TurnAction,
     User,
 )
 from scribly.util import shuffle
-
 
 logger = logging.getLogger(__name__)
 

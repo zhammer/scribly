@@ -8,8 +8,7 @@ from scribly.consumers.constants import (
     ANNOUNCE_TURN_TAKEN_EXCHANGE,
     ANNOUNCE_USER_CREATED_EXCHANGE,
 )
-from scribly.definitions import MessageGateway
-from scribly.definitions import Story, User
+from scribly.definitions import MessageGateway, Story, User
 
 logger = logging.getLogger(__name__)
 

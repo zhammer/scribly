@@ -1,7 +1,7 @@
 import abc
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
-from typing import AsyncIterator, List, Optional, Sequence, Tuple, cast
+from typing import List, Optional, Sequence, Tuple
 
 from typing_extensions import Literal
 

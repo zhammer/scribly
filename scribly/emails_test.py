@@ -1,6 +1,6 @@
 import re
 from itertools import cycle
-from typing import Iterator, List, Sequence
+from typing import Iterator, List
 
 from faker import Faker
 

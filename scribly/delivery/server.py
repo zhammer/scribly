@@ -1,11 +1,9 @@
-import asyncio
 import inspect
 import logging
-import os
 import traceback
 from contextlib import asynccontextmanager
 from inspect import FrameInfo
-from typing import AsyncGenerator, AsyncIterator, Dict, List, Optional, Tuple
+from typing import AsyncGenerator, Dict, Optional
 
 import aio_pika
 import aiohttp

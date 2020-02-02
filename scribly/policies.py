@@ -5,7 +5,6 @@ from typing import Sequence
 from scribly.definitions import EmailVerificationTokenPayload, Story, User
 from scribly.exceptions import AuthError, InputError, ScriblyException
 
-
 MAX_EMAIL_VERIFICATION_AGE = 24 * 60 * 60
 
 
