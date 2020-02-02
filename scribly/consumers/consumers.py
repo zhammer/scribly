@@ -6,7 +6,7 @@ from typing import List
 import aio_pika
 import aiohttp
 import asyncpg
-from typing_extensions import Type, Protocol
+from typing_extensions import Protocol, Type
 
 from scribly import env
 from scribly.consumers.constants import (
