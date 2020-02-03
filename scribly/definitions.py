@@ -127,11 +127,11 @@ class DatabaseGateway(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def add_user(self, username: str, password: str, email: str) -> User:
+    async def add_user(self, username: str, password_hash: str, email: str) -> User:
         ...
 
     @abc.abstractmethod
-    async def update_password(self, user: User, password: str) -> None:
+    async def update_password(self, user: User, password_hash: str) -> None:
         ...
 
     @abc.abstractmethod

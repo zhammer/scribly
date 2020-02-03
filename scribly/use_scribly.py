@@ -26,12 +26,14 @@ class Scribly:
     message_gateway: MessageGateway
 
     async def log_in(self, username: str, password: str) -> User:
-        user, hash = await self.database.fetch_user_with_password_hash(username)
+        user, password_hash = await self.database.fetch_user_with_password_hash(
+            username
+        )
 
-        if not auth.verify_password_hash(hash, password):
+        if not auth.verify_password_hash(password_hash, password):
             raise exceptions.AuthError()
 
-        if auth.check_needs_rehash(hash):
+        if auth.check_needs_rehash(password_hash):
             rehashed_password = auth.hash_password(password)
             await self.database.update_password(user, rehashed_password)
 
@@ -40,8 +42,8 @@ class Scribly:
     async def sign_up(self, username: str, password: str, email: str) -> User:
         policies.require_valid_signup_info(username, password, email)
 
-        hash = auth.hash_password(password)
-        user = await self.database.add_user(username, hash, email)
+        password_hash = auth.hash_password(password)
+        user = await self.database.add_user(username, password_hash, email)
 
         await self.message_gateway.announce_user_created(user)
         return user
