@@ -49,6 +49,8 @@ class Scribly:
         return user
 
     async def start_story(self, user: User, title: str, body: str) -> Story:
+        # this is a transaction because start_story executes multiple
+        # sql statements (inserts the story, then creates the first turn).
         async with self.database.transaction():
             return await self.database.start_story(user, title, body)
 
