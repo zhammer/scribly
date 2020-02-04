@@ -22,7 +22,10 @@ class SendGrid(EmailGateway):
         url = f"{self.base_url}/v3/mail/send"
         body = {
             "personalizations": [
-                {"to": [{"email": email.to}], "subject": email.subject}
+                {
+                    "to": [{"email": email.to.email, "name": email.to.username}],
+                    "subject": email.subject,
+                }
             ],
             "from": {"email": self.sender},
             "content": [{"type": "text/html", "value": email.body}],

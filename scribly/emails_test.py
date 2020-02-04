@@ -29,7 +29,7 @@ def test_verification_email() -> None:
 
     # then
     assert email.subject == "Verify your email"
-    assert email.to == user.email
+    assert email.to == user
     expected_body_regex = re.compile(
         (
             r"<!DOCTYPE html>\s*<html lang=\"en\">\s*"
@@ -75,7 +75,7 @@ class TestTurnNotificationEmail:
         rakesh_email = emails[1]
 
         # it's not zach's turn, he sees that gabe took a turn
-        assert zach_email.to == zach.email
+        assert zach_email.to == zach
         assert (
             zach_email.subject == f"{gabe.username} took their turn on {story.title}!"
         )
@@ -100,7 +100,7 @@ class TestTurnNotificationEmail:
         assert expected_zach_email_regex.match(zach_email.body)
 
         # it's rakesh's turn, he sees that it's his turn
-        assert rakesh_email.to == rakesh.email
+        assert rakesh_email.to == rakesh
         assert rakesh_email.subject == f"It's your turn on {story.title}!"
         expected_rakesh_email_regex = re.compile(
             (
@@ -143,7 +143,7 @@ class TestTurnNotificationEmail:
 
         # then rakesh doesn't receive an email as his email is not verified
         assert len(emails) == 1
-        assert emails[0].to == zach.email
+        assert emails[0].to == zach
 
     def test_sends_notifications_write_and_finish(self) -> None:
         zach = make_user("zach", "verified")
@@ -168,8 +168,8 @@ class TestTurnNotificationEmail:
         zach_email = emails[0]
         rakesh_email = emails[1]
 
-        assert zach_email.to == zach.email
-        assert rakesh_email.to == rakesh.email
+        assert zach_email.to == zach
+        assert rakesh_email.to == rakesh
 
         expected_subject = f"{story.title} is done!"
         assert zach_email.subject == expected_subject
@@ -218,8 +218,8 @@ class TestTurnNotificationEmail:
         zach_email = emails[0]
         rakesh_email = emails[1]
 
-        assert zach_email.to == zach.email
-        assert rakesh_email.to == rakesh.email
+        assert zach_email.to == zach
+        assert rakesh_email.to == rakesh
 
         expected_subject = f"{story.title} is done!"
         assert zach_email.subject == expected_subject
@@ -265,8 +265,8 @@ class TestTurnNotificationEmail:
         zach_email = emails[0]
         rakesh_email = emails[1]
 
-        assert zach_email.to == zach.email
-        assert rakesh_email.to == rakesh.email
+        assert zach_email.to == zach
+        assert rakesh_email.to == rakesh
 
         assert rakesh_email.subject == f"It's your turn on {story.title}!"
         assert zach_email.subject == f"gabe took their turn on {story.title}!"
@@ -336,10 +336,10 @@ class TestAddedToStoryEmail:
         gabe_email = emails[0]
         rakesh_email = emails[1]
 
-        assert gabe_email.to == gabe.email
+        assert gabe_email.to == gabe
         assert gabe_email.subject == "zach started the story Phaedrus - it's your turn!"
 
-        assert rakesh_email.to == rakesh.email
+        assert rakesh_email.to == rakesh
         assert rakesh_email.subject == "zach started the story Phaedrus"
 
         expected_gabe_email_regex = re.compile(
