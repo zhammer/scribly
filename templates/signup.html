@@ -8,17 +8,21 @@
 
 <body>
   <div class="page">
-    <h1>sign up</h1>
-    <p>join scribly to start writing stories with your friends</p>
-    <form action="/signup" method="post">
-      <input name="username" placeholder="username" required />
-      <input name="email" placeholder="email" type="email" required />
-      <input name="password" placeholder="password" type="password" required />
-      <input name="password_confirmation" placeholder="confirm password" type="password" required />
-      <button type="submit">
-        sign up
-      </button>
-    </form>
+    <main>
+      <h1>sign up</h1>
+      <p>join scribly to start writing stories with your friends</p>
+      <form action="/signup" method="post">
+        <input name="username" placeholder="username" aria-label="username" required />
+        <input name="email" placeholder="email" type="email" aria-label="email" required />
+        <input name="password" placeholder="password" type="password" aria-label="password"
+          required />
+        <input name="password_confirmation" placeholder="confirm password" type="password"
+          aria-label="confirm password" required />
+        <button type="submit">
+          sign up
+        </button>
+      </form>
+    </main>
   </div>
 </body>
 
