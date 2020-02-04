@@ -97,7 +97,7 @@ class Me:
 class Email:
     subject: str
     body: str
-    to: str
+    to: User
 
 
 @dataclass
