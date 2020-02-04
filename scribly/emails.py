@@ -38,7 +38,7 @@ def _build_added_to_story_email(story: Story, recipient: User) -> Email:
     subject = f"{story.created_by.username} started the story {story.title}"
     if story.current_writers_turn.id == recipient.id:
         subject += " - it's your turn!"
-    return Email(subject=subject, body=body, to=recipient.email)
+    return Email(subject=subject, body=body, to=recipient)
 
 
 def build_turn_email_notifications(story: Story, turn_number: int) -> List[Email]:
@@ -73,7 +73,7 @@ def _build_turn_email_notification(story: Story, turn: Turn, recipient: User) ->
     if turn.action in ("write_and_finish", "finish"):
         subject = f"{story.title} is done!"
 
-    return Email(subject=subject, body=body, to=recipient.email)
+    return Email(subject=subject, body=body, to=recipient)
 
 
 def build_email_verification_email(user: User, token: str) -> Email:
@@ -81,7 +81,7 @@ def build_email_verification_email(user: User, token: str) -> Email:
     body = _render_template_with_css(
         "verification.html", verification_link=verification_link, user=user
     )
-    return Email(subject="Verify your email", body=body, to=user.email)
+    return Email(subject="Verify your email", body=body, to=user)
 
 
 def build_nudge_email(nudger: User, nudgee: User, story: Story) -> Email:
@@ -89,7 +89,7 @@ def build_nudge_email(nudger: User, nudgee: User, story: Story) -> Email:
     body = _render_template_with_css(
         "nudge.html", nudger=nudger, nudgee=nudgee, story=story
     )
-    return Email(subject, body, to=nudgee.email)
+    return Email(subject, body, to=nudgee)
 
 
 def _render_template_with_css(template_name: str, **template_kwargs):
