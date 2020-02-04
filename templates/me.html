@@ -8,62 +8,64 @@
 
 <body>
   <div class="page">
-    <h1>{{ me.user.username }}'s scribly</h1>
-    <div>
-      <section>
-        <h3>drafts</h3>
-        <ul>
-          {% for story in me.drafts %}
-          <li>
-            <a href="/stories/{{ story.id }}">{{ story.title }}</a>
-          </li>
-          {% endfor %}
-        </ul>
-      </section>
-      <section>
-        <h3>your turn</h3>
-        <ul>
-          {% for story in me.your_turn %}
-          <li>
-            <a href="/stories/{{ story.id }}">{{ story.title }}</a>
-          </li>
-          {% endfor %}
-        </ul>
-      </section>
-      <section>
-        <h3>waiting for others</h3>
-        <ul>
-          {% for story in me.waiting_for_others %}
-          <li>
-            <a href="/stories/{{ story.id }}">{{ story.title }}</a>
-          </li>
-          {% endfor %}
-        </ul>
-      </section>
-      <section>
-        <h3>done</h3>
-        <ul>
-          {% for story in me.done %}
-          <li>
-            <a href="/stories/{{ story.id }}">{{ story.title }}</a>
-          </li>
-          {% endfor %}
-        </ul>
-      </section>
-      <a class="button" href="/new">start a new story</a>
-    </div>
-    {% if not me.user.email_verification_status == "verified" %}
-    <br>
-    <hr>
-    <div>
-      <p>verify your email to follow stories you're working on!</p>
-      <form id="verify-email-form" action="/email-verification" method="post">
-        <button title="Resend email verification link" type="submit">
-          resend verification link
-        </button>
-      </form>
-    </div>
-    {% endif %}
+    <main>
+      <h1>{{ me.user.username }}'s scribly</h1>
+      <div>
+        <section>
+          <h2>drafts</h2>
+          <ul>
+            {% for story in me.drafts %}
+            <li>
+              <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
+        <section>
+          <h2>your turn</h2>
+          <ul>
+            {% for story in me.your_turn %}
+            <li>
+              <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
+        <section>
+          <h2>waiting for others</h2>
+          <ul>
+            {% for story in me.waiting_for_others %}
+            <li>
+              <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
+        <section>
+          <h2>done</h2>
+          <ul>
+            {% for story in me.done %}
+            <li>
+              <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </section>
+        <a class="button" href="/new">start a new story</a>
+      </div>
+      {% if not me.user.email_verification_status == "verified" %}
+      <br>
+      <hr>
+      <div>
+        <p>verify your email to follow stories you're working on!</p>
+        <form id="verify-email-form" action="/email-verification" method="post">
+          <button title="Resend email verification link" type="submit">
+            resend verification link
+          </button>
+        </form>
+      </div>
+      {% endif %}
+    </main>
   </div>
 </body>
 
