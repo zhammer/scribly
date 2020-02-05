@@ -154,3 +154,8 @@ When(
     });
   }
 );
+
+Then("the page is accessible", () => {
+  cy.injectAxe();
+  cy.checkA11y();
+});

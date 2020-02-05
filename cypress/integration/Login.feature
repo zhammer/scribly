@@ -22,3 +22,7 @@ Feature: Log in
             | username   |
             | zhammer    |
             | gsnussbaum |
+
+    Scenario: I need an accessible login page
+        When I visit "/login"
+        Then the page is accessible

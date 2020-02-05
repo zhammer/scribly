@@ -16,3 +16,8 @@ Feature: Sign up
         Then I am on "/me"
         And I see the text "zach's scribly"
         And I received an email at "zach@mail.com" with the subject "Verify your email"
+
+    Scenario: I need an accessible signup page
+        When I visit "/"
+        And I click the text "sign up"
+        Then the page is accessible
