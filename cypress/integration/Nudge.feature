@@ -14,6 +14,7 @@ Feature: Nudge
         When I visit "/stories/1"
         And I click the button "nudge <currentWriter> to take their turn"
         Then I see the text "zach, your nudge has been delivered."
+        And the page is accessible
 
         When I click the link "go back to story"
         Then I am on "/stories/1"
