@@ -17,6 +17,7 @@ Feature: Email Verification
         And I click the button "resend verification link"
         Then I see the text "Email verification sent!"
         And I see the text "You should receive an email at zach@mail.com with a verification link shortly!"
+        And the page is accessible
         And I received an email at "zach@mail.com" with the subject "Verify your email"
 
     Scenario: I verify my email
@@ -26,6 +27,7 @@ Feature: Email Verification
         And I open my email at "zach@mail.com" with the subject "Verify your email"
         And I click the link "verify your email"
         Then I see the text "Your email zach@mail.com has been verified"
+        And the page is accessible
 
     Scenario: My email verification status is reflected on the me page
         Given I am logged in as zach
