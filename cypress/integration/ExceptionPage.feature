@@ -10,3 +10,4 @@ Feature: Exception Page
         And I see the text "make an issue and/or write some code"
         And I see the text "Exception: Raising an exception, intentionally!"
         And I see the text "raise Exception("Raising an exception, intentionally!")"
+        And the page is accessible
