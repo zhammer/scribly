@@ -55,6 +55,7 @@ Feature: Me Page
         And the "done" section has the stories
             | title     |
             | A big car |
+        And the page is accessible
 
     Scenario Outline: I click on the story <storyTitle>
         Given the following stories exist

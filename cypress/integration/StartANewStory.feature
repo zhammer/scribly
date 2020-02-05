@@ -6,6 +6,13 @@ Feature: Start A New Story
             | zhammer    |
             | gsnussbaum |
 
+    Scenario: I need an accessible new story page
+        Given I am logged in as zhammer
+        When I visit "/new"
+        Then I see the text "new story"
+        Then the page is accessible
+
+    @focus
     Scenario Outline: I start a new story
         Given I am logged in as zhammer
         When I visit "/new"
@@ -18,6 +25,7 @@ Feature: Start A New Story
         And I see the text "cowriters"
         And I see the text "<title>"
         And I see the text "<intro>"
+        And the page is accessible
 
         Examples:
             | title                    | intro                                                        |
