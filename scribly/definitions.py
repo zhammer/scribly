@@ -1,7 +1,7 @@
 import abc
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple
+from typing import FrozenSet, List, Optional, Sequence, Tuple
 
 from typing_extensions import Literal
 
@@ -63,6 +63,7 @@ class Story:
 class Me:
     user: User
     stories: Sequence[Story]
+    hidden_story_ids: FrozenSet[int]
 
     @property
     def your_turn(self) -> Sequence[Story]:
@@ -176,6 +177,14 @@ class DatabaseGateway(abc.ABC):
     async def add_turn_write_and_finish(
         self, user: User, story: Story, text_written: str
     ) -> Story:
+        ...
+
+    @abc.abstractmethod
+    async def hide_story(self, user: User, story: Story) -> None:
+        ...
+
+    @abc.abstractmethod
+    async def unhide_story(self, user: User, story: Story) -> None:
         ...
 
     @abc.abstractmethod
