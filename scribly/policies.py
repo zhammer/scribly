@@ -164,3 +164,26 @@ def require_can_nudge(nudger: User, nudgee: User, story: Story) -> None:
 
     if not nudgee.email_verification_status == "verified":
         raise ScriblyException(f"{nudgee.username} hasn't verified their email yet!")
+
+
+def require_can_hide_story(user: User, story: Story) -> None:
+    _require_user_involved_with_story(user, story)
+
+
+def require_can_unhide_story(user: User, story: Story) -> None:
+    _require_user_involved_with_story(user, story)
+
+
+def _require_user_involved_with_story(user: User, story: Story) -> None:
+    if not _user_involved_with_story(user, story):
+        raise ScriblyException(f"User is not involved with story {story.id}")
+
+
+def _user_involved_with_story(user: User, story: Story) -> bool:
+    if story.created_by == user:
+        return True
+
+    if story.cowriters and user in story.cowriters:
+        return True
+
+    return False

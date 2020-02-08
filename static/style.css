@@ -172,3 +172,37 @@ a.button:visited {
   margin: 1em 0;
   border: none;
 }
+
+li.me-story {
+  display: inline-block;
+}
+
+li.me-story:hover > .me-story-hover {
+  opacity: 1;
+}
+
+.me-story-hover {
+  opacity: 0;
+}
+
+.me-story-hover--mobile {
+  opacity: 1;
+}
+
+.view-preferences {
+  border-top: solid 1px;
+  border-bottom: solid 1px;
+  padding: 0.5em;
+  display: flex;
+}
+
+.story-hide-form {
+  display: inline-block;
+}
+
+.story-hide-form > button {
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+}

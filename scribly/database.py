@@ -129,6 +129,30 @@ class Database(DatabaseGateway):
         )
         return _pluck_story(story_record, [turn_record], {user.id: user})
 
+    async def hide_story(self, user: User, story: Story) -> None:
+        await self.connection.execute(
+            """
+            INSERT INTO user_story_hides (user_id, story_id, hidden_status)
+            VALUES ($1, $2, 'hidden')
+            ON CONFLICT (user_id, story_id) DO UPDATE
+            SET hidden_status = 'hidden', updated_at = NOW()
+            """,
+            user.id,
+            story.id,
+        )
+
+    async def unhide_story(self, user: User, story: Story) -> None:
+        await self.connection.execute(
+            """
+            INSERT INTO user_story_hides (user_id, story_id, hidden_status)
+            VALUES ($1, $2, 'unhidden')
+            ON CONFLICT (user_id, story_id) DO UPDATE
+            SET hidden_status = 'unhidden', updated_at = NOW()
+            """,
+            user.id,
+            story.id,
+        )
+
     async def fetch_me(self, user: User) -> Me:
         """
         Slow quick implementation of this at the moment using self.fetch_story.
@@ -149,7 +173,20 @@ class Database(DatabaseGateway):
         # with one db connection.
         stories = [await self.fetch_story(story_id) for story_id in story_ids]
 
-        return Me(user=user, stories=stories)
+        hidden_story_records = await self.connection.fetch(
+            """
+            SELECT story_id FROM user_story_hides
+            WHERE user_id = $1
+            AND hidden_status = 'hidden'
+            """,
+            user.id,
+        )
+        hidden_story_ids = frozenset(
+            hidden_story_record["story_id"]
+            for hidden_story_record in hidden_story_records
+        )
+
+        return Me(user=user, stories=stories, hidden_story_ids=hidden_story_ids)
 
     async def fetch_story(self, story_id: int, *, for_update: bool = False) -> Story:
         story_record = await self.connection.fetchrow(

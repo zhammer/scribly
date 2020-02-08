@@ -136,6 +136,16 @@ class Scribly:
     async def get_me(self, user: User) -> Me:
         return await self.database.fetch_me(user)
 
+    async def hide_story(self, user: User, story_id: int) -> None:
+        story = await self.database.fetch_story(story_id)
+        policies.require_can_hide_story(user, story)
+        await self.database.hide_story(user, story)
+
+    async def unhide_story(self, user: User, story_id: int) -> None:
+        story = await self.database.fetch_story(story_id)
+        policies.require_can_unhide_story(user, story)
+        await self.database.unhide_story(user, story)
+
     async def send_verification_email(self, user: User) -> None:
         policies.require_can_send_verification_email(user)
         verification_token = auth.build_email_verification_token(user)
