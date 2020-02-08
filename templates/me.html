@@ -5,7 +5,7 @@
 <li class="me-story">
   {% if story_with_meta.hidden -%}<i>(hidden) </i>{%- endif %}<a
     href="/stories/{{ story_with_meta.story.id }}">{{ story_with_meta.story.title }}</a>
-  <span class="me-story-hover {% if is_mobile %}me-story-hover--mobile{% endif %}"> ·{{" "}}
+  <span class="me-story-hover {% if mobile %}me-story-hover--mobile{% endif %}"> ·{{" "}}
     {% set hide_action = "unhide" if story_with_meta.hidden else "hide" -%}
     <form id="story-{{ story_with_meta.story.id }}-hide-form" class="story-hide-form"
       action="/stories/{{ story_with_meta.story.id }}/{{ hide_action }}" method="post">
