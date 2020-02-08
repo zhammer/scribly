@@ -16,6 +16,7 @@ from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from user_agents import parse
 
 from scribly import env, exceptions
 from scribly.database import Database
@@ -103,7 +104,9 @@ async def me(request):
         me = await scribly.get_me(user)
 
     set_session_user(request, me.user)
-    return templates.TemplateResponse("me.html", {"request": request, "me": me})
+
+    user_agent = parse(request.headers["user-agent"])
+    return templates.TemplateResponse("me.html", {"request": request, "me": me, "mobile": user_agent.is_mobile})
 
 
 async def log_in_page(request):
@@ -330,7 +333,6 @@ def _path_from_referer(referer: str) -> str:
     if parsed.query:
         return f"{parsed.path}?{parsed.query}"
     return parsed.path
-
 
 async def exception(request):
     raise Exception("Raising an exception, intentionally!")

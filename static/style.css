@@ -185,6 +185,10 @@ li.me-story:hover > .me-story-hover {
   opacity: 0;
 }
 
+.me-story-hover--mobile {
+  opacity: 1;
+}
+
 .view-preferences {
   border-top: solid 1px;
   border-bottom: solid 1px;
