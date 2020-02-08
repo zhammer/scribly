@@ -60,38 +60,62 @@ class Story:
 
 
 @dataclass
+class StoryWithUserMeta:
+    """Story with some metadata that applies to a user's preferences on a story."""
+
+    story: Story
+    hidden: bool
+
+
+@dataclass
 class Me:
     user: User
     stories: Sequence[Story]
     hidden_story_ids: FrozenSet[int]
 
     @property
-    def your_turn(self) -> Sequence[Story]:
+    def your_turn(self) -> Sequence[StoryWithUserMeta]:
         return [
-            story
-            for story in self.in_progress
-            if story.current_writers_turn.id == self.user.id  # type: ignore
+            story_with_meta
+            for story_with_meta in self.in_progress
+            if story_with_meta.story.current_writers_turn.id == self.user.id  # type: ignore
         ]
 
     @property
-    def waiting_for_others(self) -> Sequence[Story]:
+    def waiting_for_others(self) -> Sequence[StoryWithUserMeta]:
         return [
-            story
-            for story in self.in_progress
-            if not story.current_writers_turn.id == self.user.id  # type: ignore
+            story_with_meta
+            for story_with_meta in self.in_progress
+            if not story_with_meta.story.current_writers_turn.id == self.user.id  # type: ignore
         ]
 
     @property
-    def in_progress(self) -> Sequence[Story]:
-        return [story for story in self.stories if story.state == "in_progress"]
+    def in_progress(self) -> Sequence[StoryWithUserMeta]:
+        return [
+            self._story_with_user_meta(story)
+            for story in self.stories
+            if story.state == "in_progress"
+        ]
 
     @property
-    def drafts(self) -> Sequence[Story]:
-        return [story for story in self.stories if story.state == "draft"]
+    def drafts(self) -> Sequence[StoryWithUserMeta]:
+        return [
+            self._story_with_user_meta(story)
+            for story in self.stories
+            if story.state == "draft"
+        ]
 
     @property
-    def done(self) -> Sequence[Story]:
-        return [story for story in self.stories if story.state == "done"]
+    def done(self) -> Sequence[StoryWithUserMeta]:
+        return [
+            self._story_with_user_meta(story)
+            for story in self.stories
+            if story.state == "done"
+        ]
+
+    def _story_with_user_meta(self, story: Story) -> StoryWithUserMeta:
+        hidden = story.id in self.hidden_story_ids
+        return StoryWithUserMeta(story, hidden=hidden)
 
 
 @dataclass

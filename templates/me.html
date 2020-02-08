@@ -14,9 +14,10 @@
         <section>
           <h2>drafts</h2>
           <ul>
-            {% for story in me.drafts %}
+            {% for story_with_meta in me.drafts %}
             <li>
-              <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+              <a
+                href="/stories/{{ story_with_meta.story.id }}">{{ story_with_meta.story.title }}</a>
             </li>
             {% endfor %}
           </ul>
@@ -24,9 +25,10 @@
         <section>
           <h2>your turn</h2>
           <ul>
-            {% for story in me.your_turn %}
+            {% for story_with_meta in me.your_turn %}
             <li>
-              <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+              <a
+                href="/stories/{{ story_with_meta.story.id }}">{{ story_with_meta.story.title }}</a>
             </li>
             {% endfor %}
           </ul>
@@ -34,9 +36,10 @@
         <section>
           <h2>waiting for others</h2>
           <ul>
-            {% for story in me.waiting_for_others %}
+            {% for story_with_meta in me.waiting_for_others %}
             <li>
-              <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+              <a
+                href="/stories/{{ story_with_meta.story.id }}">{{ story_with_meta.story.title }}</a>
             </li>
             {% endfor %}
           </ul>
@@ -44,9 +47,10 @@
         <section>
           <h2>done</h2>
           <ul>
-            {% for story in me.done %}
+            {% for story_with_meta in me.done %}
             <li>
-              <a href="/stories/{{ story.id }}">{{ story.title }}</a>
+              <a
+                href="/stories/{{ story_with_meta.story.id }}">{{ story_with_meta.story.title }}</a>
             </li>
             {% endfor %}
           </ul>
