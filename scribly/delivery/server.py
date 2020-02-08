@@ -106,7 +106,9 @@ async def me(request):
     set_session_user(request, me.user)
 
     user_agent = parse(request.headers["user-agent"])
-    return templates.TemplateResponse("me.html", {"request": request, "me": me, "mobile": user_agent.is_mobile})
+    return templates.TemplateResponse(
+        "me.html", {"request": request, "me": me, "mobile": user_agent.is_mobile}
+    )
 
 
 async def log_in_page(request):
@@ -333,6 +335,7 @@ def _path_from_referer(referer: str) -> str:
     if parsed.query:
         return f"{parsed.path}?{parsed.query}"
     return parsed.path
+
 
 async def exception(request):
     raise Exception("Raising an exception, intentionally!")
