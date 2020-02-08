@@ -178,11 +178,11 @@ li.me-story {
 }
 
 li.me-story:hover > .me-story-hover {
-  visibility: visible;
+  opacity: 1;
 }
 
 .me-story-hover {
-  visibility: hidden;
+  opacity: 0;
 }
 
 .story-hide-form {
