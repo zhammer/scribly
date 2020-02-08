@@ -283,6 +283,31 @@ async def nudge(request):
         "nudged.html", {"request": request, "story_id": story_id, "user": user}
     )
 
+async def hide_story(request):
+    user = get_session_user(request)
+    if not user:
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+
+    async with get_scribly(request.app) as scribly:
+        await scribly.hide_story(user, story_id)
+
+    return RedirectResponse("/me", status_code=303)
+
+
+async def unhide_story(request):
+    user = get_session_user(request)
+    if not user:
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+
+    async with get_scribly(request.app) as scribly:
+        await scribly.unhide_story(user, story_id)
+
+    return RedirectResponse("/me", status_code=303)
+
 
 async def exception(request):
     raise Exception("Raising an exception, intentionally!")
@@ -347,6 +372,8 @@ app = Starlette(
         Route("/stories/{story_id}/turn", submit_turn, methods=["POST"]),
         Route("/stories/{story_id}", story_page),
         Route("/stories/{story_id}/nudge/{nudgee_id}", nudge, methods=["POST"]),
+        Route("/stories/{story_id}/hide", hide_story, methods=["POST"]),
+        Route("/stories/{story_id}/unhide", unhide_story, methods=["POST"]),
         Route("/exception", exception),
     ],
     exception_handlers={500: server_error},

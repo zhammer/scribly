@@ -1,7 +1,13 @@
 {% import 'head.html' as head %}
 {% macro story_li(story_with_meta) -%}
-<li>
+<li class="me-story">
   <a href="/stories/{{ story_with_meta.story.id }}">{{ story_with_meta.story.title }}</a>
+  <span class="me-story-hover"> ·{{" "}}
+    <form id="story-{{ story_with_meta.story.id }}-hide-form" class="story-hide-form"
+      action="/stories/{{ story_with_meta.story.id }}/hide" method="post">
+      <button type="submit">hide</button type="submit">
+    </form>
+  </span>
 </li>
 {%- endmacro %}
 <!DOCTYPE html>

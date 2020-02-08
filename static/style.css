@@ -172,3 +172,26 @@ a.button:visited {
   margin: 1em 0;
   border: none;
 }
+
+li.me-story {
+  display: inline-block;
+}
+
+li.me-story:hover > .me-story-hover {
+  visibility: visible;
+}
+
+.me-story-hover {
+  visibility: hidden;
+}
+
+.story-hide-form {
+  display: inline-block;
+}
+
+.story-hide-form > button {
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+}
