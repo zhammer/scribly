@@ -1,14 +1,19 @@
+{% set show_hidden = (request.query_params.show_hidden or '0') | int -%}
 {% import 'head.html' as head %}
 {% macro story_li(story_with_meta) -%}
+{% if not (story_with_meta.hidden and not show_hidden) -%}
 <li class="me-story">
-  <a href="/stories/{{ story_with_meta.story.id }}">{{ story_with_meta.story.title }}</a>
+  {% if story_with_meta.hidden -%}<i>(hidden) </i>{%- endif %}<a
+    href="/stories/{{ story_with_meta.story.id }}">{{ story_with_meta.story.title }}</a>
   <span class="me-story-hover"> ·{{" "}}
+    {% set hide_action = "unhide" if story_with_meta.hidden else "hide" -%}
     <form id="story-{{ story_with_meta.story.id }}-hide-form" class="story-hide-form"
-      action="/stories/{{ story_with_meta.story.id }}/hide" method="post">
-      <button type="submit">hide</button type="submit">
+      action="/stories/{{ story_with_meta.story.id }}/{{ hide_action }}" method="post">
+      <button type="submit">{{ hide_action }}</button type="submit">
     </form>
   </span>
 </li>
+{%- endif %}
 {%- endmacro %}
 <!DOCTYPE html>
 <html lang="en">
@@ -21,6 +26,13 @@
   <div class="page">
     <main>
       <h1>{{ me.user.username }}'s scribly</h1>
+      <div>
+        {% if show_hidden | int -%}
+        <a href="?show_hidden=0">don't show hidden stories</a>
+        {% else -%}
+        <a href="?show_hidden=1">show hidden stories</a>
+        {%- endif %}
+      </div>
       <div>
         <section>
           <h2>drafts</h2>

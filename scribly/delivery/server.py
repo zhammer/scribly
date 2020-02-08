@@ -4,6 +4,7 @@ import traceback
 from contextlib import asynccontextmanager
 from inspect import FrameInfo
 from typing import AsyncGenerator, Dict, Optional
+from urllib.parse import urlparse
 
 import aio_pika
 import aiohttp
@@ -293,7 +294,7 @@ async def hide_story(request):
     async with get_scribly(request.app) as scribly:
         await scribly.hide_story(user, story_id)
 
-    return RedirectResponse("/me", status_code=303)
+    return RedirectResponse(_path_from_referer(request.headers['referer']), status_code=303)
 
 
 async def unhide_story(request):
@@ -306,7 +307,24 @@ async def unhide_story(request):
     async with get_scribly(request.app) as scribly:
         await scribly.unhide_story(user, story_id)
 
-    return RedirectResponse("/me", status_code=303)
+    return RedirectResponse(_path_from_referer(request.headers['referer']), status_code=303)
+
+
+def _path_from_referer(referer: str) -> str:
+    """
+    >>> _path_from_referer("http://127.0.0.1:8000/me?show_hidden=0")
+    '/me?show_hidden=0'
+
+    >>> _path_from_referer("scribly.app/me?show_hidden=0")
+    '/me?show_hidden=0'
+
+    >>> _path_from_referer("scribly.app/me")
+    '/me'
+    """
+    parsed = urlparse(referer)
+    if parsed.query:
+        return f"{parsed.path}?{parsed.query}"
+    return parsed.path
 
 
 async def exception(request):
