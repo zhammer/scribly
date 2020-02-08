@@ -185,6 +185,13 @@ li.me-story:hover > .me-story-hover {
   opacity: 0;
 }
 
+.view-preferences {
+  border-top: solid 1px;
+  border-bottom: solid 1px;
+  padding: 0.5em;
+  display: flex;
+}
+
 .story-hide-form {
   display: inline-block;
 }
