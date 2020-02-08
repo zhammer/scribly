@@ -173,10 +173,6 @@ a.button:visited {
   border: none;
 }
 
-li.me-story {
-  display: inline-block;
-}
-
 li.me-story:hover > .me-story-hover {
   opacity: 1;
 }
