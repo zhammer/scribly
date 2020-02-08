@@ -284,6 +284,7 @@ async def nudge(request):
         "nudged.html", {"request": request, "story_id": story_id, "user": user}
     )
 
+
 async def hide_story(request):
     user = get_session_user(request)
     if not user:
@@ -294,7 +295,9 @@ async def hide_story(request):
     async with get_scribly(request.app) as scribly:
         await scribly.hide_story(user, story_id)
 
-    return RedirectResponse(_path_from_referer(request.headers['referer']), status_code=303)
+    return RedirectResponse(
+        _path_from_referer(request.headers["referer"]), status_code=303
+    )
 
 
 async def unhide_story(request):
@@ -307,7 +310,9 @@ async def unhide_story(request):
     async with get_scribly(request.app) as scribly:
         await scribly.unhide_story(user, story_id)
 
-    return RedirectResponse(_path_from_referer(request.headers['referer']), status_code=303)
+    return RedirectResponse(
+        _path_from_referer(request.headers["referer"]), status_code=303
+    )
 
 
 def _path_from_referer(referer: str) -> str:

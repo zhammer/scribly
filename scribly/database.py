@@ -138,7 +138,7 @@ class Database(DatabaseGateway):
             SET hidden_status = 'hidden', updated_at = NOW()
             """,
             user.id,
-            story.id
+            story.id,
         )
 
     async def unhide_story(self, user: User, story: Story) -> None:
@@ -150,9 +150,8 @@ class Database(DatabaseGateway):
             SET hidden_status = 'unhidden', updated_at = NOW()
             """,
             user.id,
-            story.id
+            story.id,
         )
-
 
     async def fetch_me(self, user: User) -> Me:
         """
