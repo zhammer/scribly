@@ -2,8 +2,7 @@ from contextlib import asynccontextmanager
 from dataclasses import replace
 from typing import AsyncIterator, Dict, Optional, Sequence, Tuple
 
-import asyncpg
-from asyncpg import Record
+import aiosqlite
 
 from scribly.definitions import (
     DatabaseGateway,
@@ -19,40 +18,44 @@ from scribly.exceptions import AuthError, ScriblyException, StoryNotFound
 class Database(DatabaseGateway):
     QUERY_INSERT_TURN = """
         INSERT INTO turns (story_id, taken_by, action, text_written)
-        VALUES ($1, $2, $3, $4)
-        RETURNING *
+        VALUES (?, ?, ?, ?)
         """
 
-    def __init__(self, connection: asyncpg.Connection) -> None:
+    def __init__(self, connection: aiosqlite.Connection) -> None:
         self.connection = connection
 
     async def add_user(self, username: str, password: str, email: str) -> User:
-        user = await self.connection.fetchrow(
+        await self.connection.execute(
             """
             INSERT INTO users (username, password, email)
-            VALUES ($1, $2, $3)
-            RETURNING *
+            VALUES (?, ?, ?);
             """,
-            username,
-            password,
-            email,
+            (username, password, email,),
         )
-        return _pluck_user(user)
+        cursor = await self.connection.execute(
+            """
+            SELECT * FROM users WHERE rowid = last_insert_rowid();
+            """
+        )
+        row = await cursor.fetchone()
+        user = _pluck_user(row)
+        await self.connection.commit()
+        return user
 
     async def update_password(self, user: User, password: str) -> None:
         await self.connection.execute(
             """
-            UPDATE users SET password = $1, updated_at = NOW()
-            WHERE id = $2;
+            UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?;
             """,
-            password,
-            user.id,
+            (password, user.id,),
         )
 
     async def fetch_user_with_password_hash(self, username: str) -> Tuple[User, str]:
-        row = await self.connection.fetchrow(
-            "SELECT * FROM users WHERE username = $1", username,
+        cursor = await self.connection.execute(
+            "SELECT * FROM users WHERE username = ?", (username,)
         )
+        row = await cursor.fetchone()
 
         if not row:
             raise AuthError()
@@ -60,8 +63,10 @@ class Database(DatabaseGateway):
         return _pluck_user(row), row["password"]
 
     async def fetch_users(self, *, usernames: Sequence[str]) -> Sequence[User]:
-        rows = await self.connection.fetch(
-            "SELECT * FROM users WHERE username = any($1::text[])", usernames
+        # VVV hack app here with sql injection
+        unsafe_names = ", ".join(f"'{name}'" for name in usernames)
+        rows = await self.connection.execute_fetchall(
+            f"SELECT * FROM users WHERE username IN ({unsafe_names})"
         )
 
         return [_pluck_user(row) for row in rows]
@@ -70,7 +75,7 @@ class Database(DatabaseGateway):
         await self.connection.executemany(
             """
             INSERT INTO story_cowriters (story_id, user_id, turn_index)
-            VALUES ($1, $2, $3);
+            VALUES (?, ?, ?);
             """,
             [
                 (story.id, cowriter.id, index)
@@ -80,10 +85,10 @@ class Database(DatabaseGateway):
 
         await self.connection.execute(
             """
-            UPDATE stories SET state = 'in_progress', updated_at = NOW()
-            WHERE id = $1;
+            UPDATE stories SET state = 'in_progress', updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?;
             """,
-            story.id,
+            (story.id,),
         )
 
         return replace(story, state="in_progress", cowriters=cowriters)
@@ -93,64 +98,72 @@ class Database(DatabaseGateway):
     ) -> User:
         await self.connection.execute(
             """
-            UPDATE users SET email_verification_status = $2, updated_at = NOW()
-            WHERE id = $1;
+            UPDATE users SET email_verification_status = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?;
             """,
-            user.id,
-            status,
+            (user.id, status,),
         )
         return replace(user, email_verification_status=status)
 
     async def fetch_user(self, user_id: int, for_update: bool = False) -> User:
-        user_record = await self.connection.fetchrow(
-            f"""
-            SELECT * FROM users WHERE id = $1 {"FOR UPDATE" if for_update else ""}
+        cursor = await self.connection.execute(
+            """
+            SELECT * FROM users WHERE id = ?
             """,
-            user_id,
+            (user_id,),
         )
+        user_record = await cursor.fetchone()
         if not user_record:
             raise ScriblyException(f"User {user_id} doesn't exist.")
 
         return _pluck_user(user_record)
 
     async def start_story(self, user: User, title: str, body: str) -> Story:
-        story_record = await self.connection.fetchrow(
+        await self.connection.execute(
             """
             INSERT INTO stories (title, state, created_by)
-            VALUES ($1, 'draft', $2)
-            RETURNING *;
+            VALUES (?, 'draft', ?);
             """,
-            title,
-            user.id,
+            (title, user.id,),
         )
+        cursor = await self.connection.execute(
+            """
+            SELECT * FROM stories WHERE id = last_insert_rowid();
+            """
+        )
+        story_record = await cursor.fetchone()
         story_id = story_record["id"]
-        turn_record = await self.connection.fetchrow(
-            self.QUERY_INSERT_TURN, story_id, user.id, "write", body,
+        await self.connection.execute(
+            self.QUERY_INSERT_TURN, (story_id, user.id, "write", body,)
         )
+        cursor = await self.connection.execute(
+            """
+            SELECT * FROM turns WHERE id = last_insert_rowid();
+            """
+        )
+        turn_record = await cursor.fetchone()
         return _pluck_story(story_record, [turn_record], {user.id: user})
 
     async def hide_story(self, user: User, story: Story) -> None:
         await self.connection.execute(
             """
             INSERT INTO user_story_hides (user_id, story_id, hidden_status)
-            VALUES ($1, $2, 'hidden')
+            VALUES (?, ?, 'hidden')
             ON CONFLICT (user_id, story_id) DO UPDATE
-            SET hidden_status = 'hidden', updated_at = NOW()
+            SET hidden_status = 'hidden', updated_at = CURRENT_TIMESTAMP
             """,
-            user.id,
-            story.id,
+            (user.id, story.id,),
         )
 
     async def unhide_story(self, user: User, story: Story) -> None:
         await self.connection.execute(
             """
             INSERT INTO user_story_hides (user_id, story_id, hidden_status)
-            VALUES ($1, $2, 'unhidden')
+            VALUES (?, ?, 'unhidden')
             ON CONFLICT (user_id, story_id) DO UPDATE
-            SET hidden_status = 'unhidden', updated_at = NOW()
+            SET hidden_status = 'unhidden', updated_at = CURRENT_TIMESTAMP
             """,
-            user.id,
-            story.id,
+            (user.id, story.id,),
         )
 
     async def fetch_me(self, user: User) -> Me:
@@ -158,14 +171,14 @@ class Database(DatabaseGateway):
         Slow quick implementation of this at the moment using self.fetch_story.
         """
         user = await self.fetch_user(user.id)
-        story_records = await self.connection.fetch(
+        story_records = await self.connection.execute_fetchall(
             """
             SELECT DISTINCT s.id FROM stories s
             LEFT JOIN story_cowriters sc on sc.story_id = s.id
-            WHERE s.created_by = $1
-            OR sc.user_id = $1;
+            WHERE s.created_by = :user_id
+            OR sc.user_id = :user_id;
             """,
-            user.id,
+            {"user_id": user.id},
         )
         story_ids = [story_record["id"] for story_record in story_records]
 
@@ -173,13 +186,13 @@ class Database(DatabaseGateway):
         # with one db connection.
         stories = [await self.fetch_story(story_id) for story_id in story_ids]
 
-        hidden_story_records = await self.connection.fetch(
+        hidden_story_records = await self.connection.execute_fetchall(
             """
             SELECT story_id FROM user_story_hides
-            WHERE user_id = $1
+            WHERE user_id = ?
             AND hidden_status = 'hidden'
             """,
-            user.id,
+            (user.id,),
         )
         hidden_story_ids = frozenset(
             hidden_story_record["story_id"]
@@ -189,36 +202,38 @@ class Database(DatabaseGateway):
         return Me(user=user, stories=stories, hidden_story_ids=hidden_story_ids)
 
     async def fetch_story(self, story_id: int, *, for_update: bool = False) -> Story:
-        story_record = await self.connection.fetchrow(
-            f"""
-            SELECT * FROM stories WHERE id = $1 {"FOR UPDATE" if for_update else ""};
+        cursor = await self.connection.execute(
+            """
+            SELECT * FROM stories WHERE id = ?;
             """,
-            story_id,
+            (story_id,),
         )
+        story_record = await cursor.fetchone()
 
         if not story_record:
             raise StoryNotFound(f"Could not find story {story_id}")
 
-        turn_records = await self.connection.fetch(
+        turn_records = await self.connection.execute_fetchall(
             """
-            SELECT * FROM turns WHERE story_id = $1 ORDER BY id;
+            SELECT * FROM turns WHERE story_id = ? ORDER BY id;
             """,
-            story_id,
+            (story_id,),
         )
 
-        cowriter_records = await self.connection.fetch(
+        cowriter_records = await self.connection.execute_fetchall(
             """
             SELECT u.* FROM story_cowriters sc
             JOIN users u on sc.user_id = u.id
-            WHERE sc.story_id = $1
+            WHERE sc.story_id = ?
             ORDER BY sc.turn_index;
             """,
-            story_id,
+            (story_id,),
         )
 
-        created_by = await self.connection.fetchrow(
-            "SELECT * FROM users WHERE id = $1", story_record["created_by"]
+        cursor = await self.connection.execute(
+            "SELECT * FROM users WHERE id = ?", (story_record["created_by"],)
         )
+        created_by = await cursor.fetchone()
 
         return _pluck_story_existing(
             story_record, turn_records, created_by, cowriter_records
@@ -246,10 +261,10 @@ class Database(DatabaseGateway):
         )
         await self.connection.execute(
             """
-            UPDATE stories SET state = 'done', updated_at = NOW()
-            WHERE id = $1
+            UPDATE stories SET state = 'done', updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
             """,
-            story.id,
+            (story.id,),
         )
         turn = _pluck_turn(turn_record, {user.id: user})
         return replace(story, state="done", turns=story.turns + [turn])
@@ -262,25 +277,30 @@ class Database(DatabaseGateway):
         )
         await self.connection.execute(
             """
-            UPDATE stories SET state = 'done', updated_at = NOW()
-            WHERE id = $1
+            UPDATE stories SET state = 'done', updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
             """,
-            story.id,
+            (story.id,),
         )
         turn = _pluck_turn(turn_record, {user.id: user})
         return replace(story, state="done", turns=story.turns + [turn])
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[None]:
-        async with self.connection.transaction():
+        await self.connection.execute("begin")
+        try:
             yield
+        except Exception as e:
+            await self.connection.execute("rollback")
+            raise e
+        await self.connection.execute("commit")
 
 
 def _pluck_story_existing(
-    story_record: Record,
-    turn_records: Sequence[Record],
-    created_by_record: Record,
-    cowriter_records: Optional[Sequence[Record]] = None,
+    story_record: Dict,
+    turn_records: Sequence[Dict],
+    created_by_record: Dict,
+    cowriter_records: Optional[Sequence[Dict]] = None,
 ) -> Story:
     created_by = _pluck_user(created_by_record)
     if not cowriter_records:
@@ -303,7 +323,7 @@ def _pluck_story_existing(
 
 
 def _pluck_story(
-    story_record: Record, turn_records: Sequence[Record], user_by_id: Dict[int, User]
+    story_record: Dict, turn_records: Sequence[Dict], user_by_id: Dict[int, User]
 ) -> Story:
     turns = [_pluck_turn(turn_record, user_by_id) for turn_record in turn_records]
     return Story(
@@ -316,7 +336,7 @@ def _pluck_story(
     )
 
 
-def _pluck_user(user_record: Record) -> User:
+def _pluck_user(user_record: aiosqlite.Row) -> User:
     return User(
         id=user_record["id"],
         username=user_record["username"],
@@ -325,7 +345,7 @@ def _pluck_user(user_record: Record) -> User:
     )
 
 
-def _pluck_turn(turn_record: Record, user_by_id: Dict[int, User]) -> Turn:
+def _pluck_turn(turn_record: Dict, user_by_id: Dict[int, User]) -> Turn:
     return Turn(
         taken_by=user_by_id[turn_record["taken_by"]],
         action=turn_record["action"],

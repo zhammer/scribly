@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:
 
 _DEFAULTS = {
     "CLOUDAMQP_URL": "amqp://guest:guest@localhost:5672/%2F",
-    "DATABASE_URL": "postgres://scribly:pass@localhost/scribly",
+    "DATABASE_URL": ".data/scribly.db",
     "EMAIL_VERIFICATION_SECRET": "myemailverificationsecret",
     "SENDGRID_API_KEY": "test_sendgrid_api_key",
     "SENDGRID_BASE_URL": "https://api.sendgrid.com",

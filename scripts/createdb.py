@@ -1,31 +1,26 @@
-import asyncio
 import os
 import sys
+from pathlib import Path
+import sqlite3
 
-import asyncpg
 
-
-async def main():
+def main():
     with open("./migrations/createdb.sql") as f:
         sql = f.read()
 
-    connection = await asyncpg.connect(os.environ["DATABASE_URL"])
+    db_path = Path(os.environ["DATABASE_URL"])
+    os.makedirs(db_path.parent, exist_ok=True)
 
     if "--reset" in sys.argv[1:]:
-        await connection.execute(
-            """
-            DROP SCHEMA IF EXISTS public CASCADE;
-            CREATE SCHEMA public;
-            """
-        )
+        os.remove(db_path)
+
+    connection = sqlite3.connect(db_path)
 
     try:
-        await connection.execute(sql)
-    except asyncpg.exceptions.DuplicateObjectError:
-        print("db already exists, skipping migration")
-
-    await connection.close()
+        connection = connection.executescript(sql)
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

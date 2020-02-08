@@ -1,26 +1,20 @@
-CREATE TYPE email_verification_state AS ENUM ('pending', 'verified');
-
 CREATE TABLE IF NOT EXISTS users (
-    id SERIAL,
+    id INTEGER PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    email_verification_status email_verification_state NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id)
+    email_verification_status TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TYPE story_state AS ENUM ('draft', 'in_progress', 'done');
-
 CREATE TABLE IF NOT EXISTS stories (
-    id SERIAL,
+    id INTEGER PRIMARY KEY,
     title TEXT NOT NULL,
-    state story_state NOT NULL,
+    state TEXT NOT NULL,
     created_by INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS story_cowriters (
@@ -31,25 +25,20 @@ CREATE TABLE IF NOT EXISTS story_cowriters (
     UNIQUE (story_id, turn_index)
 );
 
-CREATE TYPE turn_action AS ENUM ('pass', 'write', 'finish', 'write_and_finish');
-
 CREATE TABLE IF NOT EXISTS turns (
-    id SERIAL,
+    id INTEGER PRIMARY KEY,
     story_id INTEGER NOT NULL REFERENCES stories (id),
     taken_by INTEGER NOT NULL REFERENCES users (id),
-    action turn_action NOT NULL,
+    action TEXT NOT NULL,
     text_written text,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TYPE hidden_status_type AS ENUM ('hidden', 'unhidden');
 
 CREATE TABLE IF NOT EXISTS user_story_hides (
     user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     story_id INTEGER NOT NULL REFERENCES stories (id) ON DELETE CASCADE,
-    hidden_status hidden_status_type NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    hidden_status TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, story_id)
 );

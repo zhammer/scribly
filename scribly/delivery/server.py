@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import aio_pika
 import aiohttp
-import asyncpg
+import aiosqlite
 from starlette.applications import Starlette
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -37,26 +37,20 @@ templates.env.add_extension(RemoveNewlines)
 
 
 async def startup():
-    connection_kwargs = {}
-    if "pass@db/scribly" in DATABASE_URL:
-        # for cypress testing
-        connection_kwargs["statement_cache_size"] = 0
-    app.state.connection_pool = await asyncpg.create_pool(
-        dsn=DATABASE_URL, min_size=2, max_size=2, **connection_kwargs
-    )
-
     app.state.rabbit_connection = await aio_pika.connect_robust(env.CLOUDAMQP_URL)
 
 
 async def shutdown():
-    await app.state.connection_pool.close()
     await app.state.rabbit_connection.close()
 
 
 @asynccontextmanager
 async def get_scribly(app: Starlette) -> AsyncGenerator[Scribly, None]:
     rabbit_channel = await app.state.rabbit_connection.channel()
-    async with app.state.connection_pool.acquire() as db_connection, aiohttp.ClientSession() as sendgrid_session:
+    async with aiosqlite.connect(
+        DATABASE_URL, isolation_level=None
+    ) as db_connection, aiohttp.ClientSession() as sendgrid_session:
+        db_connection.row_factory = aiosqlite.Row
         database = Database(db_connection)
         emailer = SendGrid(
             env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session
