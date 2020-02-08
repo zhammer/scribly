@@ -4,6 +4,7 @@ import traceback
 from contextlib import asynccontextmanager
 from inspect import FrameInfo
 from typing import AsyncGenerator, Dict, Optional
+from urllib.parse import urlparse
 
 import aio_pika
 import aiohttp
@@ -15,6 +16,7 @@ from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from user_agents import parse
 
 from scribly import env, exceptions
 from scribly.database import Database
@@ -102,7 +104,11 @@ async def me(request):
         me = await scribly.get_me(user)
 
     set_session_user(request, me.user)
-    return templates.TemplateResponse("me.html", {"request": request, "me": me})
+
+    user_agent = parse(request.headers["user-agent"])
+    return templates.TemplateResponse(
+        "me.html", {"request": request, "me": me, "mobile": user_agent.is_mobile}
+    )
 
 
 async def log_in_page(request):
@@ -284,6 +290,53 @@ async def nudge(request):
     )
 
 
+async def hide_story(request):
+    user = get_session_user(request)
+    if not user:
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+
+    async with get_scribly(request.app) as scribly:
+        await scribly.hide_story(user, story_id)
+
+    return RedirectResponse(
+        _path_from_referer(request.headers["referer"]), status_code=303
+    )
+
+
+async def unhide_story(request):
+    user = get_session_user(request)
+    if not user:
+        return RedirectResponse("/", status_code=303)
+
+    story_id = int(request.path_params["story_id"])
+
+    async with get_scribly(request.app) as scribly:
+        await scribly.unhide_story(user, story_id)
+
+    return RedirectResponse(
+        _path_from_referer(request.headers["referer"]), status_code=303
+    )
+
+
+def _path_from_referer(referer: str) -> str:
+    """
+    >>> _path_from_referer("http://127.0.0.1:8000/me?show_hidden=0")
+    '/me?show_hidden=0'
+
+    >>> _path_from_referer("scribly.app/me?show_hidden=0")
+    '/me?show_hidden=0'
+
+    >>> _path_from_referer("scribly.app/me")
+    '/me'
+    """
+    parsed = urlparse(referer)
+    if parsed.query:
+        return f"{parsed.path}?{parsed.query}"
+    return parsed.path
+
+
 async def exception(request):
     raise Exception("Raising an exception, intentionally!")
 
@@ -347,6 +400,8 @@ app = Starlette(
         Route("/stories/{story_id}/turn", submit_turn, methods=["POST"]),
         Route("/stories/{story_id}", story_page),
         Route("/stories/{story_id}/nudge/{nudgee_id}", nudge, methods=["POST"]),
+        Route("/stories/{story_id}/hide", hide_story, methods=["POST"]),
+        Route("/stories/{story_id}/unhide", unhide_story, methods=["POST"]),
         Route("/exception", exception),
     ],
     exception_handlers={500: server_error},
