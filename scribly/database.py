@@ -133,9 +133,9 @@ class Database(DatabaseGateway):
         await self.connection.execute(
             """
             INSERT INTO user_story_hides (user_id, story_id, hidden_status)
-            ($1, $2, 'hidden')
+            VALUES ($1, $2, 'hidden')
             ON CONFLICT (user_id, story_id) DO UPDATE
-            SET hidden_status = 'hidden'
+            SET hidden_status = 'hidden', updated_at = NOW()
             """,
             user.id,
             story.id
@@ -144,10 +144,10 @@ class Database(DatabaseGateway):
     async def unhide_story(self, user: User, story: Story) -> None:
         await self.connection.execute(
             """
-            UPDATE user_story_hides
-            SET hidden_status = 'unhidden'
-            WHERE user_id = $1
-            AND story_id = $2
+            INSERT INTO user_story_hides (user_id, story_id, hidden_status)
+            VALUES ($1, $2, 'unhidden')
+            ON CONFLICT (user_id, story_id) DO UPDATE
+            SET hidden_status = 'unhidden', updated_at = NOW()
             """,
             user.id,
             story.id
