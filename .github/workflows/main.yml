@@ -36,7 +36,7 @@ jobs:
         with:
           record: true
           parallel: true
-          start: "docker-compose up"
+          start: "./dev"
           wait-on: "http://127.0.0.1:8000"
           wait-on-timeout: 180
         env:
