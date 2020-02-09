@@ -24,7 +24,7 @@ _DEFAULTS = {
     "SENDGRID_API_KEY": "test_sendgrid_api_key",
     "SENDGRID_BASE_URL": "https://api.sendgrid.com",
     "SESSION_SECRET_KEY": "dev_session_secret",
-    "WEBSITE_URL": "http://127.0.0.1:8000",
+    "WEBSITE_URL": "https://scribly.glitch.me",
 }
 
 
