@@ -240,25 +240,37 @@ class Database(DatabaseGateway):
         )
 
     async def add_turn_pass(self, user: User, story: Story) -> Story:
-        turn_record = await self.connection.fetchrow(
-            self.QUERY_INSERT_TURN, story.id, user.id, "pass", ""
+        await self.connection.execute(
+            self.QUERY_INSERT_TURN, (story.id, user.id, "pass", "")
         )
+        cursor = await self.connection.execute(
+            "SELECT * FROM turns WHERE rowid = last_insert_rowid()"
+        )
+        turn_record = await cursor.fetchone()
         turn = _pluck_turn(turn_record, {user.id: user})
         return replace(story, turns=story.turns + [turn])
 
     async def add_turn_write(
         self, user: User, story: Story, text_written: str
     ) -> Story:
-        turn_record = await self.connection.fetchrow(
-            self.QUERY_INSERT_TURN, story.id, user.id, "write", text_written,
+        await self.connection.execute(
+            self.QUERY_INSERT_TURN, (story.id, user.id, "write", text_written,)
         )
+        cursor = await self.connection.execute(
+            "SELECT * FROM turns WHERE rowid = last_insert_rowid()"
+        )
+        turn_record = await cursor.fetchone()
         turn = _pluck_turn(turn_record, {user.id: user})
         return replace(story, turns=story.turns + [turn])
 
     async def add_turn_finish(self, user: User, story: Story) -> Story:
-        turn_record = await self.connection.fetchrow(
-            self.QUERY_INSERT_TURN, story.id, user.id, "finish", "",
+        await self.connection.execute(
+            self.QUERY_INSERT_TURN, (story.id, user.id, "finish", "",)
         )
+        cursor = await self.connection.execute(
+            "SELECT * FROM turns WHERE rowid = last_insert_rowid()"
+        )
+        turn_record = await cursor.fetchone()
         await self.connection.execute(
             """
             UPDATE stories SET state = 'done', updated_at = CURRENT_TIMESTAMP
@@ -272,9 +284,14 @@ class Database(DatabaseGateway):
     async def add_turn_write_and_finish(
         self, user: User, story: Story, text_written: str
     ) -> Story:
-        turn_record = await self.connection.fetchrow(
-            self.QUERY_INSERT_TURN, story.id, user.id, "write_and_finish", text_written,
+        await self.connection.execute(
+            self.QUERY_INSERT_TURN,
+            (story.id, user.id, "write_and_finish", text_written,),
         )
+        cursor = await self.connection.execute(
+            "SELECT * FROM turns WHERE rowid = last_insert_rowid()"
+        )
+        turn_record = await cursor.fetchone()
         await self.connection.execute(
             """
             UPDATE stories SET state = 'done', updated_at = CURRENT_TIMESTAMP

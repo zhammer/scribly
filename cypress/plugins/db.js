@@ -1,25 +1,26 @@
 const argon2 = require("argon2");
 const fs = require("fs");
-const { Client } = require("pg");
+const path = require("path");
+const util = require("util");
+const Database = require("better-sqlite3");
 const casual = require("casual");
 
-const DATABASE_URL =
-  process.env.DATABASE_URL || "postgres://scribly:pass@localhost/scribly";
+const DATABASE_URL = process.env_URL || ".data/scribly.db";
 const DB_SCHEMA = fs.readFileSync("migrations/createdb.sql", "utf8");
+
+const unlinkAsync = util.promisify(fs.unlink);
 
 class DB {
   constructor() {
     this._client;
     this._passwordHash;
+
+    // make sure dirname exists
+    const dirname = path.dirname(DATABASE_URL);
+    try {
+      fs.mkdirSync(dirname, { recursive: true });
+    } catch (e) {}
   }
-
-  _getClient = async () => {
-    if (this._client) return this._client;
-
-    this._client = new Client(DATABASE_URL);
-    await this._client.connect();
-    return this._client;
-  };
 
   _getPasswordHash = async () => {
     if (this._passwordHash) return this._passwordHash;
@@ -29,12 +30,12 @@ class DB {
   };
 
   resetDb = async () => {
-    const client = await this._getClient();
-    return await client.query(`
-      DROP SCHEMA IF EXISTS public CASCADE;
-      CREATE SCHEMA public;
-      ${DB_SCHEMA}
-    `);
+    try {
+      await unlinkAsync(DATABASE_URL);
+    } catch (e) {}
+    const client = new Database(DATABASE_URL);
+    client.exec(DB_SCHEMA);
+    return null;
   };
 
   addStories = async stories => {
@@ -45,47 +46,45 @@ class DB {
   };
 
   _fetchUsers = async usernames => {
-    const client = await this._getClient();
-    const usersResult = await client.query(
-      `
-          SELECT * FROM users
-          WHERE username = ANY($1::text[])
-
-      `,
-      [usernames]
+    const client = new Database(DATABASE_URL);
+    const stmt = client.prepare(
+      "SELECT * FROM users WHERE username IN (" +
+        usernames.map(username => `'${username}'`).join(", ") +
+        ")"
     );
+    const usersResult = stmt.all();
     return usernames.map(username =>
-      usersResult.rows.find(row => row.username === username)
+      usersResult.find(row => row.username === username)
     );
   };
 
   addStory = async storyInput => {
     const { title, turns, usernames, complete } = storyInput;
-    const client = await this._getClient();
+    const client = new Database(DATABASE_URL);
     const users = await this._fetchUsers(usernames);
     let state = "draft";
     if (users.length > 1) state = "in_progress";
     if (complete) state = "done";
-    const story = await client.query(
+    let stmt = client.prepare(
       `
         INSERT INTO stories (title, state, created_by)
-        VALUES ($1, $2, $3)
-        RETURNING *
-    `,
-      [title, state, users[0].id]
+        VALUES (@title, @state, @created_by);
+    `
     );
-    const storyId = story.rows[0].id;
+    const { lastInsertRowid: storyId } = stmt.run({
+      title,
+      state,
+      created_by: users[0].id
+    });
 
     if (usernames.length > 1) {
+      let stmt = client.prepare(`
+              INSERT INTO story_cowriters (story_id, user_id, turn_index)
+              VALUES (@storyId, @userId, @index)
+        `);
       // add cowriters
       for (const [index, user] of users.entries()) {
-        await client.query(
-          `
-                INSERT INTO story_cowriters (story_id, user_id, turn_index)
-                VALUES ($1, $2, $3)
-            `,
-          [storyId, user.id, index]
-        );
+        stmt.run({ storyId, userId: user.id, index });
       }
     }
 
@@ -119,14 +118,12 @@ class DB {
       };
     });
 
+    stmt = client.prepare(`
+        INSERT INTO turns (story_id, taken_by, action, text_written)
+        VALUES (?, ?, ?, ?)
+    `);
     for (const turn of generatedTurns) {
-      await client.query(
-        `
-            INSERT INTO turns (story_id, taken_by, action, text_written)
-            VALUES ($1, $2, $3, $4)
-        `,
-        [storyId, turn.user.id, turn.action, turn.text]
-      );
+      stmt.run([storyId, turn.user.id, turn.action, turn.text]);
     }
 
     return null;
@@ -134,24 +131,18 @@ class DB {
 
   addUsers = async users => {
     const passwordHash = await this._getPasswordHash();
-    const nestedRows = users.reduce(
-      ([usernames, passwords, emails, email_verification_statuses], user) => [
-        [...usernames, user.username],
-        [...passwords, passwordHash],
-        [...emails, `${user.username}@mail.com`],
-        [...email_verification_statuses, user.email_verification_status]
-      ],
-      [[], [], [], []]
+    const client = new Database(DATABASE_URL);
+    const insert = client.prepare(
+      "INSERT INTO users (username, password, email, email_verification_status) VALUES (@username, @password, @email, @email_verification_status)"
     );
-
-    const client = await this._getClient();
-    return await client.query(
-      `
-            INSERT INTO users (username, password, email, email_verification_status)
-            SELECT * FROM UNNEST ($1::text[], $2::text[], $3::text[], $4::email_verification_state[])
-        `,
-      nestedRows
-    );
+    users.forEach(user => {
+      insert.run({
+        ...user,
+        email: `${user.username}@mail.com`,
+        password: passwordHash
+      });
+    });
+    return null;
   };
 }
 

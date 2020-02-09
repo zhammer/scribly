@@ -8,15 +8,18 @@
   "dependencies": {
     "argon2": "^0.25.1",
     "axe-core": "^3.4.1",
+    "better-sqlite3": "^5.4.3",
     "casual": "^1.6.2",
     "cypress": "^3.8.3",
     "cypress-axe": "^0.5.3",
     "cypress-cucumber-preprocessor": "^1.16.2",
     "cypress-plugin-tab": "^1.0.3",
-    "pg": "^7.14.0",
-    "pg-native": "^3.0.0",
+    "electron-rebuild": "^1.10.0",
     "superagent": "^5.1.2",
     "wait-on": "^3.3.0"
+  },
+  "scripts": {
+    "postinstall": "electron-rebuild -v 7.1"
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": true
