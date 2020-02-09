@@ -8,7 +8,7 @@ def main():
     with open("./migrations/createdb.sql") as f:
         sql = f.read()
 
-    db_path = Path(os.environ["DATABASE_URL"])
+    db_path = Path(os.environ.get("DATABASE_URL", ".data/scribly.db"))
     os.makedirs(db_path.parent, exist_ok=True)
 
     if "--reset" in sys.argv[1:]:
