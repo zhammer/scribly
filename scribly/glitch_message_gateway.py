@@ -39,4 +39,3 @@ class GlitchMessageGateway(MessageGateway):
             f"{self.base}/announce-cowriters-added", json={"story_id": story.id}
         ) as response:
             pass
-
