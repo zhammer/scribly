@@ -13,35 +13,10 @@ services:
       DATABASE_URL: ".data/scribly.db"
       WEBSITE_URL: http://127.0.0.1:8000
       SENDGRID_BASE_URL: http://mocksendgrid:1080
-      CLOUDAMQP_URL: amqp://guest:guest@rabbit:5672
     depends_on:
       mocksendgrid:
         condition: service_healthy
-      rabbit:
-        condition: service_healthy
     command: bash -c "python scripts/createdb.py && gunicorn -b 0.0.0.0:8000 --log-level trace -w 4 -k uvicorn.workers.UvicornWorker scribly.delivery.server:app"
-  worker:
-    # reuse image built by web
-    image: scribly/scribly
-    depends_on:
-      web:
-        condition: service_started
-    environment:
-      WEBSITE_URL: http://127.0.0.1:8000
-      SENDGRID_BASE_URL: http://mocksendgrid:1080
-      CLOUDAMQP_URL: amqp://guest:guest@rabbit:5672
-    command: bash -c "PYTHONPATH=. python scribly/consumers/consumers.py"
-  rabbit:
-    image: rabbitmq:3.8.2-management-alpine
-    hostname: scriblyrabbit
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    healthcheck:
-      test: nc -z localhost 5672
-      interval: 10s
-      timeout: 5s
-      retries: 3
   mocksendgrid:
     image: mockserver/mockserver
     environment:

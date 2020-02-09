@@ -10,6 +10,7 @@ if typing.TYPE_CHECKING:
     CLOUDAMQP_URL: str
     DATABASE_URL: str
     EMAIL_VERIFICATION_SECRET: str
+    PORT: str
     SENDGRID_API_KEY: str
     SENDGRID_BASE_URL: str
     SESSION_SECRET_KEY: str
@@ -19,6 +20,7 @@ _DEFAULTS = {
     "CLOUDAMQP_URL": "amqp://guest:guest@localhost:5672/%2F",
     "DATABASE_URL": ".data/scribly.db",
     "EMAIL_VERIFICATION_SECRET": "myemailverificationsecret",
+    "PORT": "3000",
     "SENDGRID_API_KEY": "test_sendgrid_api_key",
     "SENDGRID_BASE_URL": "https://api.sendgrid.com",
     "SESSION_SECRET_KEY": "dev_session_secret",

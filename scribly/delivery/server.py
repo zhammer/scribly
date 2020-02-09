@@ -1,12 +1,12 @@
+import asyncio
 import inspect
 import logging
 import traceback
 from contextlib import asynccontextmanager
 from inspect import FrameInfo
-from typing import AsyncGenerator, Dict, Optional
+from typing import AsyncGenerator, Callable, Dict, Optional
 from urllib.parse import urlparse
 
-import aio_pika
 import aiohttp
 import aiosqlite
 from starlette.applications import Starlette
@@ -21,13 +21,14 @@ from user_agents import parse
 from scribly import env, exceptions
 from scribly.database import Database
 from scribly.definitions import User
+from scribly.glitch_message_gateway import GlitchMessageGateway
 from scribly.jinja_helpers import RemoveNewlines
-from scribly.rabbit import Rabbit
 from scribly.sendgrid import SendGrid
 from scribly.use_scribly import Scribly
 
 DATABASE_URL = env.DATABASE_URL
 SESSION_SECRET_KEY = env.SESSION_SECRET_KEY
+PORT = int(env.PORT)
 
 logger = logging.getLogger(__name__)
 
@@ -37,28 +38,25 @@ templates.env.add_extension(RemoveNewlines)
 
 
 async def startup():
-    app.state.rabbit_connection = await aio_pika.connect_robust(env.CLOUDAMQP_URL)
+    pass
 
 
 async def shutdown():
-    await app.state.rabbit_connection.close()
+    pass
 
 
 @asynccontextmanager
 async def get_scribly(app: Starlette) -> AsyncGenerator[Scribly, None]:
-    rabbit_channel = await app.state.rabbit_connection.channel()
     async with aiosqlite.connect(
         DATABASE_URL, isolation_level=None
-    ) as db_connection, aiohttp.ClientSession() as sendgrid_session:
+    ) as db_connection, aiohttp.ClientSession() as sendgrid_session, aiohttp.ClientSession() as glitch_message_gateway_session:
         db_connection.row_factory = aiosqlite.Row
         database = Database(db_connection)
         emailer = SendGrid(
             env.SENDGRID_API_KEY, env.SENDGRID_BASE_URL, sendgrid_session
         )
-        message_gateway = Rabbit(rabbit_channel)
+        message_gateway = GlitchMessageGateway(PORT, glitch_message_gateway_session)
         yield Scribly(database, emailer, message_gateway)
-
-    await rabbit_channel.close()
 
 
 def get_session_user(request) -> Optional[User]:
@@ -100,6 +98,7 @@ async def me(request):
     set_session_user(request, me.user)
 
     user_agent = parse(request.headers["user-agent"])
+    print(me.user)
     return templates.TemplateResponse(
         "me.html", {"request": request, "me": me, "mobile": user_agent.is_mobile}
     )
@@ -373,6 +372,45 @@ def _build_frame_info(frame: FrameInfo, center_line_number: int) -> Dict:
     return {"frame": frame, "code_lines": code_lines}
 
 
+def consumer(func: Callable) -> Callable:
+    """
+    Helper to make a 'consumer' handler, where the actual handler is enqueued
+    as a coroutine to the running event loop and the handler immediately acks
+    the request.
+    """
+
+    async def inner(request):
+        message = await request.json()
+        asyncio.create_task(func(message))
+        return Response("ack", status_code=200)
+
+    return inner
+
+
+@consumer
+async def announce_cowriters_added_exchange(message: Dict):
+    async with get_scribly(app) as scribly:
+        await scribly.send_added_to_story_emails(message["story_id"])
+
+
+@consumer
+async def announce_turn_taken_exchange(message: Dict):
+    async with get_scribly(app) as scribly:
+        await scribly.send_turn_email_notifications(
+            message["story_id"], message["turn_number"]
+        )
+
+    return Response("ack", status_code=200)
+
+
+@consumer
+async def announce_user_created_exchange(message: Dict):
+    async with get_scribly(app) as scribly:
+        await scribly.send_verification_email(User(**message))
+
+    return Response("ack", status_code=200)
+
+
 app = Starlette(
     on_startup=[startup],
     on_shutdown=[shutdown],
@@ -397,6 +435,21 @@ app = Starlette(
         Route("/stories/{story_id}/hide", hide_story, methods=["POST"]),
         Route("/stories/{story_id}/unhide", unhide_story, methods=["POST"]),
         Route("/exception", exception),
+        Route(
+            "/consumers/announce-cowriters-added",
+            announce_cowriters_added_exchange,
+            methods=["POST"],
+        ),
+        Route(
+            "/consumers/announce-turn-taken",
+            announce_turn_taken_exchange,
+            methods=["POST"],
+        ),
+        Route(
+            "/consumers/announce-user-created",
+            announce_user_created_exchange,
+            methods=["POST"],
+        ),
     ],
     exception_handlers={500: server_error},
 )

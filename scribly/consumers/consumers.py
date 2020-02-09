@@ -5,7 +5,7 @@ from typing import List
 
 import aio_pika
 import aiohttp
-import asyncpg
+import aiosqlite
 from typing_extensions import Protocol, Type
 
 from scribly import env
@@ -98,13 +98,10 @@ async def main():
 
     logger.info("Creating an instance of Scribly")
     # make scribly
-    db_connection_kwargs = {}
-    if "pass@db/scribly" in env.DATABASE_URL:
-        # for cypress testing
-        db_connection_kwargs["statement_cache_size"] = 0
 
     rabbit_connection = await aio_pika.connect_robust(env.CLOUDAMQP_URL)
-    db_connection = await asyncpg.connect(dsn=env.DATABASE_URL, **db_connection_kwargs)
+    db_connection = await aiosqlite.connect(env.DATABASE_URL, isolation_level=None)
+    db_connection.row_factory = aiosqlite.Row
     sendgrid_session = aiohttp.ClientSession()
     channel = await rabbit_connection.channel()
 

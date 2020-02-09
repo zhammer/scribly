@@ -98,10 +98,10 @@ class Database(DatabaseGateway):
     ) -> User:
         await self.connection.execute(
             """
-            UPDATE users SET email_verification_status = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?;
+            UPDATE users SET email_verification_status = :status, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :id;
             """,
-            (user.id, status,),
+            {"status": status, "id": user.id},
         )
         return replace(user, email_verification_status=status)
 
