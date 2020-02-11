@@ -13,6 +13,7 @@ services:
       DATABASE_URL: ".data/scribly.db"
       WEBSITE_URL: http://127.0.0.1:8000
       SENDGRID_BASE_URL: http://mocksendgrid:1080
+      PORT: 8000
     depends_on:
       mocksendgrid:
         condition: service_healthy
