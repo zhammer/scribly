@@ -54,14 +54,20 @@ def build_turn_email_notifications(story: Story, turn_number: int) -> List[Email
     ]
 
     return [
-        _build_turn_email_notification(story, turn, recipient)
+        _build_turn_email_notification(story, turn, turn_number, recipient)
         for recipient in recipients
     ]
 
 
-def _build_turn_email_notification(story: Story, turn: Turn, recipient: User) -> Email:
+def _build_turn_email_notification(
+    story: Story, turn: Turn, turn_number: int, recipient: User
+) -> Email:
     body = _render_template_with_css(
-        "storyturnnotification.html", story=story, turn=turn, recipient=recipient
+        "storyturnnotification.html",
+        story=story,
+        turn=turn,
+        turn_number=turn_number,
+        recipient=recipient,
     )
     subject: str
     if turn.action in ("pass", "write"):
