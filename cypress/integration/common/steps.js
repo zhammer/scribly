@@ -159,3 +159,7 @@ Then("the page is accessible", () => {
   cy.injectAxe();
   cy.checkA11y();
 });
+
+Then(`the text {string} is in the viewport`, text => {
+  cy.contains(text).should("be.inViewport");
+});

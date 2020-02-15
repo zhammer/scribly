@@ -16,3 +16,9 @@ services:
         read_only: true
     # run uvicorn with hot relaoad enabled
     command: bash -c "python scripts/createdb.py && uvicorn --host 0.0.0.0 --port 8000 --reload scribly.delivery.server:app"
+  worker:
+    volumes:
+      - type: bind
+        source: "."
+        target: "/project"
+        read_only: true

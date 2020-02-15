@@ -15,7 +15,9 @@
         <div class="{% if not is_users_turn -%} grow {%- endif %}">
           {% for turn in story.turns %}
           {% if turn.action in ["write", "write_and_finish"] %}
-          <p class="text">{{ turn.text_written|replace('\n', '<br>'|safe) }}</p>
+          <p id="turn-{{ loop.index }}" class="text">
+            {{ turn.text_written|replace('\n', '<br>'|safe) }}
+          </p>
           {% endif %}
           {% if turn.action == "write" %}
           <hr class="text-divider">

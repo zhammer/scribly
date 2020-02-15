@@ -57,4 +57,16 @@ Feature: Email Notifications
         When I click the link "The Horseman of Bonny Light"
         Then I am on "/stories/1"
 
-
+    Scenario: Even on a long story my link brings me to the last turn taken
+        Given the following stories exist
+            | title                 | turns | users      | complete |
+            | the neverending story | 51    | zach, gabe | false    |
+        And I am logged in as gabe
+        When I visit "/stories/1"
+        And I click on the "text" textarea
+        And I type "Will this story ever end?"
+        And I click the button "write"
+        And I log in as "zach"
+        And I open my email at "zach@mail.com" with the subject "It's your turn on the neverending story!"
+        And I click the link "go to your story"
+        Then the text "Will this story ever end?" is in the viewport
