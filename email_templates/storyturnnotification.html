@@ -4,7 +4,8 @@
 
 <body>
   <p>
-    <a href="{{ website_url }}/stories/{{ story.id }}">go to your story</a>
+    {% set story_href = website_url + "/stories/" + story.id + "#turn-" ~ (story.turns|length - 1) %}
+    <a href="{{ story_href }}">go to your story</a>
   </p>
   <p>
     <span>
