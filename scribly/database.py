@@ -66,6 +66,10 @@ class Database(DatabaseGateway):
 
         return [_pluck_user(row) for row in rows]
 
+    async def fetch_all_users(self) -> Sequence[User]:
+        rows = await self.connection.fetch("SELECT * FROM users")
+        return [_pluck_user(row) for row in rows]
+
     async def add_cowriters(self, story: Story, cowriters: Sequence[User]) -> Story:
         await self.connection.executemany(
             """
