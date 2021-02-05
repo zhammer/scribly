@@ -351,7 +351,9 @@ async def server_error(request, exception: Exception):
     traceback_obj = traceback.TracebackException.from_exception(
         exception, capture_locals=True
     )
-    frames = inspect.getinnerframes(exception.__traceback__, limit)
+    frames = []
+    if exception.__traceback__:
+        frames = inspect.getinnerframes(exception.__traceback__, limit)
     center_line_number = int((limit - 1) / 2)
     return templates.TemplateResponse(
         "exception.html",
