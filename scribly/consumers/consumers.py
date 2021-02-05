@@ -1,12 +1,11 @@
 import asyncio
 import json
 import logging
-from typing import List
+from typing import List, Protocol, Type
 
 import aio_pika
 import aiohttp
 import asyncpg
-from typing_extensions import Protocol, Type
 
 from scribly import env
 from scribly.consumers.constants import (
