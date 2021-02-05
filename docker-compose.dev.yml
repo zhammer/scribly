@@ -2,7 +2,7 @@
 # directory to the container so that code changes to the host code directory will reload
 # the container's server. (seems like this is quite slow on macs: https://stackoverflow.com/a/38889958)
 
-version: "2.4"
+version: "3.9"
 services:
   web:
     stdin_open: true
@@ -15,7 +15,13 @@ services:
         target: "/project"
         read_only: true
     # run uvicorn with hot relaoad enabled
-    command: bash -c "python scripts/createdb.py && uvicorn --host 0.0.0.0 --port 8000 --reload scribly.delivery.server:app"
+    command: >
+      bash -c "
+        ./wait-for-it.sh postgres:5432
+        ./wait-for-it.sh rabbit:5672
+        ./wait-for-it.sh mocksendgrid:1080
+        python scripts/createdb.py && uvicorn --host 0.0.0.0 --port 8000 --reload scribly.delivery.server:app
+      "
   worker:
     volumes:
       - type: bind

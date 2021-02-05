@@ -61,6 +61,14 @@ class Scribly:
 
         return story
 
+    async def get_user_suggestions(self, user: User) -> Sequence[User]:
+        """
+        A very naive way to get "user suggestions" (for a user) that, at the moment,
+        just returns all users in the db (except for our user.) Lol.
+        """
+        all_users = await self.database.fetch_all_users()
+        return [u for u in all_users if not u.username == user.username]
+
     async def add_cowriters(
         self, user: User, story_id: int, cowriter_usernames: Sequence[str]
     ) -> Story:
