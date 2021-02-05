@@ -12,7 +12,6 @@ Feature: Start A New Story
         Then I see the text "new story"
         Then the page is accessible
 
-    @focus
     Scenario Outline: I start a new story
         Given I am logged in as zhammer
         When I visit "/new"
