@@ -2,7 +2,7 @@
 # directory to the container so that code changes to the host code directory will reload
 # the container's server. (seems like this is quite slow on macs: https://stackoverflow.com/a/38889958)
 
-version: "2.4"
+version: "3.9"
 services:
   web:
     stdin_open: true
