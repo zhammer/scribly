@@ -1,9 +1,7 @@
 import abc
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
-from typing import FrozenSet, List, Optional, Sequence, Tuple
-
-from typing_extensions import Literal
+from typing import FrozenSet, List, Optional, Sequence, Tuple, Literal
 
 EmailVerificationState = Literal["pending", "verified"]
 
