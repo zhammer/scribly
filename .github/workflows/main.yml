@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
           python-version: "3.7"
@@ -25,14 +25,15 @@ jobs:
   cypress-tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         containers: [1, 2, 3]
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
       - run: sudo apt-get -y install libpq-dev
-      - uses: cypress-io/github-action@v1
+      - uses: cypress-io/github-action@v2
         with:
           browser: chrome
           record: true
@@ -43,3 +44,4 @@ jobs:
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           DATABASE_URL: postgres://scribly:pass@localhost/scribly
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
