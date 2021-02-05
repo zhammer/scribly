@@ -10,13 +10,10 @@ import aio_pika
 import aiohttp
 import asyncpg
 from fastapi import FastAPI, Request
-from starlette.applications import Starlette
-from starlette.middleware.authentication import AuthenticationMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
-from starlette.responses import HTMLResponse, RedirectResponse, Response
-from starlette.routing import Route
-from starlette.staticfiles import StaticFiles
-from starlette.templating import Jinja2Templates
 from user_agents import parse
 
 from scribly import env, exceptions
@@ -61,7 +58,7 @@ async def shutdown():
 
 
 @asynccontextmanager
-async def get_scribly(app: Starlette) -> AsyncGenerator[Scribly, None]:
+async def get_scribly(app: FastAPI) -> AsyncGenerator[Scribly, None]:
     rabbit_channel = await app.state.rabbit_connection.channel()
     async with app.state.connection_pool.acquire() as db_connection, aiohttp.ClientSession() as sendgrid_session:
         database = Database(db_connection)
