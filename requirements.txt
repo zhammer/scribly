@@ -9,4 +9,4 @@ jinja2==2.11.3
 premailer==3.7.0
 starlette==0.14.2
 user-agents==2.2.0
-uvicorn==0.13.3
+uvicorn[standard]==0.13.3
