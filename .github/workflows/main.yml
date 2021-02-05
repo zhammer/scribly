@@ -40,7 +40,7 @@ jobs:
           parallel: true
           start: "docker-compose up"
           wait-on: "http://127.0.0.1:8000"
-          wait-on-timeout: 180
+          wait-on-timeout: 240
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           DATABASE_URL: postgres://scribly:pass@localhost/scribly
