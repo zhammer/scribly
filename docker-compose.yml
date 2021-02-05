@@ -47,7 +47,7 @@ services:
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: scribly
   mocksendgrid:
-    image: mockserver/mockserver
+    image: mockserver/mockserver:mockserver-5.11.2
     environment:
       MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mocksendgrid.json
       LOG_LEVEL: "INFO"
