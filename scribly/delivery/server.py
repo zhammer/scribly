@@ -199,12 +199,11 @@ async def new_story_submit(request: Request):
 
 
 @app.post("/stories/{story_id}/addcowriters")
-async def add_cowriters(request: Request):
+async def add_cowriters(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
 
-    story_id = int(request.path_params["story_id"])
     logger.info("request to add cowriters to story %s", story_id)
 
     form = await request.form()
@@ -235,9 +234,7 @@ async def request_email_verification_email(request: Request):
 
 
 @app.get("/email-verification")
-async def verify_email_link(request: Request):
-    token = request.query_params["token"]
-
+async def verify_email_link(request: Request, token: str):
     async with get_scribly(request.app) as scribly:
         email = await scribly.verify_email(token)
     return templates.TemplateResponse(
@@ -246,12 +243,10 @@ async def verify_email_link(request: Request):
 
 
 @app.post("/stories/{story_id}/turn")
-async def submit_turn(request: Request):
+async def submit_turn(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
 
     form = await request.form()
     action = form["action"]
@@ -274,12 +269,10 @@ async def submit_turn(request: Request):
 
 
 @app.get("/stories/{story_id}")
-async def story_page(request: Request):
+async def story_page(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
 
     async with get_scribly(request.app) as scribly:
         story = await scribly.get_story(user, story_id)
@@ -298,13 +291,10 @@ async def story_page(request: Request):
 
 
 @app.post("/stories/{story_id}/nudge/{nudgee_id}")
-async def nudge(request: Request):
+async def nudge(request: Request, story_id: int, nudgee_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
-    nudgee_id = int(request.path_params["nudgee_id"])
 
     async with get_scribly(request.app) as scribly:
         await scribly.nudge(user, nudgee_id, story_id)
@@ -315,12 +305,10 @@ async def nudge(request: Request):
 
 
 @app.post("/stories/{story_id}/hide")
-async def hide_story(request: Request):
+async def hide_story(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
 
     async with get_scribly(request.app) as scribly:
         await scribly.hide_story(user, story_id)
@@ -331,12 +319,10 @@ async def hide_story(request: Request):
 
 
 @app.post("/stories/{story_id}/unhide")
-async def unhide_story(request: Request):
+async def unhide_story(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
 
     async with get_scribly(request.app) as scribly:
         await scribly.unhide_story(user, story_id)
