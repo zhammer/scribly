@@ -29,7 +29,7 @@ services:
       WEBSITE_URL: http://127.0.0.1:8000
       SENDGRID_BASE_URL: http://mocksendgrid:1080
       CLOUDAMQP_URL: amqp://guest:guest@rabbit:5672
-    command: bash -c "PYTHONPATH=. ./wait-for-it.sh -t 60 web:80000 && python scribly/consumers/consumers.py"
+    command: bash -c "PYTHONPATH=. ./wait-for-it.sh -t 60 web:8000 && python scribly/consumers/consumers.py"
   rabbit:
     image: rabbitmq:3.8.2-management-alpine
     hostname: scriblyrabbit
