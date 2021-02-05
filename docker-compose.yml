@@ -32,7 +32,7 @@ services:
       PYTHONPATH: .
     command: bash -c "./wait-for-it.sh -t 60 web:8000 && python scribly/consumers/consumers.py"
   rabbit:
-    image: rabbitmq:3.8.2-management-alpine
+    image: rabbitmq:3.8.11-management-alpine
     hostname: scriblyrabbit
     ports:
       - "15672:15672"
