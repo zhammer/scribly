@@ -21,9 +21,7 @@ class MockSendGrid {
 
   getEmails = async () => {
     const requests = await this.mockserver.getRequests();
-    const requestBodies = requests.map(request =>
-      JSON.parse(request.body.json)
-    );
+    const requestBodies = requests.map(request => request.body.json);
     return requestBodies;
   };
 }

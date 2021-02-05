@@ -16,12 +16,17 @@
         <hr />
         <h2>cowriters</h2>
         <input type="text" autocorrect="off" autocapitalize="none" autofocus="true" name="person-1"
-          id="person-1" required placeholder="person 1" aria-label="person 1" />
+          id="person-1" required placeholder="person 1" aria-label="person 1" list="user-suggestions" />
         {% for i in range(2, 4) %}
         <input type="text" autocorrect="off" autocapitalize="none" name="person-{{ i }}"
           id="person-{{ i }}" placeholder="person {{ i }} (optional)"
-          aria-label="person {{ i }} (optional)" />
+          aria-label="person {{ i }} (optional)" list="user-suggestions" />
         {% endfor %}
+        <datalist id="user-suggestions">
+            {% for user in user_suggestions %}
+                <option value="{{ user.username }}" />
+            {% endfor %}
+        </datalist>
         <br />
         <button type="submit" id="new-story-button">
           submit

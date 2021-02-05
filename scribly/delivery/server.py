@@ -262,10 +262,12 @@ async def story_page(request):
 
     async with get_scribly(request.app) as scribly:
         story = await scribly.get_story(user, story_id)
+        user_suggestions = await scribly.get_user_suggestions(user)
 
     if story.state == "draft":
         return templates.TemplateResponse(
-            "addpeopletostory.html", {"request": request, "story": story},
+            "addpeopletostory.html",
+            {"request": request, "story": story, "user_suggestions": user_suggestions},
         )
 
     if story.state in {"in_progress", "done"}:
