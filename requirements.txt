@@ -8,6 +8,6 @@ itsdangerous==1.1.0
 jinja2==2.11.3
 python-multipart==0.0.5
 premailer==3.7.0
-starlette==0.14.2
+fastapi==0.63.0
 user-agents==2.2.0
 uvicorn[standard]==0.13.3
