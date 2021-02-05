@@ -9,13 +9,11 @@ from urllib.parse import urlparse
 import aio_pika
 import aiohttp
 import asyncpg
-from starlette.applications import Starlette
-from starlette.middleware.authentication import AuthenticationMiddleware
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
-from starlette.responses import HTMLResponse, RedirectResponse, Response
-from starlette.routing import Route
-from starlette.staticfiles import StaticFiles
-from starlette.templating import Jinja2Templates
 from user_agents import parse
 
 from scribly import env, exceptions
@@ -35,7 +33,12 @@ logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory="templates")
 templates.env.add_extension(RemoveNewlines)
 
+app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+@app.on_event("startup")
 async def startup():
     connection_kwargs = {}
     if "pass@db/scribly" in DATABASE_URL:
@@ -48,13 +51,14 @@ async def startup():
     app.state.rabbit_connection = await aio_pika.connect_robust(env.CLOUDAMQP_URL)
 
 
+@app.on_event("shutdown")
 async def shutdown():
     await app.state.connection_pool.close()
     await app.state.rabbit_connection.close()
 
 
 @asynccontextmanager
-async def get_scribly(app: Starlette) -> AsyncGenerator[Scribly, None]:
+async def get_scribly(app: FastAPI) -> AsyncGenerator[Scribly, None]:
     rabbit_channel = await app.state.rabbit_connection.channel()
     async with app.state.connection_pool.acquire() as db_connection, aiohttp.ClientSession() as sendgrid_session:
         database = Database(db_connection)
@@ -67,7 +71,7 @@ async def get_scribly(app: Starlette) -> AsyncGenerator[Scribly, None]:
     await rabbit_channel.close()
 
 
-def get_session_user(request) -> Optional[User]:
+def get_session_user(request: Request) -> Optional[User]:
     session_user = request.session.get("user", None)
     if not session_user:
         return None
@@ -87,7 +91,8 @@ def clear_session_user(request) -> None:
     del request.session["user"]
 
 
-async def homepage(request):
+@app.get("/")
+async def homepage(request: Request):
     user = get_session_user(request)
     if user:
         return RedirectResponse("/me")
@@ -95,7 +100,8 @@ async def homepage(request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-async def me(request):
+@app.get("/me")
+async def me(request: Request):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/")
@@ -111,7 +117,8 @@ async def me(request):
     )
 
 
-async def log_in_page(request):
+@app.get("/login")
+async def log_in_page(request: Request):
     user = get_session_user(request)
     if user:
         return RedirectResponse("/me")
@@ -119,7 +126,8 @@ async def log_in_page(request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-async def login(request):
+@app.post("/login")
+async def login(request: Request):
     form = await request.form()
 
     async with get_scribly(request.app) as scribly:
@@ -129,7 +137,8 @@ async def login(request):
     return RedirectResponse("/me", status_code=303)
 
 
-async def sign_up(request):
+@app.post("/signup")
+async def sign_up(request: Request):
     form = await request.form()
     username = form["username"]
     password = form["password"]
@@ -147,12 +156,14 @@ async def sign_up(request):
     return RedirectResponse(f"/me", status_code=303)
 
 
-async def logout(request):
+@app.api_route("/logout", methods=["GET", "POST"])
+async def logout(request: Request):
     clear_session_user(request)
     return RedirectResponse("/", status_code=303)
 
 
-async def sign_up_page(request):
+@app.get("/signup")
+async def sign_up_page(request: Request):
     user = get_session_user(request)
     if user:
         return RedirectResponse("/me")
@@ -160,7 +171,8 @@ async def sign_up_page(request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
 
-async def new_story(request):
+@app.get("/new")
+async def new_story(request: Request):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/")
@@ -168,7 +180,8 @@ async def new_story(request):
     return templates.TemplateResponse("newstory.html", {"request": request})
 
 
-async def new_story_submit(request):
+@app.post("/new")
+async def new_story_submit(request: Request):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
@@ -182,12 +195,12 @@ async def new_story_submit(request):
     return RedirectResponse(f"/stories/{story.id}", status_code=303)
 
 
-async def add_cowriters(request):
+@app.post("/stories/{story_id}/addcowriters")
+async def add_cowriters(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
 
-    story_id = int(request.path_params["story_id"])
     logger.info("request to add cowriters to story %s", story_id)
 
     form = await request.form()
@@ -203,7 +216,8 @@ async def add_cowriters(request):
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
-async def request_email_verification_email(request):
+@app.post("/email-verification")
+async def request_email_verification_email(request: Request):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
@@ -216,9 +230,8 @@ async def request_email_verification_email(request):
     )
 
 
-async def verify_email_link(request):
-    token = request.query_params["token"]
-
+@app.get("/email-verification")
+async def verify_email_link(request: Request, token: str):
     async with get_scribly(request.app) as scribly:
         email = await scribly.verify_email(token)
     return templates.TemplateResponse(
@@ -226,12 +239,11 @@ async def verify_email_link(request):
     )
 
 
-async def submit_turn(request):
+@app.post("/stories/{story_id}/turn")
+async def submit_turn(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
 
     form = await request.form()
     action = form["action"]
@@ -253,12 +265,11 @@ async def submit_turn(request):
     return RedirectResponse(f"/stories/{story_id}", status_code=303)
 
 
-async def story_page(request):
+@app.get("/stories/{story_id}")
+async def story_page(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
 
     async with get_scribly(request.app) as scribly:
         story = await scribly.get_story(user, story_id)
@@ -276,13 +287,11 @@ async def story_page(request):
         )
 
 
-async def nudge(request):
+@app.post("/stories/{story_id}/nudge/{nudgee_id}")
+async def nudge(request: Request, story_id: int, nudgee_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
-    nudgee_id = int(request.path_params["nudgee_id"])
 
     async with get_scribly(request.app) as scribly:
         await scribly.nudge(user, nudgee_id, story_id)
@@ -292,12 +301,11 @@ async def nudge(request):
     )
 
 
-async def hide_story(request):
+@app.post("/stories/{story_id}/hide")
+async def hide_story(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
 
     async with get_scribly(request.app) as scribly:
         await scribly.hide_story(user, story_id)
@@ -307,12 +315,11 @@ async def hide_story(request):
     )
 
 
-async def unhide_story(request):
+@app.post("/stories/{story_id}/unhide")
+async def unhide_story(request: Request, story_id: int):
     user = get_session_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
-
-    story_id = int(request.path_params["story_id"])
 
     async with get_scribly(request.app) as scribly:
         await scribly.unhide_story(user, story_id)
@@ -339,10 +346,12 @@ def _path_from_referer(referer: str) -> str:
     return parsed.path
 
 
-async def exception(request):
+@app.get("/exception")
+async def exception(request: Request):
     raise Exception("Raising an exception, intentionally!")
 
 
+@app.exception_handler(500)
 async def server_error(request, exception: Exception):
 
     # most of this is copied from the debug starlette error page (https://github.com/encode/starlette/blob/c80558e04d06e6f55831fbe6c38dfcc5393fc56d/starlette/middleware/errors.py#L210-L227)
@@ -351,7 +360,9 @@ async def server_error(request, exception: Exception):
     traceback_obj = traceback.TracebackException.from_exception(
         exception, capture_locals=True
     )
-    frames = inspect.getinnerframes(exception.__traceback__, limit)
+    frames = []
+    if exception.__traceback__:
+        frames = inspect.getinnerframes(exception.__traceback__, limit)
     center_line_number = int((limit - 1) / 2)
     return templates.TemplateResponse(
         "exception.html",
@@ -377,34 +388,3 @@ def _build_frame_info(frame: FrameInfo, center_line_number: int) -> Dict:
     ]
 
     return {"frame": frame, "code_lines": code_lines}
-
-
-app = Starlette(
-    on_startup=[startup],
-    on_shutdown=[shutdown],
-    routes=[
-        Route("/", homepage),
-        Route("/me", me),
-        Route("/login", log_in_page),
-        Route("/login", login, methods=["POST"]),
-        Route("/signup", sign_up, methods=["POST"]),
-        Route("/logout", logout, methods=["GET", "POST"]),
-        Route("/signup", sign_up_page),
-        Route("/new", new_story),
-        Route("/new", new_story_submit, methods=["POST"]),
-        Route("/stories/{story_id}/addcowriters", add_cowriters, methods=["POST"]),
-        Route(
-            "/email-verification", request_email_verification_email, methods=["POST"]
-        ),
-        Route("/email-verification", verify_email_link),
-        Route("/stories/{story_id}/turn", submit_turn, methods=["POST"]),
-        Route("/stories/{story_id}", story_page),
-        Route("/stories/{story_id}/nudge/{nudgee_id}", nudge, methods=["POST"]),
-        Route("/stories/{story_id}/hide", hide_story, methods=["POST"]),
-        Route("/stories/{story_id}/unhide", unhide_story, methods=["POST"]),
-        Route("/exception", exception),
-    ],
-    exception_handlers={500: server_error},
-)
-app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
-app.mount("/static", StaticFiles(directory="static"), name="static")
