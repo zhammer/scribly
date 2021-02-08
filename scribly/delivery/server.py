@@ -13,6 +13,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from user_agents import parse
 
@@ -36,6 +37,17 @@ templates.env.add_extension(RemoveNewlines)
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET_KEY)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.middleware("http")
+async def heroku_redirect(request: Request, call_next):
+    """
+    https://help.heroku.com/J2R1S4T8/can-heroku-force-an-application-to-use-ssl-tls
+    """
+    if env.ENV == "heroku" and request.headers.get("X-FORWARDED-PROTO") == "http":
+        return RedirectResponse(request.url.replace(scheme="https"), status_code=307)
+
+    return await call_next(request)
 
 
 @app.on_event("startup")
