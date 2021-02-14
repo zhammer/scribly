@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/go-pg/pg/v10"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -36,6 +38,9 @@ func main() {
 }
 
 func makeRouter(cfg Config) (http.Handler, error) {
+	formDecoder := schema.NewDecoder()
+	formDecoder.IgnoreUnknownKeys(true)
+
 	router := mux.NewRouter()
 
 	opt, err := pg.ParseURL(cfg.DatabaseURL)
@@ -48,7 +53,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		return nil, err
 	}
 
-	_, err = internal.NewScribly(db, nil)
+	scribly, err := internal.NewScribly(db, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +77,28 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		if err := signupTmpl.ExecuteTemplate(w, "signup.tmpl", nil); err != nil {
 			http.Error(w, "Internal Server Error", 500)
 		}
-	})
+	}).Methods("GET")
+
+	router.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		var input internal.SignUpInput
+		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		user, err := scribly.SignUp(r.Context(), input)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		fmt.Println(user)
+	}).Methods("POST")
 
 	return router, nil
 }

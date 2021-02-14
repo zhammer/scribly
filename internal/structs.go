@@ -1,5 +1,10 @@
 package internal
 
+import (
+	"fmt"
+	"scribly/pkg/helpers"
+)
+
 type EmailVerificationState string
 
 const (
@@ -80,4 +85,26 @@ type EmailVerificationTokenPayload struct {
 	UserID    int
 	Email     string
 	Timestamp float64
+}
+
+type SignUpInput struct {
+	Username string `schema:"username,required"`
+	Password string `schema:"password,required"`
+	Email    string `schema:"email,required"`
+}
+
+func (s *SignUpInput) Validate() error {
+	if len(s.Password) < 8 {
+		return fmt.Errorf("Password must be longer than 8 characters")
+	}
+
+	if len(s.Username) < 4 || !helpers.IsAlphaNumeric(s.Username) {
+		return fmt.Errorf("Username must be longer than 4 characters and only consist of alphanumeric characters")
+	}
+
+	if !helpers.IsValidEmail(s.Email) {
+		return fmt.Errorf("Invalid email address format")
+	}
+
+	return nil
 }

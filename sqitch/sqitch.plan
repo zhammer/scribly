@@ -9,3 +9,4 @@ useless_table 2021-02-14T03:21:58Z Zach Hammer <zachary_hammer@alumni.brown.edu>
 @1.0.1 2021-02-14T03:31:22Z Zach Hammer <zachary_hammer@alumni.brown.edu> # added useless table
 
 user_story_view 2021-02-14T03:52:01Z Zach Hammer <zachary_hammer@alumni.brown.edu> # adds user story view
+pgcrypto 2021-02-14T21:59:34Z Zach Hammer <zachary_hammer@alumni.brown.edu> # enable pgcrypto
