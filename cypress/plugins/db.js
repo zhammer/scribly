@@ -32,9 +32,14 @@ class DB {
     return await client.query(`
     DO $$ DECLARE
         r RECORD;
+        i TEXT;
     BEGIN
         FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
             EXECUTE 'TRUNCATE ' || quote_ident(r.tablename) || ' CASCADE';
+        END LOOP;
+        FOR i IN (SELECT column_default FROM information_schema.columns WHERE column_default SIMILAR TO 'nextval%')
+        LOOP
+            EXECUTE 'ALTER SEQUENCE'||' ' || substring(substring(i from '''[a-z_]*')from '[a-z_]+') || ' '||' RESTART 1;';
         END LOOP;
     END $$;
     `);
