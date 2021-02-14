@@ -18,3 +18,10 @@ func (s *Scribly) LogIn(ctx context.Context, username string, password string) (
 func (s *Scribly) SignUp(ctx context.Context, username string, password string, email string) (User, error) {
 	return User{}, ErrNotImplemented
 }
+
+func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {
+	return &Scribly{
+		db:      db,
+		emailer: emailer,
+	}, nil
+}
