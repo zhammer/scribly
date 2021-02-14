@@ -1,0 +1,6 @@
+%syntax-version=1.0.0
+%project=scribly
+%uri=https://github.com/zhammer/scribly
+
+existingdb 2021-02-14T01:04:27Z Zach Hammer <zachary_hammer@alumni.brown.edu> # The scribly DB that already exists
+@1.0.0 2021-02-14T01:07:05Z Zach Hammer <zachary_hammer@alumni.brown.edu> # added existing db

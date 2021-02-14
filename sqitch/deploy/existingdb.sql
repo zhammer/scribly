@@ -1,3 +1,6 @@
+-- Deploy scribly:existingdb to pg
+BEGIN;
+
 CREATE TYPE email_verification_state AS ENUM ('pending', 'verified');
 
 CREATE TABLE IF NOT EXISTS users (
@@ -53,3 +56,5 @@ CREATE TABLE IF NOT EXISTS user_story_hides (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (user_id, story_id)
 );
+
+COMMIT;
