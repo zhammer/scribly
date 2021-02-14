@@ -32,6 +32,24 @@ func (s *Scribly) SignUp(ctx context.Context, input SignUpInput) (*User, error) 
 	return &user, nil
 }
 
+func (s *Scribly) Me(ctx context.Context, user *User) (*Me, error) {
+	// todo: figure out how to do this in one query, if that's bettah
+	// refresh our user model
+	if err := s.db.Model(user).WherePK().Select(); err != nil {
+		return nil, err
+	}
+	var userStories []UserStory
+	if err := s.db.Model(&userStories).Where("user_id = ?", user.ID).Select(); err != nil {
+		return nil, err
+	}
+
+	return &Me{
+		User:    user,
+		Stories: userStories,
+	}, nil
+
+}
+
 func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {
 	return &Scribly{
 		db:      db,

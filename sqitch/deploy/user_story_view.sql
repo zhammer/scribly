@@ -2,7 +2,7 @@
 BEGIN;
 
 CREATE
-OR REPLACE VIEW user_story_view AS
+OR REPLACE VIEW user_stories AS
 SELECT
     users.id AS user_id,
     stories.id AS story_id,
@@ -11,7 +11,7 @@ SELECT
             WHEN user_story_hides.hidden_status = 'hidden' THEN true
             ELSE false
         END
-    ) AS is_hidden
+    ) AS hidden
 FROM
     stories
     LEFT JOIN story_cowriters ON story_cowriters.story_id = stories.id
@@ -26,6 +26,6 @@ FROM
 GROUP BY
     users.id,
     stories.id,
-    is_hidden;
+    hidden;
 
 COMMIT;

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -120,6 +121,23 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 	}).Methods("POST")
+
+	// meTmpl := tmpl("me.tmpl")
+	router.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		me, err := scribly.Me(r.Context(), user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Printf("%+v\n", me)
+	})
 
 	return router, nil
 }

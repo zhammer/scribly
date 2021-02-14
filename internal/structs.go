@@ -64,15 +64,15 @@ func (s *Story) CurrentWritersTurn() *User {
 
 // this should be a view
 type UserStory struct {
+	UserID  int
 	StoryID int
 	Story   *Story `pg:"rel:has-one"`
 	Hidden  bool
 }
 
 type Me struct {
-	UserID  int
-	User    *User        `pg:"rel:has-one"`
-	Stories []*UserStory `pg:"rel:has-many"`
+	User    *User
+	Stories []UserStory
 }
 
 type Email struct {
