@@ -23,7 +23,7 @@ func (s *Scribly) SignUp(ctx context.Context, input SignUpInput) (*User, error) 
 	user := User{}
 	_, err := s.db.QueryOne(&user, `
 		INSERT INTO users (username, email, password) VALUES (?, ?, crypt(?, gen_salt('bf', 8)))
-		RETURNING id, username, email
+		RETURNING id, username, email, email_verification_status
 	`, input.Username, input.Email, input.Password)
 	if err != nil {
 		return nil, err

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -18,8 +17,9 @@ import (
 )
 
 type Config struct {
-	Port        int    `default:"8000"`
-	DatabaseURL string `envconfig:"database_url" default:"postgres://scribly:pass@localhost/scribly?sslmode=disable"`
+	Port             int    `default:"8000"`
+	DatabaseURL      string `envconfig:"database_url" default:"postgres://scribly:pass@localhost/scribly?sslmode=disable"`
+	SessionSecretKey string `envconfig:"session_secret_key" default:"dev_session_secret"`
 }
 
 func main() {
@@ -41,6 +41,8 @@ func makeRouter(cfg Config) (http.Handler, error) {
 	formDecoder := schema.NewDecoder()
 	formDecoder.IgnoreUnknownKeys(true)
 
+	sessions := NewSessionHelper(cfg.SessionSecretKey)
+
 	router := mux.NewRouter()
 
 	opt, err := pg.ParseURL(cfg.DatabaseURL)
@@ -60,6 +62,11 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	indexTmpl := tmpl("index.tmpl")
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if user, _ := sessions.GetUser(r); user != nil {
+			http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+			return
+		}
+
 		if err := indexTmpl.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
 			http.Error(w, "Internal Server Error", 500)
 		}
@@ -67,6 +74,11 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	loginTmpl := tmpl("login.tmpl")
 	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if user, _ := sessions.GetUser(r); user != nil {
+			http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+			return
+		}
+
 		if err := loginTmpl.ExecuteTemplate(w, "login.tmpl", nil); err != nil {
 			http.Error(w, "Internal Server Error", 500)
 		}
@@ -80,6 +92,11 @@ func makeRouter(cfg Config) (http.Handler, error) {
 	}).Methods("GET")
 
 	router.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
+		if user, _ := sessions.GetUser(r); user != nil {
+			http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+			return
+		}
+
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, err.Error(), 500)
 			return
@@ -97,7 +114,11 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		fmt.Println(user)
+		if err := sessions.SaveUser(user, r, w); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 	}).Methods("POST")
 
 	return router, nil
