@@ -64,15 +64,10 @@ type UserStory struct {
 	Hidden  bool
 }
 
-// also a view
 type Me struct {
-	UserID           int
-	User             *User   `pg:"rel:has-one"`
-	YourTurn         []Story `pg:"rel:has-many"`
-	WaitingForOthers []Story `pg:"rel:has-many"`
-	InProgress       []Story `pg:"rel:has-many"`
-	Drafts           []Story `pg:"rel:has-many"`
-	Done             []Story `pg:"rel:has-many"`
+	UserID  int
+	User    *User        `pg:"rel:has-one"`
+	Stories []*UserStory `pg:"rel:has-many"`
 }
 
 type Email struct {

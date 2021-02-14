@@ -1,8 +1,14 @@
 package internal
 
-import "context"
+import (
+	"context"
+
+	"github.com/go-pg/pg/v10"
+)
 
 type Scribly struct {
+	db      *pg.DB
+	emailer EmailGateway
 }
 
 func (s *Scribly) LogIn(ctx context.Context, username string, password string) (User, error) {
