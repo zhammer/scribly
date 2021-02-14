@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"html/template"
 	"log"
 	"net"
 	"net/http"
+	"path"
 	"scribly/internal"
 	"strconv"
+	"text/template"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/gorilla/mux"
@@ -36,10 +37,6 @@ func main() {
 
 func makeRouter(cfg Config) (http.Handler, error) {
 	router := mux.NewRouter()
-	templates, err := template.ParseGlob("gotemplates/**")
-	if err != nil {
-		return nil, err
-	}
 
 	opt, err := pg.ParseURL(cfg.DatabaseURL)
 	if err != nil {
@@ -56,11 +53,35 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		return nil, err
 	}
 
+	indexTmpl := tmpl("index.tmpl")
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if err := templates.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
+		if err := indexTmpl.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
 			http.Error(w, "Internal Server Error", 500)
 		}
 	}).Methods("GET")
 
+	loginTmpl := tmpl("login.tmpl")
+	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if err := loginTmpl.ExecuteTemplate(w, "login.tmpl", nil); err != nil {
+			http.Error(w, "Internal Server Error", 500)
+		}
+	}).Methods("GET")
+
+	signupTmpl := tmpl("signup.tmpl")
+	router.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
+		if err := signupTmpl.ExecuteTemplate(w, "signup.tmpl", nil); err != nil {
+			http.Error(w, "Internal Server Error", 500)
+		}
+	})
+
 	return router, nil
+}
+
+func tmpl(tmplPath string) *template.Template {
+	return template.Must(
+		template.ParseFiles(
+			"gotemplates/_layout.tmpl",
+			path.Join("gotemplates", tmplPath),
+		),
+	)
 }
