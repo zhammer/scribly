@@ -2,6 +2,9 @@ build:
   docker:
     web: Dockerfile
     worker: Dockerfile
+release:
+  image: web
+  command: sqitch deploy $DATABASE_URL
 run:
   web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker --log-level info scribly.delivery.server:app
   worker: PYTHONPATH=. python scribly/consumers/consumers.py
