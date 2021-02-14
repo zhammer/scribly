@@ -7,3 +7,5 @@ existingdb 2021-02-14T01:04:27Z Zach Hammer <zachary_hammer@alumni.brown.edu> # 
 
 useless_table 2021-02-14T03:21:58Z Zach Hammer <zachary_hammer@alumni.brown.edu> # Adds a useless table to test sqitch release phase
 @1.0.1 2021-02-14T03:31:22Z Zach Hammer <zachary_hammer@alumni.brown.edu> # added useless table
+
+user_story_view 2021-02-14T03:52:01Z Zach Hammer <zachary_hammer@alumni.brown.edu> # adds user story view
