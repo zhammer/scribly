@@ -151,6 +151,8 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
+		http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+
 	}).Methods("POST")
 
 	meTmpl := tmpl("me.tmpl")
