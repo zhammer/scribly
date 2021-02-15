@@ -29,6 +29,7 @@ const (
 )
 
 type Turn struct {
+	StoryID     int
 	TakenByID   int
 	TakenBy     *User `pg:"rel:has-one"`
 	Action      TurnAction
@@ -43,11 +44,12 @@ const (
 	StoryStateDone       = StoryState("done")
 )
 
+// after trigger: sets current_turn_writer_id (nullable)
 type Story struct {
 	ID          int
 	Title       string
 	State       StoryState
-	CreatedByID int
+	CreatedByID int    `pg:"created_by"`
 	CreatedBy   *User  `pg:"rel:has-one"`
 	Cowriters   []User `pg:"rel:has-many"`
 	Turns       []Turn `pg:"rel:has-many"`
@@ -63,16 +65,42 @@ func (s *Story) CurrentWritersTurn() *User {
 }
 
 // this should be a view
+// todo: add field to check if it's the user's turn
 type UserStory struct {
 	UserID  int
 	StoryID int
-	Story   *Story `pg:"rel:has-one"`
+	Story   Story `pg:"rel:has-one"`
 	Hidden  bool
 }
 
 type Me struct {
 	User    *User
 	Stories []UserStory
+}
+
+func (m *Me) storiesWithState(state StoryState) []UserStory {
+	var out []UserStory
+	for _, story := range m.Stories {
+		if story.Story.State == state {
+			out = append(out, story)
+		}
+	}
+	return out
+}
+
+func (m *Me) Drafts() []UserStory {
+	return m.storiesWithState(StoryStateDraft)
+}
+func (m *Me) YourTurn() []UserStory {
+	// todo: check turn
+	return m.storiesWithState(StoryStateInProgress)
+}
+func (m *Me) WaitingForOthers() []UserStory {
+	// todo: check turn
+	return m.storiesWithState(StoryStateInProgress)
+}
+func (m *Me) Done() []UserStory {
+	return m.storiesWithState(StoryStateDone)
 }
 
 type Email struct {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -122,7 +121,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	}).Methods("POST")
 
-	// meTmpl := tmpl("me.tmpl")
+	meTmpl := tmpl("me.tmpl")
 	router.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
@@ -136,7 +135,13 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		fmt.Printf("%+v\n", me)
+		if err := meTmpl.ExecuteTemplate(w, "me.tmpl", ViewData{me, r}); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		// refresh the session user in case we get updated user info from db
+		_ = sessions.SaveUser(me.User, r, w)
 	})
 
 	return router, nil

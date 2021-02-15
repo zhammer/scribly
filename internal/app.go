@@ -39,7 +39,10 @@ func (s *Scribly) Me(ctx context.Context, user *User) (*Me, error) {
 		return nil, err
 	}
 	var userStories []UserStory
-	if err := s.db.Model(&userStories).Where("user_id = ?", user.ID).Select(); err != nil {
+	if err := s.db.Model(&userStories).
+		Where("user_id = ?", user.ID).
+		Relation("Story").
+		Select(); err != nil {
 		return nil, err
 	}
 
