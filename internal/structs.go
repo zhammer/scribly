@@ -44,15 +44,15 @@ const (
 	StoryStateDone       = StoryState("done")
 )
 
-// after trigger: sets current_turn_writer_id (nullable)
 type Story struct {
-	ID          int
-	Title       string
-	State       StoryState
-	CreatedByID int    `pg:"created_by"`
-	CreatedBy   *User  `pg:"rel:has-one"`
-	Cowriters   []User `pg:"rel:has-many"`
-	Turns       []Turn `pg:"rel:has-many"`
+	ID              int
+	Title           string
+	State           StoryState
+	CreatedByID     int    `pg:"created_by"`
+	CreatedBy       *User  `pg:"rel:has-one"`
+	Cowriters       []User `pg:"rel:has-many"`
+	Turns           []Turn `pg:"rel:has-many"`
+	CurrentWriterID int    `pg:"-"`
 }
 
 func (s *Story) CurrentWritersTurn() *User {
