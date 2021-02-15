@@ -137,6 +137,11 @@ type SignUpInput struct {
 	Email    string `schema:"email,required"`
 }
 
+type LoginInput struct {
+	Username string `schema:"username,required"`
+	Password string `schema:"password,required"`
+}
+
 func (s *SignUpInput) Validate() error {
 	if len(s.Password) < 8 {
 		return fmt.Errorf("Password must be longer than 8 characters")

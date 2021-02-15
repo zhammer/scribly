@@ -11,8 +11,15 @@ type Scribly struct {
 	emailer EmailGateway
 }
 
-func (s *Scribly) LogIn(ctx context.Context, username string, password string) (*User, error) {
-	return &User{}, ErrNotImplemented
+func (s *Scribly) LogIn(ctx context.Context, input LoginInput) (*User, error) {
+	user := User{}
+	_, err := s.db.QueryOne(&user, `
+		SELECT id, username FROM users WHERE username = ? AND password = crypt(?, password);
+	`, input.Username, input.Password)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (s *Scribly) SignUp(ctx context.Context, input SignUpInput) (*User, error) {

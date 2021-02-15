@@ -84,6 +84,38 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 	}).Methods("GET")
 
+	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if user, _ := sessions.GetUser(r); user != nil {
+			http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		var input internal.LoginInput
+		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		user, err := scribly.LogIn(r.Context(), input)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		if err := sessions.SaveUser(user, r, w); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+
+	}).Methods("POST")
+
 	signupTmpl := tmpl("signup.tmpl")
 	router.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
 		if err := signupTmpl.ExecuteTemplate(w, "signup.tmpl", nil); err != nil {
