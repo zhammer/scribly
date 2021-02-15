@@ -54,6 +54,7 @@ type Story struct {
 	Cowriters       []User `pg:"rel:has-many"`
 	Turns           []Turn `pg:"rel:has-many"`
 	CurrentWriterID int
+	CurrentWriter   *User `pg:"rel:has-one"`
 }
 
 func (s *Story) CurrentWritersTurn() *User {
@@ -70,6 +71,10 @@ type UserStory struct {
 	StoryID int
 	Story   Story `pg:"rel:has-one"`
 	Hidden  bool
+}
+
+func (u *UserStory) IsUsersTurn() bool {
+	return u.Story.CurrentWriterID == u.UserID
 }
 
 type Me struct {
@@ -94,7 +99,7 @@ func (m *Me) YourTurn() []UserStory {
 	var yourTurn []UserStory
 	inProgress := m.storiesWithState(StoryStateInProgress)
 	for _, story := range inProgress {
-		if story.Story.CurrentWriterID == m.User.ID {
+		if story.IsUsersTurn() {
 			yourTurn = append(yourTurn, story)
 		}
 	}
@@ -104,7 +109,7 @@ func (m *Me) WaitingForOthers() []UserStory {
 	var yourTurn []UserStory
 	waitingForOthers := m.storiesWithState(StoryStateInProgress)
 	for _, story := range waitingForOthers {
-		if story.Story.CurrentWriterID != m.User.ID {
+		if !story.IsUsersTurn() {
 			waitingForOthers = append(waitingForOthers, story)
 		}
 	}
