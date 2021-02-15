@@ -45,6 +45,7 @@ const (
 )
 
 type Story struct {
+	tableName       struct{} `pg:"select:stories_enhanced"`
 	ID              int
 	Title           string
 	State           StoryState
@@ -52,7 +53,7 @@ type Story struct {
 	CreatedBy       *User  `pg:"rel:has-one"`
 	Cowriters       []User `pg:"rel:has-many"`
 	Turns           []Turn `pg:"rel:has-many"`
-	CurrentWriterID int    `pg:"-"`
+	CurrentWriterID int
 }
 
 func (s *Story) CurrentWritersTurn() *User {
@@ -64,8 +65,6 @@ func (s *Story) CurrentWritersTurn() *User {
 	return &s.Cowriters[currentWriterIndex]
 }
 
-// this should be a view
-// todo: add field to check if it's the user's turn
 type UserStory struct {
 	UserID  int
 	StoryID int
@@ -92,12 +91,24 @@ func (m *Me) Drafts() []UserStory {
 	return m.storiesWithState(StoryStateDraft)
 }
 func (m *Me) YourTurn() []UserStory {
-	// todo: check turn
-	return m.storiesWithState(StoryStateInProgress)
+	var yourTurn []UserStory
+	inProgress := m.storiesWithState(StoryStateInProgress)
+	for _, story := range inProgress {
+		if story.Story.CurrentWriterID == m.User.ID {
+			yourTurn = append(yourTurn, story)
+		}
+	}
+	return yourTurn
 }
 func (m *Me) WaitingForOthers() []UserStory {
-	// todo: check turn
-	return m.storiesWithState(StoryStateInProgress)
+	var yourTurn []UserStory
+	waitingForOthers := m.storiesWithState(StoryStateInProgress)
+	for _, story := range waitingForOthers {
+		if story.Story.CurrentWriterID != m.User.ID {
+			waitingForOthers = append(waitingForOthers, story)
+		}
+	}
+	return yourTurn
 }
 func (m *Me) Done() []UserStory {
 	return m.storiesWithState(StoryStateDone)
