@@ -106,14 +106,14 @@ func (m *Me) YourTurn() []UserStory {
 	return yourTurn
 }
 func (m *Me) WaitingForOthers() []UserStory {
-	var yourTurn []UserStory
-	waitingForOthers := m.storiesWithState(StoryStateInProgress)
-	for _, story := range waitingForOthers {
+	var waitingForOthers []UserStory
+	inProgress := m.storiesWithState(StoryStateInProgress)
+	for _, story := range inProgress {
 		if !story.IsUsersTurn() {
 			waitingForOthers = append(waitingForOthers, story)
 		}
 	}
-	return yourTurn
+	return waitingForOthers
 }
 func (m *Me) Done() []UserStory {
 	return m.storiesWithState(StoryStateDone)
