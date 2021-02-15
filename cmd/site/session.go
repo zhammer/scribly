@@ -21,6 +21,9 @@ func (s *SessionHelper) GetUser(r *http.Request) (*internal.User, error) {
 	if err := mapstructure.Decode(session.Values["user"], &user); err != nil {
 		return nil, err
 	}
+	if user.ID == 0 {
+		return nil, nil
+	}
 	return &user, nil
 }
 
