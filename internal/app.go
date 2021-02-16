@@ -67,7 +67,7 @@ func (s *Scribly) UserStory(ctx context.Context, userID int, storyID int) (*User
 		Relation("Story").
 		Relation("Story.Cowriters").
 		Relation("Story.Cowriters.User").
-		Relation("Story.CreatedBy").
+		Relation("Story.CreatedByU").
 		Relation("Story.Turns").
 		Relation("Story.CurrentWriter").
 		Select(); err != nil {
@@ -79,13 +79,13 @@ func (s *Scribly) UserStory(ctx context.Context, userID int, storyID int) (*User
 }
 
 func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInput) (*Story, error) {
-	story := Story{}
+	story := Story{
+		Title:       input.Title,
+		State:       StoryStateDraft,
+		CreatedByID: user.ID,
+	}
 	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
-		// can't do model insert because CurrentWriterID is only in the select table,
-		// no way to ignore a column _only_ on inserts, will create issue
-		_, err := tx.QueryOne(&story, `
-			INSERT INTO stories (title, state, created_by) VALUES (?, ?, ?) RETURNING id
-		`, input.Title, StoryStateDraft, user.ID)
+		_, err := tx.Model(&story).ExcludeColumn("current_writer_id").Insert()
 		if err != nil {
 			return err
 		}
@@ -111,6 +111,51 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 	}
 
 	return &story, nil
+}
+
+func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, input AddCowritersInput) error {
+	story := Story{ID: storyID}
+	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+		if err := tx.Model(&story).Select(); err != nil {
+			return err
+		}
+
+		if err := story.ValidateUserCanAddCowriters(user, input.Usernames()); err != nil {
+			return err
+		}
+
+		var cowriterUsers []User
+		if err := tx.Model(&cowriterUsers).WhereIn("username IN (?)", input.Usernames()).Select(); err != nil {
+			return err
+		}
+
+		if err := input.ValidateAllFound(cowriterUsers); err != nil {
+			return err
+		}
+
+		var cowriters []StoryCowriter
+		for index, cowriter := range append([]User{user}, cowriterUsers...) {
+			cowriters = append(cowriters, StoryCowriter{
+				UserID:    cowriter.ID,
+				StoryID:   storyID,
+				TurnIndex: index,
+			})
+		}
+		if _, err := tx.Model(&cowriters).Insert(); err != nil {
+			return err
+		}
+		story.State = StoryStateInProgress
+		if _, err := tx.Model(&story).WherePK().ExcludeColumn("current_writer_id").Update(); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {

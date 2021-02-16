@@ -51,11 +51,11 @@
   </form>
   {{end}}
   <div class="story__details">
-    <p>cowriters:
-        {{ range $index, $cowriter := .Data.Story.Cowriters }}
-            {{if $index}}, {{end}}
-            {{$cowriter.User.Username}}
-        {{ end }}
+    <p>cowriters:{{" "}}
+        {{- range $index, $cowriter := .Data.Story.Cowriters -}}
+            {{- if $index -}}, {{ end -}}
+            {{- $cowriter.User.Username -}}
+        {{- end -}}
     </p>
     <p>
       {{ if eq .Data.Story.State "in_progress" }}

@@ -186,14 +186,14 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	storyTmpl := tmpl("story.tmpl")
 	addPeopleToStoryTmpl := tmpl("addpeopletostory.tmpl")
-	router.HandleFunc("/stories/{story_id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/stories/{storyId:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
 
-		storyID, _ := strconv.Atoi(mux.Vars(r)["story_id"])
+		storyID, _ := strconv.Atoi(mux.Vars(r)["storyId"])
 
 		story, err := scribly.UserStory(r.Context(), user.ID, storyID)
 		if err != nil {
@@ -215,6 +215,35 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 	}).Methods("GET")
+
+	router.HandleFunc("/stories/{storyId:[0-9]+}/addcowriters", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		var input internal.AddCowritersInput
+		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		storyID, _ := strconv.Atoi(mux.Vars(r)["storyId"])
+
+		err := scribly.AddCowriters(r.Context(), *user, storyID, input)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("/stories/%d", storyID), http.StatusSeeOther)
+	}).Methods("POST")
 
 	newStoryTmpl := tmpl("newstory.tmpl")
 	router.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {

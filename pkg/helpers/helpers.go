@@ -19,3 +19,12 @@ func IsAlphaNumeric(str string) bool {
 func IsValidEmail(email string) bool {
 	return emailRegex.MatchString(email)
 }
+
+func ContainsStr(haystack []string, needle string) bool {
+	for _, item := range haystack {
+		if item == needle {
+			return true
+		}
+	}
+	return false
+}

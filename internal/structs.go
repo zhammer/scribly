@@ -38,10 +38,11 @@ type Turn struct {
 }
 
 type StoryCowriter struct {
-	StoryID int
-	Story   Story `pg:"rel:has-one"`
-	UserID  int
-	User    User `pg:"rel:has-one"`
+	StoryID   int
+	Story     Story `pg:"rel:has-one"`
+	UserID    int
+	User      User `pg:"rel:has-one"`
+	TurnIndex int  `pg:",use_zero"`
 }
 
 type StoryState string
@@ -58,11 +59,27 @@ type Story struct {
 	Title           string
 	State           StoryState
 	CreatedByID     int             `pg:"created_by"`
-	CreatedBy       *User           `pg:"rel:has-one,fk:created_by"`
+	CreatedByU      *User           `pg:"rel:has-one,fk:created_by"`
 	Cowriters       []StoryCowriter `pg:"rel:has-many"`
 	Turns           []Turn          `pg:"rel:has-many"`
 	CurrentWriterID int
 	CurrentWriter   *User `pg:"rel:has-one"`
+}
+
+func (s *Story) ValidateUserCanAddCowriters(user User, cowriters []string) error {
+	if s.CreatedByID != user.ID {
+		return fmt.Errorf("User %d cannot add cowriters to story %d created by %d", user.ID, s.ID, s.CreatedByID)
+	}
+
+	if s.State != StoryStateDraft {
+		return fmt.Errorf("Story must be in state 'draft' to add cowriters. Story %d is in state %d.", s.ID, s.State)
+	}
+
+	if helpers.ContainsStr(cowriters, user.Username) {
+		return fmt.Errorf("You cannot list yourself as a cowriter.")
+	}
+
+	return nil
 }
 
 type UserStory struct {
@@ -160,4 +177,31 @@ func (s *SignUpInput) Validate() error {
 type StartStoryInput struct {
 	Title string `schema:"title,required"`
 	Text  string `schema:"body,required"`
+}
+
+type AddCowritersInput struct {
+	Person1 string `schema:"person-1,required"`
+	Person2 string `schema:"person-2"`
+	Person3 string `schema:"person-3"`
+}
+
+func (a *AddCowritersInput) Usernames() []string {
+	usernames := []string{a.Person1}
+	if a.Person2 != "" {
+		usernames = append(usernames, a.Person2)
+	}
+	if a.Person3 != "" {
+		usernames = append(usernames, a.Person3)
+	}
+	return usernames
+}
+
+// TODO: this should be smarter, specifically should return invalid usernames
+// i'm just too lazy to be so bold as to write a SET in go.
+func (a *AddCowritersInput) ValidateAllFound(users []User) error {
+	if len(users) != len(a.Usernames()) {
+		return fmt.Errorf("not all users were found")
+	}
+
+	return nil
 }
