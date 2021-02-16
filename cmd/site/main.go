@@ -185,6 +185,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 	})
 
 	storyTmpl := tmpl("story.tmpl")
+	addPeopleToStoryTmpl := tmpl("addpeopletostory.tmpl")
 	router.HandleFunc("/stories/{story_id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
@@ -200,9 +201,17 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := storyTmpl.ExecuteTemplate(w, "story.tmpl", ViewData{story, r}); err != nil {
-			http.Error(w, err.Error(), 500)
-			return
+		switch story.Story.State {
+		case internal.StoryStateDraft:
+			if err := addPeopleToStoryTmpl.ExecuteTemplate(w, "addpeopletostory.tmpl", ViewData{story, r}); err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+		default:
+			if err := storyTmpl.ExecuteTemplate(w, "story.tmpl", ViewData{story, r}); err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
 		}
 
 	}).Methods("GET")

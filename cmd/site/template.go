@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -37,6 +38,18 @@ func (v ViewData) Add(a int, b int) int {
 
 func (v ViewData) Replace(original string, pattern string, replacement string) string {
 	return strings.ReplaceAll(original, pattern, replacement)
+}
+
+func (v ViewData) Count(from uint, to uint) ([]uint, error) {
+	if to < from {
+		return nil, fmt.Errorf("to >= from, got to=%d from=%d", to, from)
+	}
+
+	var items []uint
+	for i := from; i < to; i++ {
+		items = append(items, i)
+	}
+	return items, nil
 }
 
 // lets us pass some other data into other templates while preserving the top-level

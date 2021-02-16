@@ -1,0 +1,31 @@
+{{ template "base" .}}
+
+{{define "title"}}{{.Data.Story.Title}} - Add Cowriters{{end}}
+
+{{define "main"}}
+<h1 class="title">{{ .Data.Story.Title }}</h1>
+<p class="text">{{ .Replace (index .Data.Story.Turns 0).Text "\n" "<br>" }}</p>
+<form id="add-cowriters" class="add-cowriters" action="/stories/{{ .Data.Story.ID }}/addcowriters"
+  method="post">
+  <hr />
+  <h2>cowriters</h2>
+  <input type="text" autocorrect="off" autocapitalize="none" autofocus="true" name="person-1"
+    id="person-1" required placeholder="person 1" aria-label="person 1" list="user-suggestions" />
+    {{range $i := .Count 2 4 }}
+    <input type="text" autocorrect="off" autocapitalize="none" name="person-{{ $i }}"
+        id="person-{{ $i }}" placeholder="person {{ $i }} (optional)"
+        aria-label="person {{ $i }} (optional)" list="user-suggestions" />
+    {{end}}
+    {{/* todo
+  <datalist id="user-suggestions">
+      {% for user in user_suggestions %}
+          <option value="{{ user.username }}" />
+      {% endfor %}
+  </datalist>
+    */}}
+  <br />
+  <button type="submit" id="new-story-button">
+    submit
+  </button>
+</form>
+{{end}}
