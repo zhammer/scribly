@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/mssola/user_agent"
 )
@@ -22,13 +23,20 @@ func (v ViewData) Mobile() bool {
 	return ua.Mobile()
 }
 
-// at this point this is just a helper function
 func (v ViewData) Ternary(cond bool, a interface{}, b interface{}) interface{} {
 	if cond {
 		return a
 	} else {
 		return b
 	}
+}
+
+func (v ViewData) Add(a int, b int) int {
+	return a + b
+}
+
+func (v ViewData) Replace(original string, pattern string, replacement string) string {
+	return strings.ReplaceAll(original, pattern, replacement)
 }
 
 // lets us pass some other data into other templates while preserving the top-level

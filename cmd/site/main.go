@@ -178,6 +178,29 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		_ = sessions.SaveUser(me.User, r, w)
 	})
 
+	storyTmpl := tmpl("story.tmpl")
+	router.HandleFunc("/stories/{story_id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		storyID, _ := strconv.Atoi(mux.Vars(r)["story_id"])
+
+		story, err := scribly.UserStory(r.Context(), user.ID, storyID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := storyTmpl.ExecuteTemplate(w, "story.tmpl", ViewData{story, r}); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+	}).Methods("GET")
+
 	return router, nil
 }
 

@@ -60,6 +60,24 @@ func (s *Scribly) Me(ctx context.Context, user *User) (*Me, error) {
 
 }
 
+func (s *Scribly) UserStory(ctx context.Context, userID int, storyID int) (*UserStory, error) {
+	story := UserStory{}
+	if err := s.db.Model(&story).
+		Where("story_id = ? AND user_id = ?", storyID, userID).
+		Relation("Story").
+		Relation("Story.Cowriters").
+		Relation("Story.Cowriters.User").
+		Relation("Story.CreatedBy").
+		Relation("Story.Turns").
+		Relation("Story.CurrentWriter").
+		Select(); err != nil {
+		return nil, err
+	}
+
+	return &story, nil
+
+}
+
 func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {
 	return &Scribly{
 		db:      db,

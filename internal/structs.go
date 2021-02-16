@@ -29,11 +29,18 @@ const (
 )
 
 type Turn struct {
-	StoryID     int
-	TakenByID   int
-	TakenBy     *User `pg:"rel:has-one"`
-	Action      TurnAction
-	TextWritten string
+	StoryID   int
+	TakenByID int  `pg:"taken_by"`
+	TakenBy   User `pg:"rel:has-one,fk:taken_by"`
+	Action    TurnAction
+	Text      string `pg:"text_written"`
+}
+
+type StoryCowriter struct {
+	StoryID int
+	Story   Story `pg:"rel:has-one"`
+	UserID  int
+	User    User `pg:"rel:has-one"`
 }
 
 type StoryState string
@@ -49,21 +56,12 @@ type Story struct {
 	ID              int
 	Title           string
 	State           StoryState
-	CreatedByID     int    `pg:"created_by"`
-	CreatedBy       *User  `pg:"rel:has-one"`
-	Cowriters       []User `pg:"rel:has-many"`
-	Turns           []Turn `pg:"rel:has-many"`
+	CreatedByID     int             `pg:"created_by"`
+	CreatedBy       *User           `pg:"rel:has-one,fk:created_by"`
+	Cowriters       []StoryCowriter `pg:"rel:has-many"`
+	Turns           []Turn          `pg:"rel:has-many"`
 	CurrentWriterID int
 	CurrentWriter   *User `pg:"rel:has-one"`
-}
-
-func (s *Story) CurrentWritersTurn() *User {
-	if s.State != StoryStateDraft {
-		return nil
-	}
-
-	currentWriterIndex := len(s.Turns) % len(s.Cowriters)
-	return &s.Cowriters[currentWriterIndex]
 }
 
 type UserStory struct {
