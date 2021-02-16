@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -20,6 +21,7 @@ type Config struct {
 	Port             int    `default:"8000"`
 	DatabaseURL      string `envconfig:"database_url" default:"postgres://scribly:pass@localhost/scribly?sslmode=disable"`
 	SessionSecretKey string `envconfig:"session_secret_key" default:"dev_session_secret"`
+	Debug            bool
 }
 
 func main() {
@@ -53,6 +55,10 @@ func makeRouter(cfg Config) (http.Handler, error) {
 	db := pg.Connect(opt)
 	if err := db.Ping(context.Background()); err != nil {
 		return nil, err
+	}
+
+	if cfg.Debug {
+		db.AddQueryHook(DBLogger{})
 	}
 
 	scribly, err := internal.NewScribly(db, nil)
@@ -200,6 +206,47 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 	}).Methods("GET")
+
+	newStoryTmpl := tmpl("newstory.tmpl")
+	router.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		if err := newStoryTmpl.ExecuteTemplate(w, "newstory.tmpl", nil); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+	}).Methods("GET")
+
+	router.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		var input internal.StartStoryInput
+		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		story, err := scribly.StartStory(r.Context(), *user, input)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("/stories/%d", story.ID), http.StatusSeeOther)
+	}).Methods("POST")
 
 	return router, nil
 }

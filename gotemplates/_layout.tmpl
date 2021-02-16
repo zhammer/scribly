@@ -14,7 +14,7 @@
 
   <body>
     <main>
-        <div class="page">
+        <div class="{{block "pageClass" .}}page{{ end }}">
             {{template "main" .}}
         </div class="page">
     </main>

@@ -78,6 +78,41 @@ func (s *Scribly) UserStory(ctx context.Context, userID int, storyID int) (*User
 
 }
 
+func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInput) (*Story, error) {
+	story := Story{}
+	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+		// can't do model insert because CurrentWriterID is only in the select table,
+		// no way to ignore a column _only_ on inserts, will create issue
+		_, err := tx.QueryOne(&story, `
+			INSERT INTO stories (title, state, created_by) VALUES (?, ?, ?) RETURNING id
+		`, input.Title, StoryStateDraft, user.ID)
+		if err != nil {
+			return err
+		}
+
+		firstTurn := Turn{
+			StoryID:   story.ID,
+			TakenByID: user.ID,
+			Action:    TurnActionWrite,
+			Text:      input.Text,
+		}
+		if _, err := tx.Model(&firstTurn).Insert(); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.db.Model(&story).WherePK().Relation("Turns").Select(); err != nil {
+		return nil, err
+	}
+
+	return &story, nil
+}
+
 func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {
 	return &Scribly{
 		db:      db,

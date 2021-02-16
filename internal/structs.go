@@ -30,10 +30,11 @@ const (
 
 type Turn struct {
 	StoryID   int
-	TakenByID int  `pg:"taken_by"`
-	TakenBy   User `pg:"rel:has-one,fk:taken_by"`
-	Action    TurnAction
-	Text      string `pg:"text_written"`
+	TakenByID int `pg:"taken_by"`
+	// this can't be called TakenBy.. go-pg gets confused, change the underlying column names soon
+	TakenByU User `pg:"rel:has-one,fk:taken_by"`
+	Action   TurnAction
+	Text     string `pg:"text_written"`
 }
 
 type StoryCowriter struct {
@@ -154,4 +155,9 @@ func (s *SignUpInput) Validate() error {
 	}
 
 	return nil
+}
+
+type StartStoryInput struct {
+	Title string `schema:"title,required"`
+	Text  string `schema:"body,required"`
 }

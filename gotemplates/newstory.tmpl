@@ -1,0 +1,17 @@
+{{ template "base" .}}
+
+{{define "title"}}Scribly - New Story{{end}}
+
+{{define "pageClass"}}page page-tall{{end}}
+
+{{define "main"}}
+<h1>new story</h1>
+<form id="new-story" action="/new" method="post" class="typewriter">
+  <input name="title" class="title" required autocomplete="off" autofocus="true"
+    aria-label="title" />
+  <textarea name="body" class="body" aria-label="body" required></textarea>
+  <button type="submit" id="new-story-button">
+    add cowriters (saves current draft)
+  </button>
+</form>
+{{end}}
