@@ -37,6 +37,36 @@ type Turn struct {
 	Text     string `pg:"text_written"`
 }
 
+func (t *Turn) Validate() error {
+	if t.Writes() && t.Text == "" {
+		return fmt.Errorf("Text for a `write` turn cannot be empty.")
+	}
+
+	switch t.Action {
+	case TurnActionFinish, TurnActionPass, TurnActionWrite, TurnActionWriteAndFinish:
+	default:
+		return fmt.Errorf("Unknown turn action '%s'", t.Action)
+	}
+
+	return nil
+}
+
+func (t *Turn) Finishes() bool {
+	switch t.Action {
+	case TurnActionFinish, TurnActionWriteAndFinish:
+		return true
+	}
+	return false
+}
+
+func (t *Turn) Writes() bool {
+	switch t.Action {
+	case TurnActionWrite, TurnActionWriteAndFinish:
+		return true
+	}
+	return false
+}
+
 type StoryCowriter struct {
 	StoryID   int
 	Story     Story `pg:"rel:has-one"`
@@ -77,6 +107,14 @@ func (s *Story) ValidateUserCanAddCowriters(user User, cowriters []string) error
 
 	if helpers.ContainsStr(cowriters, user.Username) {
 		return fmt.Errorf("You cannot list yourself as a cowriter.")
+	}
+
+	return nil
+}
+
+func (s *Story) ValidateUserCanTakeTurn(user User, turn Turn) error {
+	if s.CurrentWriterID != user.ID {
+		return fmt.Errorf("It is not user %d's turn!", user.ID)
 	}
 
 	return nil
@@ -194,6 +232,11 @@ func (a *AddCowritersInput) Usernames() []string {
 		usernames = append(usernames, a.Person3)
 	}
 	return usernames
+}
+
+type TurnInput struct {
+	Action TurnAction `schema:"action,required"`
+	Text   string     `schema:"text"`
 }
 
 // TODO: this should be smarter, specifically should return invalid usernames

@@ -158,6 +158,47 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 	return nil
 }
 
+func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input TurnInput) error {
+	turn := Turn{
+		StoryID:   storyID,
+		TakenByID: user.ID,
+		Action:    input.Action,
+		Text:      input.Text,
+	}
+	if err := turn.Validate(); err != nil {
+		return err
+	}
+
+	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+		story := Story{ID: storyID}
+		if err := tx.Model(&story).Select(); err != nil {
+			return err
+		}
+
+		if err := story.ValidateUserCanTakeTurn(user, turn); err != nil {
+			return err
+		}
+
+		if _, err := tx.Model(&turn).Insert(); err != nil {
+			return err
+		}
+
+		if turn.Finishes() {
+			story.State = StoryStateDone
+			if _, err := tx.Model(&story).WherePK().ExcludeColumn("current_writer_id").Update(); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {
 	return &Scribly{
 		db:      db,

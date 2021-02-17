@@ -245,6 +245,35 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		http.Redirect(w, r, fmt.Sprintf("/stories/%d", storyID), http.StatusSeeOther)
 	}).Methods("POST")
 
+	router.HandleFunc("/stories/{storyId:[0-9]+}/turn", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		var input internal.TurnInput
+		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		storyID, _ := strconv.Atoi(mux.Vars(r)["storyId"])
+
+		err := scribly.TakeTurn(r.Context(), *user, storyID, input)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("/stories/%d", storyID), http.StatusSeeOther)
+	}).Methods("POST")
+
 	newStoryTmpl := tmpl("newstory.tmpl")
 	router.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
