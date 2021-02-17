@@ -33,6 +33,12 @@ func (s *SessionHelper) SaveUser(user *internal.User, r *http.Request, w http.Re
 	return session.Save(r, w)
 }
 
+func (s *SessionHelper) ClearUser(r *http.Request, w http.ResponseWriter) error {
+	session, _ := s.store.Get(r, s.sessionName)
+	delete(session.Values, "user")
+	return session.Save(r, w)
+}
+
 func NewSessionHelper(secret string) *SessionHelper {
 	cookieStore := sessions.NewCookieStore([]byte(secret))
 	return &SessionHelper{store: cookieStore, sessionName: "scribly-session"}

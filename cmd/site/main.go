@@ -161,6 +161,11 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	}).Methods("POST")
 
+	router.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+		sessions.ClearUser(r, w)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}).Methods("POST", "GET")
+
 	meTmpl := tmpl("me.tmpl")
 	router.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
