@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"path"
 	"scribly/internal"
 	"strconv"
@@ -320,7 +321,36 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		http.Redirect(w, r, fmt.Sprintf("/stories/%d", story.ID), http.StatusSeeOther)
 	}).Methods("POST")
 
+	router.HandleFunc("/stories/{storyId:[0-9]+}/{action:hide|unhide}", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		storyID, _ := strconv.Atoi(mux.Vars(r)["storyId"])
+		action := mux.Vars(r)["action"]
+
+		hiddenStatus := internal.HiddenStatusHidden
+		if action == "unhide" {
+			hiddenStatus = internal.HiddenStatusUnhidden
+		}
+
+		if err := scribly.Hide(r.Context(), *user, storyID, hiddenStatus); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		http.Redirect(w, r, pathFromURL(r.Header.Get("referer")), http.StatusSeeOther)
+
+	}).Methods("POST")
+
 	return router, nil
+}
+
+func pathFromURL(urlString string) string {
+	url, _ := url.Parse(urlString)
+	return url.Path + "?" + url.RawQuery
 }
 
 func tmpl(tmplPath string) *template.Template {

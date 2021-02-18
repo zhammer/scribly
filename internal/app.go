@@ -199,6 +199,29 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 	return nil
 }
 
+func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus HiddenStatus) error {
+	story := Story{ID: storyID}
+	if err := s.db.Model(&story).Relation("Cowriters").Select(); err != nil {
+		return err
+	}
+
+	hide := UserStoryHide{
+		UserID:       user.ID,
+		StoryID:      story.ID,
+		HiddenStatus: hiddenStatus,
+	}
+
+	if err := story.ValidateCanHide(user, hide); err != nil {
+		return err
+	}
+
+	if _, err := s.db.Model(&hide).OnConflict("(user_id, story_id) DO UPDATE").Insert(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {
 	return &Scribly{
 		db:      db,

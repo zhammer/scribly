@@ -96,6 +96,27 @@ type Story struct {
 	CurrentWriter   *User `pg:"rel:has-one"`
 }
 
+func (s *Story) userInvolvedWithStory(user User) bool {
+	if s.CreatedByID == user.ID {
+		return true
+	}
+
+	for _, cowriter := range s.Cowriters {
+		if cowriter.UserID == user.ID {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *Story) ValidateCanHide(user User, hide UserStoryHide) error {
+	if !s.userInvolvedWithStory(user) {
+		return fmt.Errorf("User is not involved with story %d", s.ID)
+	}
+	return nil
+}
+
 func (s *Story) ValidateUserCanAddCowriters(user User, cowriters []string) error {
 	if s.CreatedByID != user.ID {
 		return fmt.Errorf("User %d cannot add cowriters to story %d created by %d", user.ID, s.ID, s.CreatedByID)
@@ -247,4 +268,17 @@ func (a *AddCowritersInput) ValidateAllFound(users []User) error {
 	}
 
 	return nil
+}
+
+type HiddenStatus string
+
+const (
+	HiddenStatusHidden   = HiddenStatus("hidden")
+	HiddenStatusUnhidden = HiddenStatus("unhidden")
+)
+
+type UserStoryHide struct {
+	UserID       int
+	StoryID      int
+	HiddenStatus HiddenStatus
 }
