@@ -222,6 +222,29 @@ func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus
 	return nil
 }
 
+func (s *Scribly) Nudge(ctx context.Context, nudger User, nudgeeID int, storyID int) error {
+	nudgee := User{ID: nudgeeID}
+	if err := s.db.Model(&nudgee).WherePK().Select(); err != nil {
+		return err
+	}
+
+	story := Story{ID: storyID}
+	if err := s.db.Model(&story).WherePK().Relation("Cowriters").Select(); err != nil {
+		return err
+	}
+
+	if err := story.ValidateCanNudge(nudger, nudgee); err != nil {
+		return err
+	}
+
+	email, err := BuildNudgeEmail(nudger, nudgee, story)
+	if err != nil {
+		return err
+	}
+
+	return s.emailer.SendEmail(ctx, *email)
+}
+
 func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {
 	return &Scribly{
 		db:      db,

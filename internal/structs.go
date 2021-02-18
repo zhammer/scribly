@@ -110,6 +110,22 @@ func (s *Story) userInvolvedWithStory(user User) bool {
 	return false
 }
 
+func (s *Story) ValidateCanNudge(nudger User, nudgee User) error {
+	if !s.userInvolvedWithStory(nudger) {
+		return fmt.Errorf("You can't send a nudge for a story you're not a part of!")
+	}
+
+	if nudgee.ID != s.CurrentWriterID {
+		return fmt.Errorf("It's not %s's turn!", nudgee.ID)
+	}
+
+	if nudgee.EmailVerificationStatus != EmailVerificationStateVerified {
+		return fmt.Errorf("%s hasn't verified their email yet!", nudgee.Username)
+	}
+
+	return nil
+}
+
 func (s *Story) ValidateCanHide(user User, hide UserStoryHide) error {
 	if !s.userInvolvedWithStory(user) {
 		return fmt.Errorf("User is not involved with story %d", s.ID)

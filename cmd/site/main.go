@@ -22,6 +22,8 @@ type Config struct {
 	Port             int    `default:"8000"`
 	DatabaseURL      string `envconfig:"database_url" default:"postgres://scribly:pass@localhost/scribly?sslmode=disable"`
 	SessionSecretKey string `envconfig:"session_secret_key" default:"dev_session_secret"`
+	SendgridBaseURL  string `envconfig:"sendgrid_base_url" default:"https://api.sendgrid.com"`
+	SendgridAPIKey   string `envconfig:"sendgrid_api_key" default:"test_sendgrid_api_key"`
 	Debug            bool
 }
 
@@ -62,10 +64,17 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		db.AddQueryHook(DBLogger{})
 	}
 
-	scribly, err := internal.NewScribly(db, nil)
+	sendgrid := internal.NewSendgridClient(cfg.SendgridBaseURL, cfg.SendgridAPIKey)
+
+	scribly, err := internal.NewScribly(db, sendgrid)
 	if err != nil {
 		return nil, err
 	}
+
+	staticDir := "/static/"
+	router.
+		PathPrefix(staticDir).
+		Handler(http.StripPrefix(staticDir, http.FileServer(http.Dir("."+staticDir))))
 
 	indexTmpl := tmpl("index.tmpl")
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -345,6 +354,35 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	}).Methods("POST")
 
+	nudgedTmpl := tmpl("nudged.tmpl")
+	router.HandleFunc("/stories/{storyId:[0-9]+}/nudge/{nudgeeId:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		storyID, _ := strconv.Atoi(mux.Vars(r)["storyId"])
+		nudgeeID, _ := strconv.Atoi(mux.Vars(r)["nudgeeId"])
+
+		if err := scribly.Nudge(r.Context(), *user, nudgeeID, storyID); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		data := ViewData{
+			Request: r,
+			Data: map[string]interface{}{
+				"User":    user,
+				"StoryID": storyID,
+			},
+		}
+		if err := nudgedTmpl.ExecuteTemplate(w, "nudged.tmpl", data); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+	})
 	return router, nil
 }
 
