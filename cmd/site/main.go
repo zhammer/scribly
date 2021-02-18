@@ -65,11 +65,13 @@ func makeRouter(cfg Config) (http.Handler, error) {
 	}
 
 	sendgrid := internal.NewSendgridClient(cfg.SendgridBaseURL, cfg.SendgridAPIKey)
+	messageGateway := internal.GoroutineMessageGateway{}
 
-	scribly, err := internal.NewScribly(db, sendgrid)
+	scribly, err := internal.NewScribly(db, sendgrid, &messageGateway)
 	if err != nil {
 		return nil, err
 	}
+	messageGateway.Scribly(scribly)
 
 	staticDir := "/static/"
 	router.

@@ -7,8 +7,9 @@ import (
 )
 
 type Scribly struct {
-	db      *pg.DB
-	emailer EmailGateway
+	db             *pg.DB
+	emailer        EmailGateway
+	messageGateway MessageGateway
 }
 
 func (s *Scribly) LogIn(ctx context.Context, input LoginInput) (*User, error) {
@@ -169,9 +170,10 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 		return err
 	}
 
+	story := Story{ID: storyID}
+
 	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
-		story := Story{ID: storyID}
-		if err := tx.Model(&story).Select(); err != nil {
+		if err := tx.Model(&story).Relation("Turns").Select(); err != nil {
 			return err
 		}
 
@@ -189,12 +191,16 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 				return err
 			}
 		}
+
+		story.Turns = append(story.Turns, turn)
 		return nil
 	})
 
 	if err != nil {
 		return err
 	}
+
+	s.messageGateway.AnnounceTurnTaken(ctx, story)
 
 	return nil
 }
@@ -245,9 +251,44 @@ func (s *Scribly) Nudge(ctx context.Context, nudger User, nudgeeID int, storyID 
 	return s.emailer.SendEmail(ctx, *email)
 }
 
-func NewScribly(db *pg.DB, emailer EmailGateway) (*Scribly, error) {
+func (s *Scribly) SendAddedToStoryEmails(ctx context.Context, storyID int) error {
+	return ErrNotImplemented
+}
+
+func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, turnNumber int) error {
+	story := Story{ID: storyID}
+	if err := s.db.Model(&story).WherePK().
+		Relation("Turns").
+		Relation("Turns.TakenByU").
+		Relation("Cowriters").
+		Relation("Cowriters.User").
+		Relation("CurrentWriter").
+		Select(); err != nil {
+		return err
+	}
+
+	emails, err := BuildTurnNotificationEmails(story, turnNumber)
+	if err != nil {
+		return err
+	}
+
+	for _, email := range emails {
+		if err := s.emailer.SendEmail(ctx, email); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Scribly) SendVerificationEmail(ctx context.Context, userID int) error {
+	return ErrNotImplemented
+}
+
+func NewScribly(db *pg.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {
 	return &Scribly{
-		db:      db,
-		emailer: emailer,
+		db:             db,
+		emailer:        emailer,
+		messageGateway: messageGateway,
 	}, nil
 }

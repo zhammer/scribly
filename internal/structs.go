@@ -116,7 +116,7 @@ func (s *Story) ValidateCanNudge(nudger User, nudgee User) error {
 	}
 
 	if nudgee.ID != s.CurrentWriterID {
-		return fmt.Errorf("It's not %s's turn!", nudgee.ID)
+		return fmt.Errorf("It's not %d's turn!", nudgee.ID)
 	}
 
 	if nudgee.EmailVerificationStatus != EmailVerificationStateVerified {
