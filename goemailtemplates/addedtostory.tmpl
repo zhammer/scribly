@@ -1,0 +1,20 @@
+{{ template "base" .}}
+
+{{define "main"}}
+  <p>
+    <span>{{ .Data.Story.CreatedByU.Username }} started the story <a
+        href="{{ .WebsiteURL }}/stories/{{ .Data.Story.ID }}">{{ .Data.Story.Title }}</a>!</span>
+    <span> {{ .WhoseTurnText .Data.Story .Data.Recipient }}</span>
+  </p>
+  <div>
+    <h3>cowriters:</h3>
+    <ul>
+      {{ range .Data.Story.Cowriters }}
+      <li>{{ .User.Username }}</li>
+      {{end}}
+    </ul>
+  </div>
+  <hr>
+  <h1>{{ .Data.Story.Title }}</h1>
+  <p>{{ .Replace (index .Data.Story.Turns 0).Text "\n" "<br>" }}</p>
+{{end}}

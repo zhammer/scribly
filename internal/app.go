@@ -156,6 +156,8 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 		return err
 	}
 
+	s.messageGateway.AnnounceCowritersAdded(ctx, story)
+
 	return nil
 }
 
@@ -252,7 +254,30 @@ func (s *Scribly) Nudge(ctx context.Context, nudger User, nudgeeID int, storyID 
 }
 
 func (s *Scribly) SendAddedToStoryEmails(ctx context.Context, storyID int) error {
-	return ErrNotImplemented
+	story := Story{ID: storyID}
+	if err := s.db.Model(&story).
+		WherePK().
+		Relation("Cowriters").
+		Relation("Cowriters.User").
+		Relation("CurrentWriter").
+		Relation("Turns").
+		Relation("CreatedByU").
+		Select(); err != nil {
+		return err
+	}
+
+	emails, err := BuildAddedToStoryEmails(story)
+	if err != nil {
+		return err
+	}
+
+	for _, email := range emails {
+		if err := s.emailer.SendEmail(ctx, email); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, turnNumber int) error {

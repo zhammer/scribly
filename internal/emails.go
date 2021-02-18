@@ -60,6 +60,34 @@ func BuildNudgeEmail(nudger User, nudgee User, story Story) (*Email, error) {
 	}, nil
 }
 
+func BuildAddedToStoryEmails(story Story) ([]Email, error) {
+	var recipients []User
+	for _, cowriter := range story.Cowriters {
+		if cowriter.User.ID != story.CreatedByID && cowriter.User.EmailVerificationStatus == EmailVerificationStateVerified {
+			recipients = append(recipients, cowriter.User)
+		}
+	}
+
+	var emails []Email
+	for _, recipient := range recipients {
+		data := map[string]interface{}{
+			"Story":     story,
+			"Recipient": recipient,
+		}
+		body, err := renderTemplateWithCSS("addedtostory.tmpl", data)
+		if err != nil {
+			return nil, err
+		}
+		subject := fmt.Sprintf("%s started the story %s", story.CreatedByU.Username, story.Title)
+		if story.CurrentWriterID == recipient.ID {
+			subject = subject + " - it's your turn!"
+		}
+		emails = append(emails, Email{Body: body, Subject: subject, To: recipient})
+	}
+
+	return emails, nil
+}
+
 func BuildTurnNotificationEmails(story Story, turnNumber int) ([]Email, error) {
 	turn := story.Turns[turnNumber-1]
 	var recipients []User
