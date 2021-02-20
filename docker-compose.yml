@@ -13,7 +13,6 @@ services:
       DATABASE_URL: postgres://scribly:pass@db/scribly?sslmode=disable
       WEBSITE_URL: http://127.0.0.1:8000
       SENDGRID_BASE_URL: http://mocksendgrid:1080
-      CLOUDAMQP_URL: amqp://guest:guest@rabbit:5672
     command: >
       bash -c "
         ./wait-for-it.sh postgres:5432
