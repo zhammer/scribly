@@ -25,3 +25,5 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           DATABASE_URL: postgres://scribly:pass@localhost/scribly
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker-compose logs
+        if: ${{ failure() }}
