@@ -1,0 +1,15 @@
+{{ template "base" .}}
+
+{{define "title"}}Scribly - Log in{{end}}
+
+{{define "main"}}
+<h1>log in</h1>
+<form action="/login" method="post">
+    <input name="username" placeholder="username" aria-label="username" required />
+    <input name="password" placeholder="password" type="password" aria-label="password"
+        required />
+    <button type="submit">
+        log in
+    </button>
+</form>
+{{end}}

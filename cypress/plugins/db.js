@@ -1,4 +1,3 @@
-const argon2 = require("argon2");
 const fs = require("fs");
 const { Client } = require("pg");
 const casual = require("casual");
@@ -9,7 +8,6 @@ const DATABASE_URL =
 class DB {
   constructor() {
     this._client;
-    this._passwordHash;
   }
 
   _getClient = async () => {
@@ -18,13 +16,6 @@ class DB {
     this._client = new Client(DATABASE_URL);
     await this._client.connect();
     return this._client;
-  };
-
-  _getPasswordHash = async () => {
-    if (this._passwordHash) return this._passwordHash;
-
-    this._passwordHash = await argon2.hash("password");
-    return this._passwordHash;
   };
 
   resetDb = async () => {
@@ -141,22 +132,21 @@ class DB {
   };
 
   addUsers = async users => {
-    const passwordHash = await this._getPasswordHash();
     const nestedRows = users.reduce(
-      ([usernames, passwords, emails, email_verification_statuses], user) => [
+      ([usernames, emails, email_verification_statuses], user) => [
         [...usernames, user.username],
-        [...passwords, passwordHash],
         [...emails, `${user.username}@mail.com`],
         [...email_verification_statuses, user.email_verification_status]
       ],
-      [[], [], [], []]
+      [[], [], []]
     );
 
     const client = await this._getClient();
     return await client.query(
       `
             INSERT INTO users (username, password, email, email_verification_status)
-            SELECT * FROM UNNEST ($1::text[], $2::text[], $3::text[], $4::email_verification_state[])
+            SELECT u.username, crypt('password', gen_salt('bf', 8)), u.email, u.email_verification_status
+            FROM UNNEST ($1::text[], $2::text[], $3::email_verification_state[]) AS u(username, email, email_verification_status)
         `,
       nestedRows
     );

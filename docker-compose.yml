@@ -10,34 +10,15 @@ services:
       # as a workaround for: https://github.com/cypress-io/cypress/issues/2918
       - "./static:/project/static"
     environment:
-      DATABASE_URL: postgres://scribly:pass@db/scribly
+      DATABASE_URL: postgres://scribly:pass@db/scribly?sslmode=disable
       WEBSITE_URL: http://127.0.0.1:8000
       SENDGRID_BASE_URL: http://mocksendgrid:1080
-      CLOUDAMQP_URL: amqp://guest:guest@rabbit:5672
     command: >
       bash -c "
         ./wait-for-it.sh postgres:5432
-        ./wait-for-it.sh rabbit:5672
         ./wait-for-it.sh mocksendgrid:1080
-        sqitch deploy db:$${DATABASE_URL} && gunicorn -b 0.0.0.0:8000 --log-level trace -w 4 -k uvicorn.workers.UvicornWorker scribly.delivery.server:app
+        sqitch deploy db:$${DATABASE_URL} && go run ./cmd/site/
       "
-  worker:
-    # reuse image built by web
-    image: scribly/scribly
-    environment:
-      DATABASE_URL: postgres://scribly:pass@db/scribly
-      WEBSITE_URL: http://127.0.0.1:8000
-      SENDGRID_BASE_URL: http://mocksendgrid:1080
-      CLOUDAMQP_URL: amqp://guest:guest@rabbit:5672
-      PYTHONPATH: .
-    command: bash -c "./wait-for-it.sh -t 60 web:8000 && python scribly/consumers/consumers.py"
-  rabbit:
-    image: rabbitmq:3.8.11-management-alpine
-    hostname: scriblyrabbit
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-
   db:
     image: postgres:latest
     ports:
@@ -46,12 +27,17 @@ services:
       POSTGRES_USER: scribly
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: scribly
+    volumes:
+      - pgdata:/var/lib/postgresql/data
   mocksendgrid:
     image: mockserver/mockserver:mockserver-5.11.2
     environment:
       MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mocksendgrid.json
-      LOG_LEVEL: "INFO"
+      MOCKSERVER_LOG_LEVEL: "WARNING"
     ports:
       - "9991:1080"
     volumes:
       - "./mocksendgrid.json:/config/mocksendgrid.json"
+
+volumes:
+  pgdata:

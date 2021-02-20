@@ -1,0 +1,73 @@
+{{ template "base" .}}
+
+{{define "title"}}Scribly - {{.Data.Story.Title }}{{end}}
+
+{{define "main"}}
+
+<div class="story">
+  <h1 class="title">{{ .Data.Story.Title }}</h1>
+  <div class="{{ if not .Data.IsUsersTurn }} grow {{ end }}">
+    {{ range $index, $turn := .Data.Story.Turns }}
+    {{ if or (eq $turn.Action "write") (eq $turn.Action "write_and_finish") }}
+    <p id="turn-{{ $.Add $index 1 }}" class="text">
+      {{ $.Replace $turn.Text "\n" "<br>" }}
+    </p>
+    {{end}}
+    {{ if eq $turn.Action "write" }}
+    <hr class="text-divider">
+    {{ end }}
+    {{end}}
+  </div>
+  {{ if .Data.IsUsersTurn }}
+  <textarea name="text" id="text" form="turn-form" autofocus="true" aria-label="turn text"
+    class="story__writer {{ if .Data.IsUsersTurn }} grow {{ end }}"></textarea>
+  <form id="turn-form" action="/stories/{{ .Data.Story.ID }}/turn" method="post">
+    <div class="story__turnbuttons">
+      <button type="submit" id="write" name="action" value="write"
+        title="write your current text to the story, passing the turn to the next writer."
+        onclick="return confirm('Once you\'ve submitted your turn, your text can\'t be edited. Are you sure you want to continue?');">
+        write
+      </button>
+      <button type="submit" id="write-and-finish" name="action" value="write_and_finish"
+        title="write your current text and finish the story."
+        onclick="return confirm('This will finish the story. Are you sure you want to continue?');">
+        write and finish
+      </button>
+      <button type="submit" id="finish" name="action" value="finish"
+        title="finish the story without adding text."
+        onclick="return confirm('This will finish the story and will IGNORE any text you\'ve written for this turn. Are you sure you want to continue?');">
+        finish
+      </button>
+      <button type="submit" id="pass" name="action" value="pass" title="skip your turn."
+        onclick="return confirm('This will pass over your turn and will IGNORE any text you\'ve written for this turn. Are you sure you want to continue?');">
+        pass
+      </button>
+    </div>
+  </form>
+  {{ end }}
+  {{ if and (eq .Data.Story.State "in_progress") (not .Data.IsUsersTurn) }}
+  <form id="nudge-form"
+    action="/stories/{{ .Data.Story.ID }}/nudge/{{ .Data.Story.CurrentWriter.ID }}" method="post">
+    <button type="submit">nudge {{ .Data.Story.CurrentWriter.Username }} to take their
+      turn</button>
+  </form>
+  {{end}}
+  <div class="story__details">
+    <p>cowriters:{{" "}}
+        {{- range $index, $cowriter := .Data.Story.Cowriters -}}
+            {{- if $index -}}, {{ end -}}
+            {{- $cowriter.User.Username -}}
+        {{- end -}}
+    </p>
+    <p>
+      {{ if eq .Data.Story.State "in_progress" }}
+      turn: {{ len .Data.Story.Turns }} ({{ .Data.Story.CurrentWriter.Username }}'s turn)
+      {{ end }}
+      {{ if eq .Data.Story.State "done" }}
+      story is finished, {{ len .Data.Story.Turns }} turns
+      {{ end }}
+    </p>
+  </div>
+</div>
+
+{{end}}
