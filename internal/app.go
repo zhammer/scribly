@@ -38,6 +38,8 @@ func (s *Scribly) SignUp(ctx context.Context, input SignUpInput) (*User, error) 
 		return nil, err
 	}
 
+	s.messageGateway.AnnounceUserCreated(ctx, user)
+
 	return &user, nil
 }
 
