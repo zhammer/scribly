@@ -46,6 +46,8 @@ services:
       POSTGRES_USER: scribly
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: scribly
+    volumes:
+      - pgdata:/var/lib/postgresql/data
   mocksendgrid:
     image: mockserver/mockserver:mockserver-5.11.2
     environment:
@@ -55,3 +57,6 @@ services:
       - "9991:1080"
     volumes:
       - "./mocksendgrid.json:/config/mocksendgrid.json"
+
+volumes:
+  pgdata:
