@@ -443,8 +443,8 @@ func pathFromURL(urlString string) string {
 func tmpl(tmplPath string) *template.Template {
 	return template.Must(
 		template.ParseFiles(
-			"gotemplates/_layout.tmpl",
-			path.Join("gotemplates", tmplPath),
+			"templates/_layout.tmpl",
+			path.Join("templates", tmplPath),
 		),
 	)
 }

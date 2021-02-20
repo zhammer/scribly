@@ -149,7 +149,7 @@ func BuildEmailVerificationEmail(user User, token string) (*Email, error) {
 }
 
 func renderTemplateWithCSS(templateName string, data interface{}) (string, error) {
-	template, err := template.ParseFiles("goemailtemplates/_layout.tmpl", path.Join("goemailtemplates", templateName))
+	template, err := template.ParseFiles("templates_email/_layout.tmpl", path.Join("templates_email", templateName))
 	if err != nil {
 		return "", err
 	}
