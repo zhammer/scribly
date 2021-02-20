@@ -15,7 +15,7 @@ type Scribly struct {
 func (s *Scribly) LogIn(ctx context.Context, input LoginInput) (*User, error) {
 	user := User{}
 	_, err := s.db.QueryOne(&user, `
-		SELECT id, username FROM users WHERE username = ? AND password = crypt(?, password);
+		SELECT id, username, email, email_verification_status FROM users WHERE username = ? AND password = crypt(?, password);
 	`, input.Username, input.Password)
 	if err != nil {
 		return nil, err
@@ -307,7 +307,48 @@ func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, t
 }
 
 func (s *Scribly) SendVerificationEmail(ctx context.Context, userID int) error {
-	return ErrNotImplemented
+	user := User{ID: userID}
+	if err := s.db.Model(&user).WherePK().Select(); err != nil {
+		return err
+	}
+
+	if err := user.ValidateCanSendVerificationEmail(); err != nil {
+		return err
+	}
+
+	verificationToken, err := buildEmailVerificationToken(user)
+	if err != nil {
+		return err
+	}
+
+	email, err := BuildEmailVerificationEmail(user, verificationToken)
+	if err != nil {
+		return err
+	}
+
+	if err := s.emailer.SendEmail(ctx, *email); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Scribly) VerifyEmail(ctx context.Context, user User, token string) error {
+	emailVerificationPayload, err := parseEmailVerificationToken(token)
+	if err != nil {
+		return err
+	}
+
+	if err := user.ValidateEmailVerification(*emailVerificationPayload); err != nil {
+		return nil
+	}
+
+	user.EmailVerificationStatus = EmailVerificationStateVerified
+	if _, err := s.db.Model(&user).WherePK().Column("email_verification_status").Update(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewScribly(db *pg.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {

@@ -391,6 +391,47 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 	})
+
+	emailVerificationRequestedTmpl := tmpl("emailverificationrequested.tmpl")
+	router.HandleFunc("/email-verification", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		if err := scribly.SendVerificationEmail(r.Context(), user.ID); err != nil {
+			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			return
+		}
+
+		if err := emailVerificationRequestedTmpl.ExecuteTemplate(w, "emailverificationrequested.tmpl", ViewData{user, r}); err != nil {
+			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			return
+		}
+	}).Methods("POST")
+
+	emailVerificationSuccessTmpl := tmpl("emailverificationsuccess.tmpl")
+	router.HandleFunc("/email-verification", func(w http.ResponseWriter, r *http.Request) {
+		user, _ := sessions.GetUser(r)
+		if user == nil {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		token := r.URL.Query().Get("token")
+
+		if err := scribly.VerifyEmail(r.Context(), *user, token); err != nil {
+			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			return
+		}
+
+		if err := emailVerificationSuccessTmpl.ExecuteTemplate(w, "emailverificationsuccess.tmpl", ViewData{user, r}); err != nil {
+			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			return
+		}
+	}).Methods("GET")
+
 	return router, nil
 }
 

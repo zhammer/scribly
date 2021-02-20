@@ -131,6 +131,23 @@ func BuildTurnNotificationEmails(story Story, turnNumber int) ([]Email, error) {
 	return emails, nil
 }
 
+func BuildEmailVerificationEmail(user User, token string) (*Email, error) {
+	data := map[string]interface{}{
+		"Recipient":         user,
+		"VerificationToken": token,
+	}
+	body, err := renderTemplateWithCSS("verification.tmpl", data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Email{
+		To:      user,
+		Subject: "Verify your email",
+		Body:    body,
+	}, nil
+}
+
 func renderTemplateWithCSS(templateName string, data interface{}) (string, error) {
 	template, err := template.ParseFiles("goemailtemplates/_layout.tmpl", path.Join("goemailtemplates", templateName))
 	if err != nil {

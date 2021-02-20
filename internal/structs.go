@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"scribly/pkg/helpers"
+	"time"
 )
 
 type EmailVerificationState string
@@ -17,6 +18,29 @@ type User struct {
 	Username                string
 	Email                   string
 	EmailVerificationStatus EmailVerificationState
+}
+
+func (u *User) ValidateCanSendVerificationEmail() error {
+	if u.EmailVerificationStatus == EmailVerificationStateVerified {
+		return fmt.Errorf("Email already verified.")
+	}
+	return nil
+}
+
+func (u *User) ValidateEmailVerification(emailVerification EmailVerificationPayload) error {
+	if u.EmailVerificationStatus == EmailVerificationStateVerified {
+		return fmt.Errorf("Email already verified")
+	}
+
+	if emailVerification.Email != u.Email {
+		return fmt.Errorf("Email in payload doesn't match user's email")
+	}
+
+	if time.Now().Sub(time.Unix(emailVerification.Timestamp, 0)) > (time.Hour * 24) {
+		return fmt.Errorf("Email token expored")
+	}
+
+	return nil
 }
 
 type TurnAction string
@@ -297,4 +321,10 @@ type UserStoryHide struct {
 	UserID       int
 	StoryID      int
 	HiddenStatus HiddenStatus
+}
+
+type EmailVerificationPayload struct {
+	UserID    int
+	Email     string
+	Timestamp int64
 }
