@@ -1,0 +1,9 @@
+{{ template "base" .}}
+
+{{define "main"}}
+
+<h1>verify your email</h1>
+<p>{{ .Data.Recipient.Username }}, click the following link to verify your email</p>
+<a class="button" href="{{.WebsiteURL}}/email-verification?token={{ .Data.VerificationToken }}">verify your email</a>
+
+{{end}}

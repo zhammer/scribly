@@ -6,15 +6,13 @@
   "author": "zhammer <zachary_hammer@alumni.brown.edu>",
   "license": "MIT",
   "dependencies": {
-    "argon2": "^0.25.1",
     "axe-core": "^3.4.1",
     "casual": "^1.6.2",
-    "cypress": "6",
+    "cypress": "6.5.0",
     "cypress-axe": "^0.5.3",
-    "cypress-cucumber-preprocessor": "^4.0.0",
+    "cypress-cucumber-preprocessor": "^4.0.1",
     "cypress-plugin-tab": "^1.0.3",
     "pg": "^7.14.0",
-    "pg-native": "^3.0.0",
     "superagent": "^5.1.2",
     "wait-on": "^3.3.0"
   },

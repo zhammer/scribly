@@ -1,11 +1,20 @@
-FROM python:3.9
+FROM golang:1.16
 
-COPY . ./project
-WORKDIR /project
+ENV GO111MODULE=on
 
+# sqitch
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     sqitch libdbd-pg-perl postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /project
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
+COPY . .
+
+RUN go build -o /bin/scribly ./cmd/site

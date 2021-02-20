@@ -1,0 +1,8 @@
+{{ template "base" .}}
+
+{{define "main"}}
+<p>
+    {{ .Data.Nudger.Username }} knows you're busy but wants to remind you it's your turn on
+    {{ .StoryLink .Data.Story }}.
+</p>
+{{end}}

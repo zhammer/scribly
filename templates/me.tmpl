@@ -1,0 +1,82 @@
+
+{{define "story_li"}}
+{{$showHidden := eq (.Query "show_hidden") "1" }}
+{{$hidden := .Data.Hidden }}
+{{$hideAction := .Ternary $hidden "unhide" "hide" }}
+{{ if not (and $hidden (not $showHidden)) }}
+<li class="me-story">
+  {{if $hidden}}<i>(hidden) </i>{{end}}
+  <a href="/stories/{{ .Data.Story.ID }}">{{ .Data.Story.Title }}</a>
+  <span class="me-story-hover {{ if .Mobile }}me-story-hover--mobile{{end}}"> ·{{" "}}
+    <form id="story-{{ .Data.Story.ID }}-hide-form" class="story-hide-form"
+      action="/stories/{{ .Data.Story.ID }}/{{ $hideAction }}" method="post">
+      <button type="submit">{{ $hideAction }}</button type="submit">
+    </form>
+  </span>
+</li>
+{{end}}
+{{end}}
+
+{{ template "base" .}}
+
+{{define "main"}}
+{{$showHidden := eq (.Query "show_hidden") "1" }}
+<h1>{{.Data.User.Username}}'s scribly</h1>
+<div class="view-preferences">
+    {{if $showHidden}}
+    <a href="?show_hidden=0">don't show hidden stories</a>
+    {{else}}
+    <a href="?show_hidden=1">show hidden stories</a>
+    {{end}}
+</div>
+<div>
+<section>
+    <h2>drafts</h2>
+    <ul>
+    {{range .Data.Drafts }}
+        {{ template "story_li" $.Propogate . }}
+    {{end}}
+    </ul>
+</section>
+<section>
+    <h2>your turn</h2>
+    <ul>
+    {{range .Data.YourTurn }}
+        {{ template "story_li" $.Propogate . }}
+    {{end}}
+    </ul>
+</section>
+<section>
+    <h2>waiting for others</h2>
+    <ul>
+    {{range .Data.WaitingForOthers }}
+        {{ template "story_li" $.Propogate . }}
+    {{end}}
+    </ul>
+</section>
+<section>
+    <h2>done</h2>
+    <ul>
+    {{range .Data.Done }}
+        {{ template "story_li" $.Propogate . }}
+    {{end}}
+    </ul>
+</section>
+</section>
+<a class="button" href="/new">start a new story</a>
+</div>
+
+{{if ne .Data.User.EmailVerificationStatus "verified" }}
+<br>
+<hr>
+<div>
+<p>verify your email to follow stories you're working on!</p>
+<form id="verify-email-form" action="/email-verification" method="post">
+    <button title="Resend email verification link" type="submit">
+    resend verification link
+    </button>
+</form>
+</div>
+{{end}}
+
+{{end}}

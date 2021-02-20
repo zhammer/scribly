@@ -1,0 +1,11 @@
+{{ template "base" .}}
+
+{{define "title"}}Email Verification Sent{{end}}
+
+{{define "main"}}
+
+<h1>Email verification sent!</h1>
+<p>You should receive an email at {{ .Data.Email }} with a verification link shortly!</p>
+<a href="/me">click this link to go back to scribly</a>
+
+{{end}}

@@ -1,7 +1,0 @@
-black==19.10b0
-Faker==3.0.0
-migra==1.0.1575954682
-mypy==0.800
-psycopg2-binary==2.8.6
-pylint==2.6.0
-pytest==6.2.2
