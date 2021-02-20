@@ -437,6 +437,9 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 	}).Methods("GET")
 
+	// middleware
+	router.Use(HerokuHTTPSMiddleware)
+
 	return router, nil
 }
 
