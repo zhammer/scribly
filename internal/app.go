@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"scribly/pkg/db"
 
 	"github.com/go-pg/pg/v10"
 )
@@ -66,10 +67,10 @@ func (s *Scribly) UserStory(ctx context.Context, userID int, storyID int) (*User
 	if err := s.db.Model(&story).
 		Where("story_id = ? AND user_id = ?", storyID, userID).
 		Relation("Story").
-		Relation("Story.Cowriters").
+		Relation("Story.Cowriters", db.WithOrderBy("story_cowriter.turn_index")).
 		Relation("Story.Cowriters.User").
 		Relation("Story.CreatedByU").
-		Relation("Story.Turns").
+		Relation("Story.Turns", db.WithOrderBy("turn.created_at")).
 		Relation("Story.CurrentWriter").
 		Select(); err != nil {
 		return nil, err
@@ -283,9 +284,9 @@ func (s *Scribly) SendAddedToStoryEmails(ctx context.Context, storyID int) error
 func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, turnNumber int) error {
 	story := Story{ID: storyID}
 	if err := s.db.Model(&story).WherePK().
-		Relation("Turns").
+		Relation("Turns", db.WithOrderBy("turn.created_at")).
 		Relation("Turns.TakenByU").
-		Relation("Cowriters").
+		Relation("Cowriters", db.WithOrderBy("story_cowriter.turn_index")).
 		Relation("Cowriters.User").
 		Relation("CurrentWriter").
 		Select(); err != nil {
