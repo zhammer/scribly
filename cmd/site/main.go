@@ -78,6 +78,12 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		PathPrefix(staticDir).
 		Handler(http.StripPrefix(staticDir, http.FileServer(http.Dir("."+staticDir))))
 
+	exceptionTmpl := tmpl("exception.tmpl")
+	router.HandleFunc("/exception", func(w http.ResponseWriter, r *http.Request) {
+		err := fmt.Errorf("Raising an exception, intentionally!")
+		exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+	})
+
 	indexTmpl := tmpl("index.tmpl")
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if user, _ := sessions.GetUser(r); user != nil {
