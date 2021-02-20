@@ -79,9 +79,14 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		Handler(http.StripPrefix(staticDir, http.FileServer(http.Dir("."+staticDir))))
 
 	exceptionTmpl := tmpl("exception.tmpl")
+	errorPage := func(w http.ResponseWriter, r *http.Request, e error) error {
+		fmt.Printf("error on request %s: %s\n", r.URL.String(), e.Error())
+		return exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{e, r})
+	}
+
 	router.HandleFunc("/exception", func(w http.ResponseWriter, r *http.Request) {
 		err := fmt.Errorf("Raising an exception, intentionally!")
-		exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+		errorPage(w, r, err)
 	})
 
 	indexTmpl := tmpl("index.tmpl")
@@ -92,7 +97,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := indexTmpl.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 		}
 	}).Methods("GET")
 
@@ -104,7 +109,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := loginTmpl.ExecuteTemplate(w, "login.tmpl", nil); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 		}
 	}).Methods("GET")
 
@@ -115,24 +120,24 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := r.ParseForm(); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		var input internal.LoginInput
 		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		user, err := scribly.LogIn(r.Context(), input)
 		if err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		if err := sessions.SaveUser(user, r, w); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -143,7 +148,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 	signupTmpl := tmpl("signup.tmpl")
 	router.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
 		if err := signupTmpl.ExecuteTemplate(w, "signup.tmpl", nil); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 		}
 	}).Methods("GET")
 
@@ -154,24 +159,24 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := r.ParseForm(); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		var input internal.SignUpInput
 		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		user, err := scribly.SignUp(r.Context(), input)
 		if err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		if err := sessions.SaveUser(user, r, w); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -194,12 +199,12 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 		me, err := scribly.Me(r.Context(), user)
 		if err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		if err := meTmpl.ExecuteTemplate(w, "me.tmpl", ViewData{me, r}); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -220,19 +225,19 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 		story, err := scribly.UserStory(r.Context(), user.ID, storyID)
 		if err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		switch story.Story.State {
 		case internal.StoryStateDraft:
 			if err := addPeopleToStoryTmpl.ExecuteTemplate(w, "addpeopletostory.tmpl", ViewData{story, r}); err != nil {
-				exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+				errorPage(w, r, err)
 				return
 			}
 		default:
 			if err := storyTmpl.ExecuteTemplate(w, "story.tmpl", ViewData{story, r}); err != nil {
-				exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+				errorPage(w, r, err)
 				return
 			}
 		}
@@ -247,13 +252,13 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := r.ParseForm(); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		var input internal.AddCowritersInput
 		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -261,7 +266,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 		err := scribly.AddCowriters(r.Context(), *user, storyID, input)
 		if err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -276,13 +281,13 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := r.ParseForm(); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		var input internal.TurnInput
 		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -290,7 +295,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 		err := scribly.TakeTurn(r.Context(), *user, storyID, input)
 		if err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -306,7 +311,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := newStoryTmpl.ExecuteTemplate(w, "newstory.tmpl", nil); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 	}).Methods("GET")
@@ -319,19 +324,19 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := r.ParseForm(); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		var input internal.StartStoryInput
 		if err := formDecoder.Decode(&input, r.PostForm); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		story, err := scribly.StartStory(r.Context(), *user, input)
 		if err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -354,7 +359,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := scribly.Hide(r.Context(), *user, storyID, hiddenStatus); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -374,7 +379,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		nudgeeID, _ := strconv.Atoi(mux.Vars(r)["nudgeeId"])
 
 		if err := scribly.Nudge(r.Context(), *user, nudgeeID, storyID); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -386,7 +391,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			},
 		}
 		if err := nudgedTmpl.ExecuteTemplate(w, "nudged.tmpl", data); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
@@ -401,12 +406,12 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		}
 
 		if err := scribly.SendVerificationEmail(r.Context(), user.ID); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		if err := emailVerificationRequestedTmpl.ExecuteTemplate(w, "emailverificationrequested.tmpl", ViewData{user, r}); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 	}).Methods("POST")
@@ -422,12 +427,12 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		token := r.URL.Query().Get("token")
 
 		if err := scribly.VerifyEmail(r.Context(), *user, token); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 
 		if err := emailVerificationSuccessTmpl.ExecuteTemplate(w, "emailverificationsuccess.tmpl", ViewData{user, r}); err != nil {
-			exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{err, r})
+			errorPage(w, r, err)
 			return
 		}
 	}).Methods("GET")
