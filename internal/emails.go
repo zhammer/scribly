@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-	"path"
+	"scribly"
 	"strings"
 
 	"github.com/vanng822/go-premailer/premailer"
 )
 
-var css string
 var websiteURL = os.Getenv("WEBSITE_URL")
 
 type viewData struct {
@@ -39,7 +38,7 @@ func (v viewData) WhoseTurnText(story Story, recipient User) string {
 }
 
 func (v viewData) CSS() template.HTML {
-	return template.HTML("<style>" + css + "</style>")
+	return template.HTML("<style>" + scribly.CSS + "</style>")
 }
 
 func BuildNudgeEmail(nudger User, nudgee User, story Story) (*Email, error) {
@@ -149,13 +148,9 @@ func BuildEmailVerificationEmail(user User, token string) (*Email, error) {
 }
 
 func renderTemplateWithCSS(templateName string, data interface{}) (string, error) {
-	template, err := template.ParseFiles("templates_email/_layout.tmpl", path.Join("templates_email", templateName))
-	if err != nil {
-		return "", err
-	}
 	var buffer bytes.Buffer
 	viewData := viewData{Data: data}
-	if err := template.ExecuteTemplate(&buffer, templateName, viewData); err != nil {
+	if err := scribly.EmailTemplates.ExecuteTemplate(&buffer, templateName, viewData); err != nil {
 		return "", err
 	}
 	prem, err := premailer.NewPremailerFromBytes(buffer.Bytes(), premailer.NewOptions())
@@ -164,13 +159,4 @@ func renderTemplateWithCSS(templateName string, data interface{}) (string, error
 	}
 
 	return prem.Transform()
-}
-
-func init() {
-	styleCSS, err := os.ReadFile("static/style.css")
-	if err != nil {
-		panic(err)
-	}
-
-	css = string(styleCSS)
 }
