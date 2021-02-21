@@ -9,8 +9,10 @@ import (
 )
 
 type ViewData struct {
-	Data    interface{}
-	Request *http.Request
+	Data      interface{}
+	Request   *http.Request
+	title     string
+	pageClass string
 }
 
 // v *ViewData doesn't seem to work. i guess go templates don't have the same
@@ -22,6 +24,20 @@ func (v ViewData) Query(key string) string {
 func (v ViewData) Mobile() bool {
 	ua := user_agent.New(v.Request.Header.Get("user-agent"))
 	return ua.Mobile()
+}
+
+func (v ViewData) Title() string {
+	if v.title == "" {
+		return "Scribly"
+	}
+	return v.title
+}
+
+func (v ViewData) PageClass() string {
+	if v.pageClass == "" {
+		return "page"
+	}
+	return v.pageClass
 }
 
 func (v ViewData) Ternary(cond bool, a interface{}, b interface{}) interface{} {

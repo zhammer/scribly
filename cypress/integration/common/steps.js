@@ -15,7 +15,7 @@ Given("the following users exist", datatable => {
   cy.addUsers(users);
 });
 
-Given("I am not logged in", () => {});
+Given("I am not logged in", () => { });
 
 Given(/I am logged in as (.*)/, username => {
   cy.clearCookies();
@@ -150,7 +150,7 @@ When(
       const email = getEmail(emails, address, subject);
       const html = email.content[0].value;
       cy.writeFile("static/tempfile.html", html);
-      cy.visit("static/tempfile.html");
+      cy.visit("_cypress_email");
     });
   }
 );

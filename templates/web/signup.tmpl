@@ -1,8 +1,4 @@
-{{ template "base" .}}
-
-{{define "title"}}Scribly - Sign up{{end}}
-
-{{define "main"}}
+{{template "before" .}}
 <h1>sign up</h1>
 <p>join scribly to start writing stories with your friends</p>
 <form action="/signup" method="post">
@@ -16,4 +12,4 @@
         sign up
     </button>
 </form>
-{{end}}
+{{template "after" .}}

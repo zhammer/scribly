@@ -1,8 +1,8 @@
-{{define "base"}}
+{{define "before"}}
 <!DOCTYPE html>
 <html>
   <head>
-    <title>{{block "title" .}}Scribly{{ end }}</title>
+    <title>{{.Title}}</title>
     <meta name="description" content="write stories together" />
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -14,9 +14,11 @@
 
   <body>
     <main>
-        <div class="{{block "pageClass" .}}page{{ end }}">
-            {{template "main" .}}
-        </div class="page">
+        <div class="{{.PageClass}}">
+{{end}}
+
+{{define "after"}}
+        </div>
     </main>
   </body>
 </html>

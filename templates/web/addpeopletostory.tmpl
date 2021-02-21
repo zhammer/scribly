@@ -1,8 +1,4 @@
-{{ template "base" .}}
-
-{{define "title"}}{{.Data.Story.Title}} - Add Cowriters{{end}}
-
-{{define "main"}}
+{{template "before" .}}
 <h1 class="title">{{ .Data.Story.Title }}</h1>
 <p class="text">{{ .Replace (index .Data.Story.Turns 0).Text "\n" "<br>" }}</p>
 <form id="add-cowriters" class="add-cowriters" action="/stories/{{ .Data.Story.ID }}/addcowriters"
@@ -28,4 +24,4 @@
     submit
   </button>
 </form>
-{{end}}
+{{template "after" .}}

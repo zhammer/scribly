@@ -1,6 +1,4 @@
-{{ template "base" .}}
-
-{{define "main"}}
+{{template "before" .}}
 <p>
 {{ $storyHref := printf "%s/stories/%d#turn-%d" .WebsiteURL .Data.Story.ID .Data.TurnNumber }}
 <a href="{{ $storyHref }}">go to your story</a>
@@ -28,4 +26,4 @@
 <hr>
 <em>{{ .Replace .Data.Turn.Text "\n" "<br>" }}</em>
 {{ end }}
-{{end}}
+{{template "after" .}}
