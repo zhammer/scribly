@@ -120,7 +120,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, input AddCowritersInput) error {
 	story := Story{ID: storyID}
 	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
-		if err := tx.Model(&story).Select(); err != nil {
+		if err := tx.Model(&story).WherePK().Select(); err != nil {
 			return err
 		}
 
@@ -178,7 +178,7 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 	story := Story{ID: storyID}
 
 	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
-		if err := tx.Model(&story).Relation("Turns").Select(); err != nil {
+		if err := tx.Model(&story).WherePK().Relation("Turns").Select(); err != nil {
 			return err
 		}
 
