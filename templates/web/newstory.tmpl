@@ -1,10 +1,4 @@
-{{ template "base" .}}
-
-{{define "title"}}Scribly - New Story{{end}}
-
-{{define "pageClass"}}page page-tall{{end}}
-
-{{define "main"}}
+{{template "before" .}}
 <h1>new story</h1>
 <form id="new-story" action="/new" method="post" class="typewriter">
   <input name="title" class="title" required autocomplete="off" autofocus="true"
@@ -14,4 +8,4 @@
     add cowriters (saves current draft)
   </button>
 </form>
-{{end}}
+{{template "after" .}}

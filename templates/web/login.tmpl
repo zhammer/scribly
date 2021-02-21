@@ -1,8 +1,4 @@
-{{ template "base" .}}
-
-{{define "title"}}Scribly - Log in{{end}}
-
-{{define "main"}}
+{{template "before" .}}
 <h1>log in</h1>
 <form action="/login" method="post">
     <input name="username" placeholder="username" aria-label="username" required />
@@ -12,4 +8,4 @@
         log in
     </button>
 </form>
-{{end}}
+{{template "after" .}}

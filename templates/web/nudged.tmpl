@@ -1,8 +1,4 @@
-{{ template "base" .}}
-
-{{define "title"}}Nudge delivered{{end}}
-
-{{define "main"}}
+{{template "before" .}}
 <h1>{{ .Data.User.Username }}, your nudge has been delivered.</h1>
 <a href="/stories/{{ .Data.StoryID }}">go back to story.</a>
-{{end}}
+{{template "after" .}}

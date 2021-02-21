@@ -1,9 +1,11 @@
-{{define "base"}}
+{{define "before"}}
 <!DOCTYPE html>
 <html>
     {{.CSS}}
     <body>
-    {{template "main" .}}
+{{end}}
+
+{{define "after"}}
     </body>
 </html>
 {{end}}

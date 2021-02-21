@@ -17,9 +17,7 @@
 {{end}}
 {{end}}
 
-{{ template "base" .}}
-
-{{define "main"}}
+{{template "before" .}}
 {{$showHidden := eq (.Query "show_hidden") "1" }}
 <h1>{{.Data.User.Username}}'s scribly</h1>
 <div class="view-preferences">
@@ -79,4 +77,4 @@
 </div>
 {{end}}
 
-{{end}}
+{{template "after" .}}

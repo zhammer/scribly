@@ -1,6 +1,4 @@
-{{ template "base" .}}
-
-{{define "main"}}
+{{template "before" .}}
 <style type='text/css'>
 .frame {
     background: lightgray;
@@ -41,4 +39,4 @@ Here is an error that was raised while you were using Scribly.
 <h2>
 {{ printf "%T" .Data }}: {{ .Data.Error }}
 </h2>
-{{ end }}
+{{template "after" .}}

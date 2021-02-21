@@ -1,6 +1,4 @@
-{{ template "base" .}}
-
-{{define "main"}}
+{{template "before" .}}
   <p>
     <span>{{ .Data.Story.CreatedByU.Username }} started the story <a
         href="{{ .WebsiteURL }}/stories/{{ .Data.Story.ID }}">{{ .Data.Story.Title }}</a>!</span>
@@ -17,4 +15,4 @@
   <hr>
   <h1>{{ .Data.Story.Title }}</h1>
   <p>{{ .Replace (index .Data.Story.Turns 0).Text "\n" "<br>" }}</p>
-{{end}}
+{{template "after" .}}
