@@ -7,10 +7,9 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"path"
+	embedded "scribly"
 	"scribly/internal"
 	"strconv"
-	"text/template"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/gorilla/mux"
@@ -73,15 +72,11 @@ func makeRouter(cfg Config) (http.Handler, error) {
 	}
 	messageGateway.Scribly(scribly)
 
-	staticDir := "/static/"
-	router.
-		PathPrefix(staticDir).
-		Handler(http.StripPrefix(staticDir, http.FileServer(http.Dir("."+staticDir))))
+	router.PathPrefix("/static/").Handler(http.FileServer(http.FS(embedded.StaticFS)))
 
-	exceptionTmpl := tmpl("exception.tmpl")
 	errorPage := func(w http.ResponseWriter, r *http.Request, e error) error {
 		fmt.Printf("error on request %s: %s\n", r.URL.String(), e.Error())
-		return exceptionTmpl.ExecuteTemplate(w, "exception.tmpl", ViewData{e, r})
+		return embedded.WebTemplates.ExecuteTemplate(w, "exception.tmpl", ViewData{e, r, "Uh Oh!", ""})
 	}
 
 	router.HandleFunc("/exception", func(w http.ResponseWriter, r *http.Request) {
@@ -89,26 +84,24 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		errorPage(w, r, err)
 	})
 
-	indexTmpl := tmpl("index.tmpl")
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if user, _ := sessions.GetUser(r); user != nil {
 			http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
 			return
 		}
 
-		if err := indexTmpl.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
 			errorPage(w, r, err)
 		}
 	}).Methods("GET")
 
-	loginTmpl := tmpl("login.tmpl")
 	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if user, _ := sessions.GetUser(r); user != nil {
 			http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
 			return
 		}
 
-		if err := loginTmpl.ExecuteTemplate(w, "login.tmpl", nil); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "login.tmpl", ViewData{nil, r, "Scribly - Log in", ""}); err != nil {
 			errorPage(w, r, err)
 		}
 	}).Methods("GET")
@@ -145,9 +138,8 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	}).Methods("POST")
 
-	signupTmpl := tmpl("signup.tmpl")
 	router.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
-		if err := signupTmpl.ExecuteTemplate(w, "signup.tmpl", nil); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "signup.tmpl", ViewData{nil, r, "Scribly - Sign up", ""}); err != nil {
 			errorPage(w, r, err)
 		}
 	}).Methods("GET")
@@ -189,7 +181,6 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}).Methods("POST", "GET")
 
-	meTmpl := tmpl("me.tmpl")
 	router.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
@@ -203,7 +194,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := meTmpl.ExecuteTemplate(w, "me.tmpl", ViewData{me, r}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "me.tmpl", ViewData{me, r, "", ""}); err != nil {
 			errorPage(w, r, err)
 			return
 		}
@@ -212,8 +203,6 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		_ = sessions.SaveUser(me.User, r, w)
 	})
 
-	storyTmpl := tmpl("story.tmpl")
-	addPeopleToStoryTmpl := tmpl("addpeopletostory.tmpl")
 	router.HandleFunc("/stories/{storyId:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
@@ -231,12 +220,12 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 		switch story.Story.State {
 		case internal.StoryStateDraft:
-			if err := addPeopleToStoryTmpl.ExecuteTemplate(w, "addpeopletostory.tmpl", ViewData{story, r}); err != nil {
+			if err := embedded.WebTemplates.ExecuteTemplate(w, "addpeopletostory.tmpl", ViewData{story, r, fmt.Sprintf("%s - Add Cowriters", story.Story.Title), ""}); err != nil {
 				errorPage(w, r, err)
 				return
 			}
 		default:
-			if err := storyTmpl.ExecuteTemplate(w, "story.tmpl", ViewData{story, r}); err != nil {
+			if err := embedded.WebTemplates.ExecuteTemplate(w, "story.tmpl", ViewData{story, r, fmt.Sprintf("Scribly - %s", story.Story.Title), ""}); err != nil {
 				errorPage(w, r, err)
 				return
 			}
@@ -302,7 +291,6 @@ func makeRouter(cfg Config) (http.Handler, error) {
 		http.Redirect(w, r, fmt.Sprintf("/stories/%d", storyID), http.StatusSeeOther)
 	}).Methods("POST")
 
-	newStoryTmpl := tmpl("newstory.tmpl")
 	router.HandleFunc("/new", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
@@ -310,7 +298,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := newStoryTmpl.ExecuteTemplate(w, "newstory.tmpl", nil); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "newstory.tmpl", ViewData{nil, r, "Scribly - New Story", "page page-tall"}); err != nil {
 			errorPage(w, r, err)
 			return
 		}
@@ -367,7 +355,6 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	}).Methods("POST")
 
-	nudgedTmpl := tmpl("nudged.tmpl")
 	router.HandleFunc("/stories/{storyId:[0-9]+}/nudge/{nudgeeId:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
@@ -389,15 +376,15 @@ func makeRouter(cfg Config) (http.Handler, error) {
 				"User":    user,
 				"StoryID": storyID,
 			},
+			title: "Nudge delivered",
 		}
-		if err := nudgedTmpl.ExecuteTemplate(w, "nudged.tmpl", data); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "nudged.tmpl", data); err != nil {
 			errorPage(w, r, err)
 			return
 		}
 
 	})
 
-	emailVerificationRequestedTmpl := tmpl("emailverificationrequested.tmpl")
 	router.HandleFunc("/email-verification", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
@@ -410,13 +397,12 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := emailVerificationRequestedTmpl.ExecuteTemplate(w, "emailverificationrequested.tmpl", ViewData{user, r}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "emailverificationrequested.tmpl", ViewData{user, r, "Email Verification Sent", ""}); err != nil {
 			errorPage(w, r, err)
 			return
 		}
 	}).Methods("POST")
 
-	emailVerificationSuccessTmpl := tmpl("emailverificationsuccess.tmpl")
 	router.HandleFunc("/email-verification", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {
@@ -431,7 +417,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := emailVerificationSuccessTmpl.ExecuteTemplate(w, "emailverificationsuccess.tmpl", ViewData{user, r}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "emailverificationsuccess.tmpl", ViewData{user, r, "Email Verified!", ""}); err != nil {
 			errorPage(w, r, err)
 			return
 		}
@@ -446,13 +432,4 @@ func makeRouter(cfg Config) (http.Handler, error) {
 func pathFromURL(urlString string) string {
 	url, _ := url.Parse(urlString)
 	return url.Path + "?" + url.RawQuery
-}
-
-func tmpl(tmplPath string) *template.Template {
-	return template.Must(
-		template.ParseFiles(
-			"templates/_layout.tmpl",
-			path.Join("templates", tmplPath),
-		),
-	)
 }

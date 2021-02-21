@@ -1,9 +1,4 @@
-{{ template "base" .}}
-
-{{define "title"}}Scribly - {{.Data.Story.Title }}{{end}}
-
-{{define "main"}}
-
+{{template "before" .}}
 <div class="story">
   <h1 class="title">{{ .Data.Story.Title }}</h1>
   <div class="{{ if not .Data.IsUsersTurn }} grow {{ end }}">
@@ -69,5 +64,4 @@
     </p>
   </div>
 </div>
-
-{{end}}
+{{template "after" .}}
