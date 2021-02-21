@@ -9,8 +9,9 @@ Feature: Hide Stories
             | gabe     |
 
         And the following stories exist
-            | title     | turns | users      | complete |
-            | Linger on | 3     | zach, gabe | false    |
+            | title               | turns | users      | complete |
+            | Linger on           | 3     | zach, gabe | false    |
+            | Your pale blue eyes | 3     | zach, gabe | false    |
 
     Scenario: I hide a story and unhide a story
         Given I am logged in as zach
@@ -24,3 +25,11 @@ Feature: Hide Stories
         When I click the unhide button for the story "Linger on"
         And I click the link "don't show hidden stories"
         Then I see the text "Linger on"
+
+    Scenario: I hide multiple stories
+        Given I am logged in as zach
+        When I visit "/me"
+        And I click the hide button for the story "Linger on"
+        And I click the hide button for the story "Your pale blue eyes"
+        Then I do not see the text "Linger on"
+        And I do not see the text "Your pale blue eyes"

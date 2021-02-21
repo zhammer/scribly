@@ -318,8 +318,8 @@ const (
 )
 
 type UserStoryHide struct {
-	UserID       int
-	StoryID      int
+	UserID       int `pg:",pk"`
+	StoryID      int `pg:",pk"`
 	HiddenStatus HiddenStatus
 }
 
