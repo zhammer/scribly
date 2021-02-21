@@ -6,6 +6,10 @@ Feature: Start A New Story
             | zhammer    |
             | gsnussbaum |
 
+        And the following stories exist
+            | title   | turns | users               | complete |
+            | A story | 3     | zhammer, gsnussbaum | false    |
+
     Scenario: I need an accessible new story page
         Given I am logged in as zhammer
         When I visit "/new"
@@ -20,7 +24,7 @@ Feature: Start A New Story
         And I click on the "body" textarea
         And I type "<intro>"
         And I click the text "add cowriters"
-        Then I am on "/stories/1"
+        Then I am on "/stories/2"
         And I see the text "cowriters"
         And I see the text "<title>"
         And I see the text "<intro>"
@@ -39,7 +43,7 @@ Feature: Start A New Story
         And I type "my intro"
         And I click the text "add cowriters"
         And I refresh the page
-        Then I am on "/stories/1"
+        Then I am on "/stories/2"
         And I see the text "cowriters"
         And I see the text "submit"
         And I see the text "my title"
@@ -56,7 +60,7 @@ Feature: Start A New Story
         And I click on the "person-1" input
         And I type "gsnussbaum"
         And I click the text "submit"
-        Then I am on "/stories/1"
+        Then I am on "/stories/2"
         And I see the text "my title"
         And I see the text "cowriters: zhammer, gsnussbaum"
         And I see the text "turn: 1 (gsnussbaum's turn)"
@@ -74,7 +78,7 @@ Feature: Start A New Story
         And I type "gsnussbaum"
         And I click the text "submit"
         And I log in as "gsnussbaum"
-        And I visit "/stories/1"
+        And I visit "/stories/2"
         Then I see the text "my title"
         And I see the text "write"
         And I see the text "write and finish"
