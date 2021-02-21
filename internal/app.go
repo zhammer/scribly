@@ -212,7 +212,7 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 
 func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus HiddenStatus) error {
 	story := Story{ID: storyID}
-	if err := s.db.Model(&story).Relation("Cowriters").Select(); err != nil {
+	if err := s.db.Model(&story).WherePK().Relation("Cowriters").Select(); err != nil {
 		return err
 	}
 
