@@ -74,6 +74,10 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	router.PathPrefix("/static/").Handler(http.FileServer(http.FS(embedded.StaticFS)))
 
+	router.HandleFunc("/_cypress_email", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/tempfile.html")
+	})
+
 	errorPage := func(w http.ResponseWriter, r *http.Request, e error) error {
 		fmt.Printf("error on request %s: %s\n", r.URL.String(), e.Error())
 		return embedded.WebTemplates.ExecuteTemplate(w, "exception.tmpl", ViewData{e, r, "Uh Oh!", ""})
