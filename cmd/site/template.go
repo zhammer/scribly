@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -50,6 +51,10 @@ func (v ViewData) Ternary(cond bool, a interface{}, b interface{}) interface{} {
 
 func (v ViewData) Add(a int, b int) int {
 	return a + b
+}
+
+func (v ViewData) NewLineify(str string) template.HTML {
+	return template.HTML(strings.ReplaceAll(str, "\n", "<br>"))
 }
 
 func (v ViewData) Replace(original string, pattern string, replacement string) string {
