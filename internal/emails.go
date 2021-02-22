@@ -29,6 +29,10 @@ func (v viewData) Replace(original string, pattern string, replacement string) s
 	return strings.ReplaceAll(original, pattern, replacement)
 }
 
+func (v viewData) NewLineify(str string) template.HTML {
+	return template.HTML(strings.ReplaceAll(str, "\n", "<br>"))
+}
+
 func (v viewData) WhoseTurnText(story Story, recipient User) string {
 	subject := story.CurrentWriter.Username + "'s"
 	if story.CurrentWriterID == recipient.ID {

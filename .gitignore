@@ -7,3 +7,4 @@ cypress/videos
 
 # vscode
 .vscode
+/tmp/

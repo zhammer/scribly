@@ -84,3 +84,14 @@ Feature: Story Turn
         And I see the text "Moricori fully opens the pizza."
         And I see the text "Five years later all anyone will remember"
 
+    Scenario: New lines in turns correctly display on the page
+        When I log in as "gabe"
+        And I visit "/stories/1"
+        And I click on the "text" textarea
+        And I type:
+            """
+            From,
+            Your Father
+            """
+        And I click the button "write"
+        And I do not see the text "<br>"

@@ -24,6 +24,6 @@
 </p>
 {{ if .Data.Turn.Writes }}
 <hr>
-<em>{{ .Replace .Data.Turn.Text "\n" "<br>" }}</em>
+<em>{{ .NewLineify .Data.Turn.Text }}</em>
 {{ end }}
 {{template "after" .}}
