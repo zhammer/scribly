@@ -94,7 +94,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := embedded.WebTemplates.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "index.tmpl", ViewData{nil, r, "", ""}); err != nil {
 			errorPage(w, r, err)
 		}
 	}).Methods("GET")
