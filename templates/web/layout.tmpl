@@ -1,12 +1,16 @@
 {{define "before"}}
+{{ $description := "write stories together" }}
 <!DOCTYPE html>
 <html>
   <head>
     <title>{{.Title}}</title>
-    <meta name="description" content="write stories together" />
+    <meta name="description" content="{{$description}}" />
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- sosh mede -->
+    <meta property="og:description" content="{{$description}}" />
 
     <!-- stylesheet -->
     <link rel="stylesheet" href="/static/style.css" />
