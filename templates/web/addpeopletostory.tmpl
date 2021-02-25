@@ -1,6 +1,6 @@
 {{template "before" .}}
 <h1 class="title">{{ .Data.Story.Title }}</h1>
-<p class="text">{{ .Replace (index .Data.Story.Turns 0).Text "\n" "<br>" }}</p>
+<p class="text">{{ .NewLineify (index .Data.Story.Turns 0).Text }}</p>
 <form id="add-cowriters" class="add-cowriters" action="/stories/{{ .Data.Story.ID }}/addcowriters"
   method="post">
   <hr />
