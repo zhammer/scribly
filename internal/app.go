@@ -129,7 +129,7 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 		}
 
 		var cowriterUsers []User
-		if err := tx.Model(&cowriterUsers).WhereIn("username IN (?)", input.Usernames()).Select(); err != nil {
+		if err := tx.Model(&cowriterUsers).Where("username ILIKE ANY (?)", pg.Array(input.Usernames())).Select(); err != nil {
 			return err
 		}
 
