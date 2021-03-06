@@ -216,7 +216,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 		storyID, _ := strconv.Atoi(mux.Vars(r)["storyId"])
 
-		story, err := scribly.UserStory(r.Context(), user.ID, storyID)
+		story, err := scribly.UserStory(r.Context(), *user, storyID)
 		if err != nil {
 			errorPage(w, r, err)
 			return
@@ -224,7 +224,16 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 		switch story.Story.State {
 		case internal.StoryStateDraft:
-			if err := embedded.WebTemplates.ExecuteTemplate(w, "addpeopletostory.tmpl", ViewData{story, r, fmt.Sprintf("%s - Add Cowriters", story.Story.Title), ""}); err != nil {
+			userSuggestions, _ := scribly.UserSuggestions(r.Context(), *user)
+			viewData := ViewData{
+				Data: map[string]interface{}{
+					"UserStory":       story,
+					"UserSuggestions": userSuggestions,
+				},
+				Request: r,
+				title:   fmt.Sprintf("%s - Add Cowriters", story.Story.Title),
+			}
+			if err := embedded.WebTemplates.ExecuteTemplate(w, "addpeopletostory.tmpl", viewData); err != nil {
 				errorPage(w, r, err)
 				return
 			}

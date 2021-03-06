@@ -64,10 +64,10 @@ func (s *Scribly) Me(ctx context.Context, user *User) (*Me, error) {
 
 }
 
-func (s *Scribly) UserStory(ctx context.Context, userID int, storyID int) (*UserStory, error) {
+func (s *Scribly) UserStory(ctx context.Context, user User, storyID int) (*UserStory, error) {
 	story := UserStory{}
 	if err := s.db.Model(&story).
-		Where("story_id = ? AND user_id = ?", storyID, userID).
+		Where("story_id = ? AND user_id = ?", storyID, user.ID).
 		Relation("Story").
 		Relation("Story.Cowriters", db.WithOrderBy("story_cowriter.turn_index")).
 		Relation("Story.Cowriters.User").
@@ -80,6 +80,17 @@ func (s *Scribly) UserStory(ctx context.Context, userID int, storyID int) (*User
 
 	return &story, nil
 
+}
+
+// this is the super simple way to do this while there are only a handful of users
+// on the site. return everyone who's not the current user.
+func (s *Scribly) UserSuggestions(ctx context.Context, user User) ([]User, error) {
+	var users []User
+	if err := s.db.Model(&users).Where("id != ?", user.ID).Select(); err != nil {
+		return users, err
+	}
+
+	return users, nil
 }
 
 func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInput) (*Story, error) {
