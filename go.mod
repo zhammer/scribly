@@ -10,5 +10,6 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mssola/user_agent v0.5.2
+	github.com/stretchr/testify v1.6.1
 	github.com/vanng822/go-premailer v1.9.0
 )
