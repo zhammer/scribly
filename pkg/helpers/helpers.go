@@ -20,8 +20,11 @@ func IsValidEmail(email string) bool {
 	return emailRegex.MatchString(email)
 }
 
-func ContainsStr(haystack []string, needle string) bool {
+func ContainsStr(haystack []string, needle string, transforms ...func(string) string) bool {
 	for _, item := range haystack {
+		for _, t := range transforms {
+			item = t(item)
+		}
 		if item == needle {
 			return true
 		}

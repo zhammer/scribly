@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"scribly/pkg/helpers"
+	"strings"
 	"time"
 )
 
@@ -163,11 +164,11 @@ func (s *Story) ValidateUserCanAddCowriters(user User, cowriters []string) error
 	}
 
 	if s.State != StoryStateDraft {
-		return fmt.Errorf("Story must be in state 'draft' to add cowriters. Story %d is in state %d.", s.ID, s.State)
+		return fmt.Errorf("Story must be in state 'draft' to add cowriters. Story %d is in state %s.", s.ID, s.State)
 	}
 
-	if helpers.ContainsStr(cowriters, user.Username) {
-		return fmt.Errorf("You cannot list yourself as a cowriter.")
+	if helpers.ContainsStr(cowriters, user.Username, strings.ToLower) {
+		return fmt.Errorf("You cannot add yourself as a cowriter.")
 	}
 
 	return nil

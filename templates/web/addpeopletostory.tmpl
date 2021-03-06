@@ -1,7 +1,7 @@
 {{template "before" .}}
-<h1 class="title">{{ .Data.Story.Title }}</h1>
-<p class="text">{{ .NewLineify (index .Data.Story.Turns 0).Text }}</p>
-<form id="add-cowriters" class="add-cowriters" action="/stories/{{ .Data.Story.ID }}/addcowriters"
+<h1 class="title">{{ .Data.UserStory.Story.Title }}</h1>
+<p class="text">{{ .NewLineify (index .Data.UserStory.Story.Turns 0).Text }}</p>
+<form id="add-cowriters" class="add-cowriters" action="/stories/{{ .Data.UserStory.Story.ID }}/addcowriters"
   method="post">
   <hr />
   <h2>cowriters</h2>
@@ -12,13 +12,11 @@
         id="person-{{ $i }}" placeholder="person {{ $i }} (optional)"
         aria-label="person {{ $i }} (optional)" list="user-suggestions" />
     {{end}}
-    {{/* todo
-  <datalist id="user-suggestions">
-      {% for user in user_suggestions %}
-          <option value="{{ user.username }}" />
-      {% endfor %}
-  </datalist>
-    */}}
+    <datalist id="user-suggestions">
+        {{ range $user := .Data.UserSuggestions }}
+            <option value="{{ $user.Username }}" />
+        {{ end }}
+    </datalist>
   <br />
   <button type="submit" id="new-story-button">
     submit
