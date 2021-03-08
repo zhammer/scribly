@@ -1,0 +1,20 @@
+image:
+  file: .gitpod.Dockerfile
+
+# List the ports you want to expose and what to do when they are served. See https://www.gitpod.io/docs/config-ports/
+ports:
+  - port: 8000
+    onOpen: open-preview
+
+# List the start up tasks. You can start them in parallel in multiple terminals. See https://www.gitpod.io/docs/config-start-tasks/
+tasks:
+  - name: Docker Compose Environment
+    command: docker-compose up db mocksendgrid
+    openMode: split-right
+  - name: Golang Web Application
+    env:
+      SENDGRID_BASE_URL: http://127.0.0.1:9991
+      WEBSITE_URL: http://127.0.0.1:8000
+    init: go mod download
+    command: ./wait-for-it.sh 127.0.0.1:5432 && air -c .air.toml
+    openIn: left
