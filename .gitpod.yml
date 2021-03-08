@@ -17,5 +17,5 @@ tasks:
       SENDGRID_BASE_URL: http://127.0.0.1:9991
       WEBSITE_URL: http://127.0.0.1:8000
     init: go mod download
-    command: ./wait-for-it.sh 127.0.0.1:5432 && air -c .air.toml
+    command: ./wait-for-it.sh -t 0 127.0.0.1:5432 && go run ./cmd/site/
     openIn: left
