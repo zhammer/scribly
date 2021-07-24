@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"scribly/pkg/db"
+	"sync"
 
 	"github.com/go-pg/pg/v10"
 )
@@ -11,6 +12,27 @@ type Scribly struct {
 	db             *pg.DB
 	emailer        EmailGateway
 	messageGateway MessageGateway
+	openai         OpenAIGateway
+
+	scribbotUserLock sync.Mutex
+	scribbotUser     *User
+}
+
+func (s *Scribly) getScribbotUser() (*User, error) {
+	s.scribbotUserLock.Lock()
+	defer s.scribbotUserLock.Unlock()
+
+	if s.scribbotUser != nil {
+		return s.scribbotUser, nil
+	}
+
+	user := User{}
+	if err := s.db.Model(&user).Where("username = ?", scribbotUsername).Select(); err != nil {
+		return nil, err
+	}
+
+	s.scribbotUser = &user
+	return s.scribbotUser, nil
 }
 
 func (s *Scribly) LogIn(ctx context.Context, input LoginInput) (*User, error) {
@@ -363,6 +385,46 @@ func (s *Scribly) VerifyEmail(ctx context.Context, user User, token string) erro
 	}
 
 	return nil
+}
+
+func (s *Scribly) TakeScribbotTurn(ctx context.Context, story Story, scribbot User) error {
+	text, err := s.openai.PredictText(ctx, story)
+	if err != nil {
+		return err
+	}
+
+	action := TurnActionWrite
+	if Odds(1, 20) {
+		action = TurnActionWriteAndFinish
+	}
+
+	turnInput := TurnInput{
+		Text:   text,
+		Action: action,
+	}
+
+	return s.TakeTurn(ctx, scribbot, story.ID, turnInput)
+}
+
+func (s *Scribly) TakeScribbotTurns(ctx context.Context) error {
+	scribbot, err := s.getScribbotUser()
+	if err != nil {
+		return err
+	}
+
+	var stories []Story // find all stories where it's AI's turn
+
+	for _, story := range stories {
+		if !story.ShouldTakeScribbotTurn() {
+			continue
+		}
+		if err := s.TakeScribbotTurn(ctx, story, *scribbot); err != nil {
+			return err
+		}
+	}
+
+	return nil
+
 }
 
 func NewScribly(db *pg.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {
