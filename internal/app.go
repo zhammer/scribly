@@ -14,8 +14,9 @@ type Scribly struct {
 	messageGateway MessageGateway
 	openai         OpenAIGateway
 
-	scribbotUserLock sync.Mutex
-	scribbotUser     *User
+	scribbotUserLock           sync.Mutex
+	scribbotUser               *User
+	scribbotShouldWriteChooser func() bool
 }
 
 func (s *Scribly) getScribbotUser() (*User, error) {
@@ -388,7 +389,7 @@ func (s *Scribly) VerifyEmail(ctx context.Context, user User, token string) erro
 }
 
 func (s *Scribly) TakeScribbotTurn(ctx context.Context, story Story, scribbot User) error {
-	text, err := s.openai.PredictText(ctx, story)
+	text, err := s.openai.GenerateTurnText(ctx, story)
 	if err != nil {
 		return err
 	}
@@ -415,7 +416,7 @@ func (s *Scribly) TakeScribbotTurns(ctx context.Context) error {
 	var stories []Story // find all stories where it's AI's turn
 
 	for _, story := range stories {
-		if !story.ShouldTakeScribbotTurn() {
+		if !s.scribbotShouldWriteChooser() {
 			continue
 		}
 		if err := s.TakeScribbotTurn(ctx, story, *scribbot); err != nil {
@@ -429,8 +430,9 @@ func (s *Scribly) TakeScribbotTurns(ctx context.Context) error {
 
 func NewScribly(db *pg.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {
 	return &Scribly{
-		db:             db,
-		emailer:        emailer,
-		messageGateway: messageGateway,
+		db:                         db,
+		emailer:                    emailer,
+		messageGateway:             messageGateway,
+		scribbotShouldWriteChooser: func() bool { return true },
 	}, nil
 }

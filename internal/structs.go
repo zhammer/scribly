@@ -186,11 +186,6 @@ func (s *Story) ValidateUserCanTakeTurn(user User, turn Turn) error {
 	return nil
 }
 
-func (s *Story) ShouldTakeScribbotTurn() bool {
-	// currently it's just a 1 in 12 chance that we should take a turn
-	return Odds(1, 12)
-}
-
 type UserStory struct {
 	UserID  int
 	StoryID int
