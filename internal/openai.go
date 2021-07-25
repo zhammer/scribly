@@ -8,8 +8,11 @@ import (
 )
 
 const (
-	turnSeparator          = GS
-	turnSeparatorSanitized = FS
+	// https://stackoverflow.com/questions/492090/least-used-delimiter-character-in-normal-text-ascii-128
+	asciiGS                = rune(0x1D) //      Group Separator
+	asciiFS                = rune(0x1C) //      Field Separator
+	turnSeparator          = asciiGS
+	turnSeparatorSanitized = asciiFS
 )
 
 type HTTPOpenAIGateway struct {
