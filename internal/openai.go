@@ -64,7 +64,7 @@ func WithBaseURL(baseURL string) HTTPOpenAIGatewayOption {
 	}
 }
 
-func (o *HTTPOpenAIGateway) PredictText(ctx context.Context, story Story) (string, error) {
+func (o *HTTPOpenAIGateway) GenerateTurnText(ctx context.Context, story Story) (string, error) {
 	payload := requestPayload{
 		Prompt:      buildPrompt(story),
 		MaxTokens:   1024,

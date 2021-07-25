@@ -13,5 +13,5 @@ type MessageGateway interface {
 }
 
 type OpenAIGateway interface {
-	PredictText(ctx context.Context, story Story) (string, error)
+	GenerateTurnText(ctx context.Context, story Story) (string, error)
 }
