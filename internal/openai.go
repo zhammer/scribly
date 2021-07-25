@@ -1,8 +1,11 @@
 package internal
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"math/rand"
 	"net/http"
@@ -22,14 +25,79 @@ const (
 	turnSeparatorSanitized = string(asciiFS)
 )
 
+type HTTPOpenAIGatewayOption func(o *HTTPOpenAIGateway)
+
 type HTTPOpenAIGateway struct {
 	client  *http.Client
 	baseURL string
 	apiKey  string
 }
 
+type requestPayload struct {
+	Prompt      string  `json:"prompt"`
+	MaxTokens   int     `json:"max_tokens"`
+	Temperature float32 `json:"temperature"`
+	Stop        string  `json:"stop"`
+}
+
+type responsePayload struct {
+	Choices []struct {
+		Text string `json:"text"`
+	} `json:"choices"`
+}
+
+func NewHTTPOpenAIGateway(apiKey string, opts ...HTTPOpenAIGatewayOption) *HTTPOpenAIGateway {
+	o := HTTPOpenAIGateway{
+		apiKey:  apiKey,
+		client:  &http.Client{},
+		baseURL: "https://api.openai.com",
+	}
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return &o
+}
+
+func WithBaseURL(baseURL string) HTTPOpenAIGatewayOption {
+	return func(o *HTTPOpenAIGateway) {
+		o.baseURL = baseURL
+	}
+}
+
 func (o *HTTPOpenAIGateway) PredictText(ctx context.Context, story Story) (string, error) {
-	return "", fmt.Errorf("Not implemented")
+	payload := requestPayload{
+		Prompt:      buildPrompt(story),
+		MaxTokens:   1024,
+		Temperature: .9,
+		Stop:        turnSeparator,
+	}
+	body := bytes.Buffer{}
+	if err := json.NewEncoder(&body).Encode(payload); err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest("POST", o.baseURL+"/v1/engines/davinci/completion", &body)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Authorization", "Bearer "+o.apiKey)
+	req.Header.Add("content-type", "application/json")
+	resp, err := o.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("Received non-200 response from openai %d - '%s'", resp.StatusCode, string(body))
+	}
+
+	responseBody := responsePayload{}
+	if err := json.NewDecoder(resp.Body).Decode(&responseBody); err != nil {
+		return "", err
+	}
+
+	return responseBody.Choices[0].Text, nil
 }
 
 func buildPrompt(story Story) string {
