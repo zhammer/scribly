@@ -37,6 +37,10 @@ Given("the following stories exist", datatable => {
   );
 });
 
+When("I wait for scribbot to take its turn", () => {
+  cy.exec("go run ./cmd/scribbot_cron/")
+});
+
 When("I wait {float} seconds", seconds => {
   cy.wait(seconds * 1000);
 });
