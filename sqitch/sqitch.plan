@@ -12,3 +12,6 @@ user_story_view 2021-02-14T03:52:01Z Zach Hammer <zachary_hammer@alumni.brown.ed
 pgcrypto 2021-02-14T21:59:34Z Zach Hammer <zachary_hammer@alumni.brown.edu> # enable pgcrypto
 stories_enhanced_view 2021-02-15T20:44:14Z Zach Hammer <zachary_hammer@alumni.brown.edu> # add view for stories with some enhanced computed data
 @1.1.0 2021-02-20T22:15:18Z Zach Hammer <zachary_hammer@alumni.brown.edu> # forgot to tag changes from bd7f1d5
+
+scribbot_user 2021-07-26T13:55:58Z System Administrator <zachary_hammer@alumni.brown.edu> # adds scribbot user
+@1.2.0 2021-07-26T13:59:51Z System Administrator <root@Zachs-MBP-2.fios-router.home> # scribbot user
