@@ -1,6 +1,6 @@
 [{
     "httpRequest": {
-        "path": "/v1/engines/davinci/completion",
+        "path": "/v1/engines/davinci/completions",
         "method": "POST"
     },
     "httpResponse": {
