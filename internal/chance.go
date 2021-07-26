@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -14,6 +13,5 @@ func init() {
 // there's a Odds(5, 12) chance i'm going to graduate
 func Odds(x int, in int) bool {
 	randomNumber := rand.Intn(in)
-	fmt.Println(randomNumber)
 	return x > randomNumber
 }

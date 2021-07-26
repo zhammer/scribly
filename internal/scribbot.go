@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"sync"
 )
 
@@ -19,6 +20,7 @@ type Scribbot struct {
 func NewScribbot(scribly *Scribly, openai OpenAIGateway, opts ...ScribbotOption) *Scribbot {
 	s := Scribbot{
 		Scribly:                    scribly,
+		openai:                     openai,
 		scribbotShouldWriteChooser: func() bool { return true },
 	}
 	for _, opt := range opts {
@@ -45,6 +47,7 @@ func (s *Scribbot) getScribbotUser() (*User, error) {
 }
 
 func (s *Scribbot) takeScribbotTurn(ctx context.Context, story Story, scribbot User) error {
+	fmt.Printf("scribbot taking turn on story %d\n", story.ID)
 	text, err := s.openai.GenerateTurnText(ctx, story)
 	if err != nil {
 		return err
@@ -69,12 +72,21 @@ func (s *Scribbot) TakeScribbotTurns(ctx context.Context) error {
 		return err
 	}
 
-	var stories []Story // find all stories where it's AI's turn
+	var stories []Story
+	if err := s.db.Model(&stories).Where("current_writer_id = ?", scribbot.ID).Select(); err != nil {
+		return err
+	}
+	fmt.Printf("found %d stories where it is scribbot's turn\n", len(stories))
 
+	var storiesToTakeTurn []Story
 	for _, story := range stories {
-		if !s.scribbotShouldWriteChooser() {
-			continue
+		if s.scribbotShouldWriteChooser() {
+			storiesToTakeTurn = append(storiesToTakeTurn, story)
 		}
+	}
+	fmt.Printf("scribbot will take its turn on %d stories\n", len(storiesToTakeTurn))
+
+	for _, story := range storiesToTakeTurn {
 		if err := s.takeScribbotTurn(ctx, story, *scribbot); err != nil {
 			return err
 		}

@@ -31,14 +31,14 @@ Given("the following stories exist", datatable => {
     datatable.hashes().map(storyRow => ({
       ...storyRow,
       usernames: storyRow.users.split(", "),
-      complete: JSON.parse(storyRow.complete),
+      complete: storyRow.complete === "true" ? true : false,
       turns: parseInt(storyRow.turns)
     }))
   );
 });
 
-When("I wait for scribbot to take its turn", () => {
-  cy.exec("go run ./cmd/scribbot_cron/")
+When("I wait for scribbot to take its turns", () => {
+  cy.exec("docker-compose run scribbot")
 });
 
 When("I wait {float} seconds", seconds => {

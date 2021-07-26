@@ -21,7 +21,7 @@ func (c *Config) MakeScribbot() (*internal.Scribbot, error) {
 		return nil, err
 	}
 
-	openai := internal.NewHTTPOpenAIGateway(c.OpenAIAPIKey, internal.WithBaseURL(c.OpenAIAPIKey))
+	openai := internal.NewHTTPOpenAIGateway(c.OpenAIAPIKey, internal.WithBaseURL(c.OpenAIBaseURL))
 	return internal.NewScribbot(scribly, openai), nil
 }
 
