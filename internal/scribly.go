@@ -11,7 +11,6 @@ type Scribly struct {
 	db             *pg.DB
 	emailer        EmailGateway
 	messageGateway MessageGateway
-	openai         OpenAIGateway
 }
 
 func (s *Scribly) LogIn(ctx context.Context, input LoginInput) (*User, error) {

@@ -9,12 +9,14 @@ type ScribbotOption func(s *Scribbot)
 
 type Scribbot struct {
 	*Scribly
-	scribbotUserLock           sync.Mutex
-	scribbotUser               *User
+	openai                     OpenAIGateway
 	scribbotShouldWriteChooser func() bool
+
+	scribbotUserLock sync.Mutex
+	scribbotUser     *User
 }
 
-func NewScribbot(scribly *Scribly, opts ...ScribbotOption) *Scribbot {
+func NewScribbot(scribly *Scribly, openai OpenAIGateway, opts ...ScribbotOption) *Scribbot {
 	s := Scribbot{
 		Scribly:                    scribly,
 		scribbotShouldWriteChooser: func() bool { return true },
@@ -42,7 +44,7 @@ func (s *Scribbot) getScribbotUser() (*User, error) {
 	return s.scribbotUser, nil
 }
 
-func (s *Scribly) TakeScribbotTurn(ctx context.Context, story Story, scribbot User) error {
+func (s *Scribbot) takeScribbotTurn(ctx context.Context, story Story, scribbot User) error {
 	text, err := s.openai.GenerateTurnText(ctx, story)
 	if err != nil {
 		return err
@@ -73,7 +75,7 @@ func (s *Scribbot) TakeScribbotTurns(ctx context.Context) error {
 		if !s.scribbotShouldWriteChooser() {
 			continue
 		}
-		if err := s.TakeScribbotTurn(ctx, story, *scribbot); err != nil {
+		if err := s.takeScribbotTurn(ctx, story, *scribbot); err != nil {
 			return err
 		}
 	}
