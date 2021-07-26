@@ -18,3 +18,4 @@ RUN go mod download
 COPY . .
 
 RUN go build -o /bin/scribly ./cmd/site
+RUN go build -o /bin/scribbot ./cmd/scribbot

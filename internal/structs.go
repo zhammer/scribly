@@ -21,6 +21,10 @@ type User struct {
 	EmailVerificationStatus EmailVerificationState
 }
 
+func (u *User) IsScribbot() bool {
+	return u.Username == scribbotUsername
+}
+
 func (u *User) ValidateCanSendVerificationEmail() error {
 	if u.EmailVerificationStatus == EmailVerificationStateVerified {
 		return fmt.Errorf("Email already verified.")

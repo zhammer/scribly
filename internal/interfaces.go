@@ -11,3 +11,7 @@ type MessageGateway interface {
 	AnnounceTurnTaken(ctx context.Context, story Story)
 	AnnounceCowritersAdded(ctx context.Context, story Story)
 }
+
+type OpenAIGateway interface {
+	GenerateTurnText(ctx context.Context, story Story) (string, error)
+}
