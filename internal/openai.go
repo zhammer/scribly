@@ -76,7 +76,7 @@ func (o *HTTPOpenAIGateway) GenerateTurnText(ctx context.Context, story Story) (
 		return "", err
 	}
 
-	req, err := http.NewRequest("POST", o.baseURL+"/v1/engines/davinci/completion", &body)
+	req, err := http.NewRequest("POST", o.baseURL+"/v1/engines/davinci/completions", &body)
 	if err != nil {
 		return "", err
 	}
