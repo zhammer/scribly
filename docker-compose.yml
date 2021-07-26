@@ -15,7 +15,7 @@ services:
       SENDGRID_BASE_URL: http://mocksendgrid:1080
     command: >
       bash -c "
-        ./wait-for-it.sh -t 30 postgres:5432
+        ./wait-for-it.sh db:5432
         ./wait-for-it.sh mocksendgrid:1080
         sqitch deploy db:$${DATABASE_URL} && go run ./cmd/site/
       "
