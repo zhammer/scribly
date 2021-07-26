@@ -73,7 +73,10 @@ func (s *Scribbot) TakeScribbotTurns(ctx context.Context) error {
 	}
 
 	var stories []Story
-	if err := s.db.Model(&stories).Where("current_writer_id = ?", scribbot.ID).Select(); err != nil {
+	if err := s.db.Model(&stories).
+		Where("current_writer_id = ?", scribbot.ID).
+		Relation("Turns").
+		Select(); err != nil {
 		return err
 	}
 	fmt.Printf("found %d stories where it is scribbot's turn\n", len(stories))
