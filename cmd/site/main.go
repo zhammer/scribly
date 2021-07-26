@@ -1,29 +1,25 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
 	embedded "scribly"
+	"scribly/cmd"
 	"scribly/internal"
 	"strconv"
 
-	"github.com/go-pg/pg/v10"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
+	cmd.Config
 	Port             int    `default:"8000"`
-	DatabaseURL      string `envconfig:"database_url" default:"postgres://scribly:pass@localhost/scribly?sslmode=disable"`
 	SessionSecretKey string `envconfig:"session_secret_key" default:"dev_session_secret"`
-	SendgridBaseURL  string `envconfig:"sendgrid_base_url" default:"https://api.sendgrid.com"`
-	SendgridAPIKey   string `envconfig:"sendgrid_api_key" default:"test_sendgrid_api_key"`
-	Debug            bool
 }
 
 func main() {
@@ -49,28 +45,10 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	router := mux.NewRouter()
 
-	opt, err := pg.ParseURL(cfg.DatabaseURL)
+	scribly, err := cfg.MakeScribly()
 	if err != nil {
 		return nil, err
 	}
-
-	db := pg.Connect(opt)
-	if err := db.Ping(context.Background()); err != nil {
-		return nil, err
-	}
-
-	if cfg.Debug {
-		db.AddQueryHook(DBLogger{})
-	}
-
-	sendgrid := internal.NewSendgridClient(cfg.SendgridBaseURL, cfg.SendgridAPIKey)
-	messageGateway := internal.GoroutineMessageGateway{}
-
-	scribly, err := internal.NewScribly(db, sendgrid, &messageGateway)
-	if err != nil {
-		return nil, err
-	}
-	messageGateway.Scribly(scribly)
 
 	router.PathPrefix("/static/").Handler(http.FileServer(http.FS(embedded.StaticFS)))
 
