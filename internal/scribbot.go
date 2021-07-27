@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"scribly/pkg/db"
 	"sync"
 )
 
@@ -75,7 +76,7 @@ func (s *Scribbot) TakeScribbotTurns(ctx context.Context) error {
 	var stories []Story
 	if err := s.db.Model(&stories).
 		Where("current_writer_id = ?", scribbot.ID).
-		Relation("Turns").
+		Relation("Turns", db.WithOrderBy("turn.created_at")).
 		Select(); err != nil {
 		return err
 	}
