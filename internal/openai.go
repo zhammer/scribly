@@ -65,6 +65,8 @@ func WithBaseURL(baseURL string) HTTPOpenAIGatewayOption {
 }
 
 func (o *HTTPOpenAIGateway) GenerateTurnText(ctx context.Context, story Story) (string, error) {
+	prompt := buildPrompt(story)
+	fmt.Printf("sending prompt: '%s'\n", prompt)
 	payload := requestPayload{
 		Prompt:      buildPrompt(story),
 		MaxTokens:   1024,
