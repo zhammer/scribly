@@ -50,6 +50,11 @@ a.button {
   display: inline-block;
 }
 
+button {
+  color: black;
+  border-color: black;
+}
+
 button,
 a.button {
   padding: 1em;
