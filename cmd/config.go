@@ -28,7 +28,7 @@ func (c *Config) MakeScribly() (*internal.Scribly, error) {
 	db := bun.NewDB(sqldb, pgdialect.New())
 
 	if c.Debug {
-		db.AddQueryHook(bundebug.NewQueryHook())
+		db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 	}
 
 	sendgrid := internal.NewSendgridClient(c.SendgridBaseURL, c.SendgridAPIKey)

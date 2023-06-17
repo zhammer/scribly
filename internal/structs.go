@@ -17,7 +17,7 @@ const (
 )
 
 type User struct {
-	ID                      int `bun:",pk"`
+	ID                      int `bun:",pk,autoincrement"`
 	Username                string
 	Email                   string
 	EmailVerificationStatus EmailVerificationState
@@ -116,7 +116,7 @@ const (
 
 type Story struct {
 	bun.BaseModel   `bun:"select:stories_enhanced"`
-	ID              int `bun:",pk"`
+	ID              int `bun:",pk,autoincrement"`
 	Title           string
 	State           StoryState
 	CreatedByID     int             `bun:"created_by"`

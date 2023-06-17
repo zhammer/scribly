@@ -13,6 +13,8 @@ services:
       - type: bind
         source: "."
         target: "/project"
+    environment:
+      DEBUG: true
     command: >
       bash -c "
         ./wait-for-it.sh db:5432
