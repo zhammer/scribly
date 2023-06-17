@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"scribly/pkg/db"
 
-	"github.com/go-pg/pg/v10"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
 type Scribly struct {
@@ -142,7 +142,7 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 		}
 
 		var cowriterUsers []User
-		if err := tx.NewSelect().Model(&cowriterUsers).Where("username ILIKE ANY (?)", pg.Array(input.Usernames())).Scan(ctx); err != nil {
+		if err := tx.NewSelect().Model(&cowriterUsers).Where("username ILIKE ANY (?)", pgdialect.Array(input.Usernames())).Scan(ctx); err != nil {
 			return err
 		}
 
