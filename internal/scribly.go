@@ -2,15 +2,13 @@ package internal
 
 import (
 	"context"
-	"database/sql"
 	"scribly/pkg/db"
 
 	"github.com/go-pg/pg/v10"
-	"github.com/uptrace/bun"
 )
 
 type Scribly struct {
-	db             *bun.DB
+	db             *pg.DB
 	emailer        EmailGateway
 	messageGateway MessageGateway
 }
@@ -48,14 +46,14 @@ func (s *Scribly) SignUp(ctx context.Context, input SignUpInput) (*User, error) 
 func (s *Scribly) Me(ctx context.Context, user *User) (*Me, error) {
 	// todo: figure out how to do this in one query, if that's bettah
 	// refresh our user model
-	if _, err := s.db.NewSelect().Model(user).WherePK().Exec(ctx); err != nil {
+	if err := s.db.Model(user).WherePK().Select(); err != nil {
 		return nil, err
 	}
 	var userStories []UserStory
-	if _, err := s.db.NewSelect().Model(&userStories).
+	if err := s.db.Model(&userStories).
 		Where("user_id = ?", user.ID).
 		Relation("Story").
-		Exec(ctx); err != nil {
+		Select(); err != nil {
 		return nil, err
 	}
 
@@ -68,7 +66,7 @@ func (s *Scribly) Me(ctx context.Context, user *User) (*Me, error) {
 
 func (s *Scribly) UserStory(ctx context.Context, user User, storyID int) (*UserStory, error) {
 	story := UserStory{}
-	if _, err := s.db.NewSelect().Model(&story).
+	if err := s.db.Model(&story).
 		Where("story_id = ? AND user_id = ?", storyID, user.ID).
 		Relation("Story").
 		Relation("Story.Cowriters", db.WithOrderBy("story_cowriter.turn_index")).
@@ -76,7 +74,7 @@ func (s *Scribly) UserStory(ctx context.Context, user User, storyID int) (*UserS
 		Relation("Story.CreatedByU").
 		Relation("Story.Turns", db.WithOrderBy("turn.created_at")).
 		Relation("Story.CurrentWriter").
-		Exec(ctx); err != nil {
+		Select(); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +86,7 @@ func (s *Scribly) UserStory(ctx context.Context, user User, storyID int) (*UserS
 // on the site. return everyone who's not the current user.
 func (s *Scribly) UserSuggestions(ctx context.Context, user User) ([]User, error) {
 	var users []User
-	if _, err := s.db.NewSelect().Model(&users).Where("id != ?", user.ID).Exec(ctx); err != nil {
+	if err := s.db.Model(&users).Where("id != ?", user.ID).Select(); err != nil {
 		return users, err
 	}
 
@@ -101,8 +99,8 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 		State:       StoryStateDraft,
 		CreatedByID: user.ID,
 	}
-	err := s.db.RunInTx(ctx, & &sql.TxOptions{}, sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
-		_, err := tx.NewInsert().Model(&story).ExcludeColumn("current_writer_id").Exec(ctx)
+	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+		_, err := tx.Model(&story).ExcludeColumn("current_writer_id").Insert()
 		if err != nil {
 			return err
 		}
@@ -113,7 +111,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 			Action:    TurnActionWrite,
 			Text:      input.Text,
 		}
-		if _, err := tx.NewInsert().Model(&firstTurn).Exec(ctx); err != nil {
+		if _, err := tx.Model(&firstTurn).Insert(); err != nil {
 			return err
 		}
 
@@ -123,7 +121,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 		return nil, err
 	}
 
-	if _, err := s.db.NewSelect().Model(&story).WherePK().Relation("Turns").Exec(ctx); err != nil {
+	if err := s.db.Model(&story).WherePK().Relation("Turns").Select(); err != nil {
 		return nil, err
 	}
 
@@ -132,8 +130,8 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 
 func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, input AddCowritersInput) error {
 	story := Story{ID: storyID}
-	err := s.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
-		if _, err := tx.NewSelect().Model(&story).WherePK().Exec(ctx); err != nil {
+	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+		if err := tx.Model(&story).WherePK().Select(); err != nil {
 			return err
 		}
 
@@ -142,7 +140,7 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 		}
 
 		var cowriterUsers []User
-		if _, err := tx.NewSelect().Model(&cowriterUsers).Where("username ILIKE ANY (?)", pg.Array(input.Usernames())).Exec(ctx); err != nil {
+		if err := tx.Model(&cowriterUsers).Where("username ILIKE ANY (?)", pg.Array(input.Usernames())).Select(); err != nil {
 			return err
 		}
 
@@ -158,11 +156,11 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 				TurnIndex: index,
 			})
 		}
-		if _, err := tx.NewInsert().Model(&cowriters).Exec(ctx); err != nil {
+		if _, err := tx.Model(&cowriters).Insert(); err != nil {
 			return err
 		}
 		story.State = StoryStateInProgress
-		if _, err := tx.NewUpdate().Model(&story).WherePK().ExcludeColumn("current_writer_id").Exec(ctx); err != nil {
+		if _, err := tx.Model(&story).WherePK().ExcludeColumn("current_writer_id").Update(); err != nil {
 			return err
 		}
 
@@ -190,8 +188,8 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 
 	story := Story{ID: storyID}
 
-	err := s.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
-		if _, err := tx.NewSelect().Model(&story).WherePK().Relation("Turns").Exec(ctx); err != nil {
+	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+		if err := tx.Model(&story).WherePK().Relation("Turns").Select(); err != nil {
 			return err
 		}
 
@@ -199,13 +197,13 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 			return err
 		}
 
-		if _, err := tx.NewInsert().Model(&turn).Exec(ctx); err != nil {
+		if _, err := tx.Model(&turn).Insert(); err != nil {
 			return err
 		}
 
 		if turn.Finishes() {
 			story.State = StoryStateDone
-			if _, err := tx.NewUpdate().Model(&story).WherePK().ExcludeColumn("current_writer_id").Exec(ctx); err != nil {
+			if _, err := tx.Model(&story).WherePK().ExcludeColumn("current_writer_id").Update(); err != nil {
 				return err
 			}
 		}
@@ -225,7 +223,7 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 
 func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus HiddenStatus) error {
 	story := Story{ID: storyID}
-	if _, err := s.db.NewSelect().Model(&story).WherePK().Relation("Cowriters").Exec(ctx); err != nil {
+	if err := s.db.Model(&story).WherePK().Relation("Cowriters").Select(); err != nil {
 		return err
 	}
 
@@ -239,7 +237,7 @@ func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus
 		return err
 	}
 
-	if _, err := s.db.NewInsert().Model(&hide).On("CONFLICT (user_id, story_id) DO UPDATE").Exec(ctx); err != nil {
+	if _, err := s.db.Model(&hide).OnConflict("(user_id, story_id) DO UPDATE").Insert(); err != nil {
 		return err
 	}
 
@@ -248,12 +246,12 @@ func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus
 
 func (s *Scribly) Nudge(ctx context.Context, nudger User, nudgeeID int, storyID int) error {
 	nudgee := User{ID: nudgeeID}
-	if _, err := s.db.NewSelect().Model(&nudgee).WherePK().Exec(ctx); err != nil {
+	if err := s.db.Model(&nudgee).WherePK().Select(); err != nil {
 		return err
 	}
 
 	story := Story{ID: storyID}
-	if _, err := s.db.NewSelect().Model(&story).WherePK().Relation("Cowriters").Exec(ctx); err != nil {
+	if err := s.db.Model(&story).WherePK().Relation("Cowriters").Select(); err != nil {
 		return err
 	}
 
@@ -271,14 +269,14 @@ func (s *Scribly) Nudge(ctx context.Context, nudger User, nudgeeID int, storyID 
 
 func (s *Scribly) SendAddedToStoryEmails(ctx context.Context, storyID int) error {
 	story := Story{ID: storyID}
-	if _, err := s.db.NewSelect().Model(&story).
+	if err := s.db.Model(&story).
 		WherePK().
 		Relation("Cowriters").
 		Relation("Cowriters.User").
 		Relation("CurrentWriter").
 		Relation("Turns").
 		Relation("CreatedByU").
-		Exec(ctx); err != nil {
+		Select(); err != nil {
 		return err
 	}
 
@@ -298,13 +296,13 @@ func (s *Scribly) SendAddedToStoryEmails(ctx context.Context, storyID int) error
 
 func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, turnNumber int) error {
 	story := Story{ID: storyID}
-	if _, err := s.db.NewSelect().Model(&story).WherePK().
+	if err := s.db.Model(&story).WherePK().
 		Relation("Turns", db.WithOrderBy("turn.created_at")).
 		Relation("Turns.TakenByU").
 		Relation("Cowriters", db.WithOrderBy("story_cowriter.turn_index")).
 		Relation("Cowriters.User").
 		Relation("CurrentWriter").
-		Exec(ctx); err != nil {
+		Select(); err != nil {
 		return err
 	}
 
@@ -324,7 +322,7 @@ func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, t
 
 func (s *Scribly) SendVerificationEmail(ctx context.Context, userID int) error {
 	user := User{ID: userID}
-	if _, err := s.db.NewSelect().Model(&user).WherePK().Exec(ctx); err != nil {
+	if err := s.db.Model(&user).WherePK().Select(); err != nil {
 		return err
 	}
 
@@ -360,14 +358,14 @@ func (s *Scribly) VerifyEmail(ctx context.Context, user User, token string) erro
 	}
 
 	user.EmailVerificationStatus = EmailVerificationStateVerified
-	if _, err := s.db.NewUpdate().Model(&user).WherePK().Column("email_verification_status").Exec(ctx); err != nil {
+	if _, err := s.db.Model(&user).WherePK().Column("email_verification_status").Update(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func NewScribly(db *bun.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {
+func NewScribly(db *pg.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {
 	return &Scribly{
 		db:             db,
 		emailer:        emailer,

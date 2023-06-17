@@ -1,13 +1,11 @@
 package db
 
-import (
-	"github.com/uptrace/bun"
-)
+import "github.com/go-pg/pg/v10/orm"
 
-type relationshipFunc func(*bun.SelectQuery) *bun.SelectQuery
+type relationshipFunc func(*orm.Query) (*orm.Query, error)
 
 func WithOrderBy(column string) relationshipFunc {
-	return func(q *bun.SelectQuery) *bun.SelectQuery {
-		return q.Order(column)
+	return func(q *orm.Query) (*orm.Query, error) {
+		return q.Order(column), nil
 	}
 }
