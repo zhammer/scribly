@@ -5,10 +5,11 @@ import (
 	"scribly/pkg/db"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/uptrace/bun"
 )
 
 type Scribly struct {
-	db             *pg.DB
+	db             *bun.DB
 	emailer        EmailGateway
 	messageGateway MessageGateway
 }
@@ -365,7 +366,7 @@ func (s *Scribly) VerifyEmail(ctx context.Context, user User, token string) erro
 	return nil
 }
 
-func NewScribly(db *pg.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {
+func NewScribly(db *bun.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {
 	return &Scribly{
 		db:             db,
 		emailer:        emailer,
