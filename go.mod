@@ -14,5 +14,6 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/uptrace/bun v1.1.14 // indirect
 	github.com/uptrace/bun/dialect/pgdialect v1.1.14 // indirect
+	github.com/uptrace/bun/extra/bundebug v1.1.14 // indirect
 	github.com/vanng822/go-premailer v1.9.0
 )

@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v4/stdlib"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/extra/bundebug"
 )
 
 type Config struct {
@@ -25,6 +26,10 @@ func (c *Config) MakeScribly() (*internal.Scribly, error) {
 
 	sqldb := stdlib.OpenDB(*config)
 	db := bun.NewDB(sqldb, pgdialect.New())
+
+	if c.Debug {
+		db.AddQueryHook(bundebug.NewQueryHook())
+	}
 
 	sendgrid := internal.NewSendgridClient(c.SendgridBaseURL, c.SendgridAPIKey)
 	messageGateway := internal.GoroutineMessageGateway{}
