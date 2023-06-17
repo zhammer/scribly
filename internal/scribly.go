@@ -100,7 +100,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 		CreatedByID: user.ID,
 	}
 	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
-		_, err := tx.Model(&story).ExcludeColumn("current_writer_id").Insert()
+		_, err := tx.NewInsert().Model(&story).ExcludeColumn("current_writer_id").Exec()
 		if err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 			Action:    TurnActionWrite,
 			Text:      input.Text,
 		}
-		if _, err := tx.Model(&firstTurn).Insert(); err != nil {
+		if _, err := tx.NewInsert().Model(&firstTurn).Exec(); err != nil {
 			return err
 		}
 
@@ -156,11 +156,11 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 				TurnIndex: index,
 			})
 		}
-		if _, err := tx.Model(&cowriters).Insert(); err != nil {
+		if _, err := tx.NewInsert().Model(&cowriters).Exec(); err != nil {
 			return err
 		}
 		story.State = StoryStateInProgress
-		if _, err := tx.Model(&story).WherePK().ExcludeColumn("current_writer_id").Update(); err != nil {
+		if _, err := tx.NewUpdate().Model(&story).WherePK().ExcludeColumn("current_writer_id").Exec(); err != nil {
 			return err
 		}
 
@@ -197,13 +197,13 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 			return err
 		}
 
-		if _, err := tx.Model(&turn).Insert(); err != nil {
+		if _, err := tx.NewInsert().Model(&turn).Exec(); err != nil {
 			return err
 		}
 
 		if turn.Finishes() {
 			story.State = StoryStateDone
-			if _, err := tx.Model(&story).WherePK().ExcludeColumn("current_writer_id").Update(); err != nil {
+			if _, err := tx.NewUpdate().Model(&story).WherePK().ExcludeColumn("current_writer_id").Exec(); err != nil {
 				return err
 			}
 		}
@@ -237,7 +237,7 @@ func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus
 		return err
 	}
 
-	if _, err := s.db.Model(&hide).OnConflict("(user_id, story_id) DO UPDATE").Insert(); err != nil {
+	if _, err := s.db.NewInsert().Model(&hide).OnConflict("(user_id, story_id) DO UPDATE").Exec(); err != nil {
 		return err
 	}
 
@@ -358,7 +358,7 @@ func (s *Scribly) VerifyEmail(ctx context.Context, user User, token string) erro
 	}
 
 	user.EmailVerificationStatus = EmailVerificationStateVerified
-	if _, err := s.db.Model(&user).WherePK().Column("email_verification_status").Update(); err != nil {
+	if _, err := s.db.NewUpdate().Model(&user).WherePK().Column("email_verification_status").Exec(); err != nil {
 		return err
 	}
 
