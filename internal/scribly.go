@@ -86,7 +86,7 @@ func (s *Scribly) UserStory(ctx context.Context, user User, storyID int) (*UserS
 // on the site. return everyone who's not the current user.
 func (s *Scribly) UserSuggestions(ctx context.Context, user User) ([]User, error) {
 	var users []User
-	if err := s.db.Model(&users).Where("id != ?", user.ID).Select(); err != nil {
+	if err := s.db.NewSelect().Model(&users).Where("id != ?", user.ID).Scan(ctx); err != nil {
 		return users, err
 	}
 
@@ -121,7 +121,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 		return nil, err
 	}
 
-	if err := s.db.Model(&story).WherePK().Relation("Turns").Select(); err != nil {
+	if err := s.db.NewSelect().Model(&story).WherePK().Relation("Turns").Scan(ctx); err != nil {
 		return nil, err
 	}
 
@@ -131,7 +131,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, input AddCowritersInput) error {
 	story := Story{ID: storyID}
 	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
-		if err := tx.Model(&story).WherePK().Select(); err != nil {
+		if err := tx.NewSelect().Model(&story).WherePK().Scan(ctx); err != nil {
 			return err
 		}
 
@@ -140,7 +140,7 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 		}
 
 		var cowriterUsers []User
-		if err := tx.Model(&cowriterUsers).Where("username ILIKE ANY (?)", pg.Array(input.Usernames())).Select(); err != nil {
+		if err := tx.NewSelect().Model(&cowriterUsers).Where("username ILIKE ANY (?)", pg.Array(input.Usernames())).Scan(ctx); err != nil {
 			return err
 		}
 
@@ -189,7 +189,7 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 	story := Story{ID: storyID}
 
 	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
-		if err := tx.Model(&story).WherePK().Relation("Turns").Select(); err != nil {
+		if err := tx.NewSelect().Model(&story).WherePK().Relation("Turns").Scan(ctx); err != nil {
 			return err
 		}
 
@@ -223,7 +223,7 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 
 func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus HiddenStatus) error {
 	story := Story{ID: storyID}
-	if err := s.db.Model(&story).WherePK().Relation("Cowriters").Select(); err != nil {
+	if err := s.db.NewSelect().Model(&story).WherePK().Relation("Cowriters").Scan(ctx); err != nil {
 		return err
 	}
 
@@ -246,12 +246,12 @@ func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus
 
 func (s *Scribly) Nudge(ctx context.Context, nudger User, nudgeeID int, storyID int) error {
 	nudgee := User{ID: nudgeeID}
-	if err := s.db.Model(&nudgee).WherePK().Select(); err != nil {
+	if err := s.db.NewSelect().Model(&nudgee).WherePK().Scan(ctx); err != nil {
 		return err
 	}
 
 	story := Story{ID: storyID}
-	if err := s.db.Model(&story).WherePK().Relation("Cowriters").Select(); err != nil {
+	if err := s.db.NewSelect().Model(&story).WherePK().Relation("Cowriters").Scan(ctx); err != nil {
 		return err
 	}
 
@@ -322,7 +322,7 @@ func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, t
 
 func (s *Scribly) SendVerificationEmail(ctx context.Context, userID int) error {
 	user := User{ID: userID}
-	if err := s.db.Model(&user).WherePK().Select(); err != nil {
+	if err := s.db.NewSelect().Model(&user).WherePK().Scan(ctx); err != nil {
 		return err
 	}
 

@@ -39,7 +39,7 @@ func (s *Scribbot) getScribbotUser() (*User, error) {
 	}
 
 	user := User{}
-	if err := s.db.Model(&user).Where("username = ?", scribbotUsername).Select(); err != nil {
+	if err := s.db.NewSelect().Model(&user).Where("username = ?", scribbotUsername).Scan(ctx); err != nil {
 		return nil, err
 	}
 
