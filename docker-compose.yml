@@ -1,24 +1,24 @@
 version: "3.9"
 services:
-  # web:
-  #   build: .
-  #   image: scribly/scribly
-  #   ports:
-  #     - "8000:8000"
-  #   volumes:
-  #     # for a hack where cypress dumps email html bodies into /static to interact with emails
-  #     # as a workaround for: https://github.com/cypress-io/cypress/issues/2918
-  #     - "./static:/project/static"
-  #   environment:
-  #     DATABASE_URL: postgres://scribly:pass@db/scribly?sslmode=disable
-  #     WEBSITE_URL: http://127.0.0.1:8000
-  #     SENDGRID_BASE_URL: http://mocksendgrid:1080
-  #   command: >
-  #     bash -c "
-  #       ./wait-for-it.sh db:5432
-  #       ./wait-for-it.sh mocksendgrid:1080
-  #       sqitch deploy db:$${DATABASE_URL} && go run ./cmd/site/
-  #     "
+  web:
+    build: .
+    image: scribly/scribly
+    ports:
+      - "8000:8000"
+    volumes:
+      # for a hack where cypress dumps email html bodies into /static to interact with emails
+      # as a workaround for: https://github.com/cypress-io/cypress/issues/2918
+      - "./static:/project/static"
+    environment:
+      DATABASE_URL: postgres://scribly:pass@db/scribly?sslmode=disable
+      WEBSITE_URL: http://127.0.0.1:8000
+      SENDGRID_BASE_URL: http://mocksendgrid:1080
+    command: >
+      bash -c "
+        ./wait-for-it.sh db:5432
+        ./wait-for-it.sh mocksendgrid:1080
+        sqitch deploy db:$${DATABASE_URL} && go run ./cmd/site/
+      "
   migrations:
     image: sqitch/sqitch
     command: deploy db:postgres://scribly:pass@db/scribly?sslmode=disable
