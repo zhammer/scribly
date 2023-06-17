@@ -17,9 +17,9 @@ type Scribly struct {
 
 func (s *Scribly) LogIn(ctx context.Context, input LoginInput) (*User, error) {
 	user := User{}
-	_, err := s.db.QueryOne(&user, `
+	err := s.db.NewRaw(`
 		SELECT id, username, email, email_verification_status FROM users WHERE username = ? AND password = crypt(?, password);
-	`, input.Username, input.Password)
+	`, input.Username, input.Password).Scan(ctx, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -32,10 +32,10 @@ func (s *Scribly) SignUp(ctx context.Context, input SignUpInput) (*User, error) 
 	}
 
 	user := User{}
-	_, err := s.db.QueryOne(&user, `
+	err := s.db.NewRaw(`
 		INSERT INTO users (username, email, password) VALUES (?, ?, crypt(?, gen_salt('bf', 8)))
 		RETURNING id, username, email, email_verification_status
-	`, input.Username, input.Email, input.Password)
+	`, input.Username, input.Email, input.Password).Scan(ctx, &user)
 	if err != nil {
 		return nil, err
 	}
