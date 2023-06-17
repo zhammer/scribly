@@ -1,4 +1,4 @@
-package scribly
+package embed
 
 import (
 	"embed"

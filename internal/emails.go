@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-	"scribly"
+	"scribly/embed"
 	"strings"
 
 	"github.com/vanng822/go-premailer/premailer"
@@ -42,7 +42,7 @@ func (v viewData) WhoseTurnText(story Story, recipient User) string {
 }
 
 func (v viewData) CSS() template.HTML {
-	return template.HTML("<style>" + scribly.CSS + "</style>")
+	return template.HTML("<style>" + embed.CSS + "</style>")
 }
 
 func BuildNudgeEmail(nudger User, nudgee User, story Story) (*Email, error) {
@@ -154,7 +154,7 @@ func BuildEmailVerificationEmail(user User, token string) (*Email, error) {
 func renderTemplateWithCSS(templateName string, data interface{}) (string, error) {
 	var buffer bytes.Buffer
 	viewData := viewData{Data: data}
-	if err := scribly.EmailTemplates.ExecuteTemplate(&buffer, templateName, viewData); err != nil {
+	if err := embed.EmailTemplates.ExecuteTemplate(&buffer, templateName, viewData); err != nil {
 		return "", err
 	}
 	prem, err := premailer.NewPremailerFromBytes(buffer.Bytes(), premailer.NewOptions())

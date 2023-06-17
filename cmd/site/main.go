@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	embedded "scribly"
 	"scribly/cmd"
+	embedded "scribly/embed"
 	"scribly/internal"
 	"strconv"
 
