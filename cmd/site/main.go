@@ -1,19 +1,16 @@
-package main
+package site
 
 import (
 	"fmt"
-	"log"
-	"net"
 	"net/http"
 	"net/url"
-	embedded "scribly"
 	"scribly/cmd"
+	embedded "scribly/embed"
 	"scribly/internal"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
-	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
@@ -22,22 +19,22 @@ type Config struct {
 	SessionSecretKey string `envconfig:"session_secret_key" default:"dev_session_secret"`
 }
 
-func main() {
-	cfg := Config{}
-	if err := envconfig.Process("", &cfg); err != nil {
-		log.Fatal(err)
-	}
+// func main() {
+// 	cfg := Config{}
+// 	if err := envconfig.Process("", &cfg); err != nil {
+// 		log.Fatal(err)
+// 	}
+//
+// 	router, err := MakeRouter(cfg)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	if err := http.ListenAndServe(net.JoinHostPort("", strconv.Itoa(cfg.Port)), router); err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
 
-	router, err := makeRouter(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := http.ListenAndServe(net.JoinHostPort("", strconv.Itoa(cfg.Port)), router); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func makeRouter(cfg Config) (http.Handler, error) {
+func MakeRouter(cfg Config) (http.Handler, error) {
 	formDecoder := schema.NewDecoder()
 	formDecoder.IgnoreUnknownKeys(true)
 
@@ -47,7 +44,7 @@ func makeRouter(cfg Config) (http.Handler, error) {
 
 	scribly, err := cfg.MakeScribly()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error making scribly: %w", err)
 	}
 
 	router.PathPrefix("/static/").Handler(http.FileServer(http.FS(embedded.StaticFS)))
