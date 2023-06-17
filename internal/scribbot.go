@@ -30,7 +30,7 @@ func NewScribbot(scribly *Scribly, openai OpenAIGateway, opts ...ScribbotOption)
 	return &s
 }
 
-func (s *Scribbot) getScribbotUser() (*User, error) {
+func (s *Scribbot) getScribbotUser(ctx context.Context) (*User, error) {
 	s.scribbotUserLock.Lock()
 	defer s.scribbotUserLock.Unlock()
 
@@ -39,7 +39,7 @@ func (s *Scribbot) getScribbotUser() (*User, error) {
 	}
 
 	user := User{}
-	if err := s.db.Model(&user).Where("username = ?", scribbotUsername).Select(); err != nil {
+	if err := s.db.NewSelect().Model(&user).Where("username = ?", scribbotUsername).Scan(ctx); err != nil {
 		return nil, err
 	}
 
@@ -68,16 +68,16 @@ func (s *Scribbot) takeScribbotTurn(ctx context.Context, story Story, scribbot U
 }
 
 func (s *Scribbot) TakeScribbotTurns(ctx context.Context) error {
-	scribbot, err := s.getScribbotUser()
+	scribbot, err := s.getScribbotUser(ctx)
 	if err != nil {
 		return err
 	}
 
 	var stories []Story
-	if err := s.db.Model(&stories).
+	if err := s.db.NewSelect().Model(&stories).
 		Where("current_writer_id = ?", scribbot.ID).
 		Relation("Turns", db.WithOrderBy("turn.created_at")).
-		Select(); err != nil {
+		Scan(ctx); err != nil {
 		return err
 	}
 	fmt.Printf("found %d stories where it is scribbot's turn\n", len(stories))
