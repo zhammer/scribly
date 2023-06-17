@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"scribly/internal"
 
-	"github.com/go-pg/pg/v10"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/stdlib"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
 type Config struct {
@@ -15,19 +17,14 @@ type Config struct {
 }
 
 func (c *Config) MakeScribly() (*internal.Scribly, error) {
-	opt, err := pg.ParseURL(c.DatabaseURL)
+	config, err := pgx.ParseConfig(c.DatabaseURL)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
+	config.PreferSimpleProtocol = true
 
-	db := pg.Connect(opt)
-	if err := db.Ping(context.Background()); err != nil {
-		return nil, err
-	}
-
-	if c.Debug {
-		db.AddQueryHook(DBLogger{})
-	}
+	sqldb := stdlib.OpenDB(*config)
+	db := bun.NewDB(sqldb, pgdialect.New())
 
 	sendgrid := internal.NewSendgridClient(c.SendgridBaseURL, c.SendgridAPIKey)
 	messageGateway := internal.GoroutineMessageGateway{}
