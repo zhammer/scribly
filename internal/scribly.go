@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"database/sql"
 	"scribly/pkg/db"
 
 	"github.com/go-pg/pg/v10"
@@ -47,14 +48,14 @@ func (s *Scribly) SignUp(ctx context.Context, input SignUpInput) (*User, error) 
 func (s *Scribly) Me(ctx context.Context, user *User) (*Me, error) {
 	// todo: figure out how to do this in one query, if that's bettah
 	// refresh our user model
-	if err := s.db.Model(user).WherePK().Select(); err != nil {
+	if err := s.db.NewSelect().Model(user).WherePK().Scan(ctx); err != nil {
 		return nil, err
 	}
 	var userStories []UserStory
-	if err := s.db.Model(&userStories).
+	if err := s.db.NewSelect().Model(&userStories).
 		Where("user_id = ?", user.ID).
 		Relation("Story").
-		Select(); err != nil {
+		Scan(ctx); err != nil {
 		return nil, err
 	}
 
@@ -67,7 +68,7 @@ func (s *Scribly) Me(ctx context.Context, user *User) (*Me, error) {
 
 func (s *Scribly) UserStory(ctx context.Context, user User, storyID int) (*UserStory, error) {
 	story := UserStory{}
-	if err := s.db.Model(&story).
+	if err := s.db.NewSelect().Model(&story).
 		Where("story_id = ? AND user_id = ?", storyID, user.ID).
 		Relation("Story").
 		Relation("Story.Cowriters", db.WithOrderBy("story_cowriter.turn_index")).
@@ -75,7 +76,7 @@ func (s *Scribly) UserStory(ctx context.Context, user User, storyID int) (*UserS
 		Relation("Story.CreatedByU").
 		Relation("Story.Turns", db.WithOrderBy("turn.created_at")).
 		Relation("Story.CurrentWriter").
-		Select(); err != nil {
+		Scan(ctx); err != nil {
 		return nil, err
 	}
 
@@ -100,7 +101,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 		State:       StoryStateDraft,
 		CreatedByID: user.ID,
 	}
-	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+	err := s.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		_, err := tx.NewInsert().Model(&story).ExcludeColumn("current_writer_id").Exec(ctx)
 		if err != nil {
 			return err
@@ -131,7 +132,7 @@ func (s *Scribly) StartStory(ctx context.Context, user User, input StartStoryInp
 
 func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, input AddCowritersInput) error {
 	story := Story{ID: storyID}
-	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+	err := s.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		if err := tx.NewSelect().Model(&story).WherePK().Scan(ctx); err != nil {
 			return err
 		}
@@ -189,7 +190,7 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 
 	story := Story{ID: storyID}
 
-	err := s.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+	err := s.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		if err := tx.NewSelect().Model(&story).WherePK().Relation("Turns").Scan(ctx); err != nil {
 			return err
 		}
@@ -238,7 +239,7 @@ func (s *Scribly) Hide(ctx context.Context, user User, storyID int, hiddenStatus
 		return err
 	}
 
-	if _, err := s.db.NewInsert().Model(&hide).OnConflict("(user_id, story_id) DO UPDATE").Exec(ctx); err != nil {
+	if _, err := s.db.NewInsert().Model(&hide).On("CONFLICT (user_id, story_id) DO UPDATE").Exec(ctx); err != nil {
 		return err
 	}
 
@@ -270,14 +271,14 @@ func (s *Scribly) Nudge(ctx context.Context, nudger User, nudgeeID int, storyID 
 
 func (s *Scribly) SendAddedToStoryEmails(ctx context.Context, storyID int) error {
 	story := Story{ID: storyID}
-	if err := s.db.Model(&story).
+	if err := s.db.NewSelect().Model(&story).
 		WherePK().
 		Relation("Cowriters").
 		Relation("Cowriters.User").
 		Relation("CurrentWriter").
 		Relation("Turns").
 		Relation("CreatedByU").
-		Select(); err != nil {
+		Scan(ctx); err != nil {
 		return err
 	}
 
@@ -297,13 +298,13 @@ func (s *Scribly) SendAddedToStoryEmails(ctx context.Context, storyID int) error
 
 func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, turnNumber int) error {
 	story := Story{ID: storyID}
-	if err := s.db.Model(&story).WherePK().
+	if err := s.db.NewSelect().Model(&story).WherePK().
 		Relation("Turns", db.WithOrderBy("turn.created_at")).
 		Relation("Turns.TakenByU").
 		Relation("Cowriters", db.WithOrderBy("story_cowriter.turn_index")).
 		Relation("Cowriters.User").
 		Relation("CurrentWriter").
-		Select(); err != nil {
+		Scan(ctx); err != nil {
 		return err
 	}
 
