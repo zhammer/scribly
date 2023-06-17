@@ -13,5 +13,14 @@ services:
       - type: bind
         source: "."
         target: "/project"
-        read_only: true
+    environment:
+      DEBUG: true
+    command: >
+      bash -c "
+        ./wait-for-it.sh db:5432
+        ./wait-for-it.sh mocksendgrid:1080
+        sqitch deploy db:$${DATABASE_URL}
+        go install github.com/cosmtrek/air@latest
+        air
+      "
     # TODO: command that uses go hot reload (in the past i've used air)

@@ -5,6 +5,8 @@ import (
 	"scribly/pkg/helpers"
 	"strings"
 	"time"
+
+	"github.com/uptrace/bun"
 )
 
 type EmailVerificationState string
@@ -15,7 +17,7 @@ const (
 )
 
 type User struct {
-	ID                      int
+	ID                      int `bun:",pk,autoincrement"`
 	Username                string
 	Email                   string
 	EmailVerificationStatus EmailVerificationState
@@ -59,11 +61,11 @@ const (
 
 type Turn struct {
 	StoryID   int
-	TakenByID int `pg:"taken_by"`
+	TakenByID int `bun:"taken_by"`
 	// this can't be called TakenBy.. go-pg gets confused, change the underlying column names soon
-	TakenByU User `pg:"rel:has-one,fk:taken_by"`
+	TakenByU User `bun:"rel:belongs-to,join:taken_by=id"`
 	Action   TurnAction
-	Text     string `pg:"text_written"`
+	Text     string `bun:"text_written"`
 }
 
 func (t *Turn) Validate() error {
@@ -98,10 +100,10 @@ func (t *Turn) Writes() bool {
 
 type StoryCowriter struct {
 	StoryID   int
-	Story     Story `pg:"rel:has-one"`
+	Story     Story `bun:"rel:belongs-to"`
 	UserID    int
-	User      User `pg:"rel:has-one"`
-	TurnIndex int  `pg:",use_zero"`
+	User      User `bun:"rel:belongs-to"`
+	TurnIndex int
 }
 
 type StoryState string
@@ -113,16 +115,16 @@ const (
 )
 
 type Story struct {
-	tableName       struct{} `pg:"select:stories_enhanced"`
-	ID              int
+	bun.BaseModel   `bun:"select:stories_enhanced"`
+	ID              int `bun:",pk,autoincrement"`
 	Title           string
 	State           StoryState
-	CreatedByID     int             `pg:"created_by"`
-	CreatedByU      *User           `pg:"rel:has-one,fk:created_by"`
-	Cowriters       []StoryCowriter `pg:"rel:has-many"`
-	Turns           []Turn          `pg:"rel:has-many"`
+	CreatedByID     int             `bun:"created_by"`
+	CreatedByU      *User           `bun:"rel:has-one,join:created_by=id"`
+	Cowriters       []StoryCowriter `bun:"rel:has-many"`
+	Turns           []Turn          `bun:"rel:has-many"`
 	CurrentWriterID int
-	CurrentWriter   *User `pg:"rel:has-one"`
+	CurrentWriter   *User `bun:"rel:belongs-to"`
 }
 
 func (s *Story) userInvolvedWithStory(user User) bool {
@@ -187,9 +189,9 @@ func (s *Story) ValidateUserCanTakeTurn(user User, turn Turn) error {
 }
 
 type UserStory struct {
-	UserID  int
+	UserID  int `bun:",pk"`
 	StoryID int
-	Story   Story `pg:"rel:has-one"`
+	Story   Story `bun:"rel:belongs-to"`
 	Hidden  bool
 }
 
@@ -323,8 +325,8 @@ const (
 )
 
 type UserStoryHide struct {
-	UserID       int `pg:",pk"`
-	StoryID      int `pg:",pk"`
+	UserID       int `bun:",pk"`
+	StoryID      int `bun:",pk"`
 	HiddenStatus HiddenStatus
 }
 

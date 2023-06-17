@@ -39,7 +39,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
   mocksendgrid:
-    image: mockserver/mockserver:mockserver-5.11.2
+    image: mockserver/mockserver:mockserver-5.15.0
     environment:
       MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mocksendgrid.json
       MOCKSERVER_LOG_LEVEL: "WARNING"
@@ -48,7 +48,7 @@ services:
     volumes:
       - "./mocksendgrid.json:/config/mocksendgrid.json"
   mockopenai:
-    image: mockserver/mockserver:mockserver-5.11.2
+    image: mockserver/mockserver:mockserver-5.15.0
     environment:
       MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mockopenai.json
       MOCKSERVER_LOG_LEVEL: "WARNING"
