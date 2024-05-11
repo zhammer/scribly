@@ -2,6 +2,7 @@ package site
 
 import (
 	"fmt"
+	"html"
 	"html/template"
 	"net/http"
 	"strings"
@@ -54,7 +55,7 @@ func (v ViewData) Add(a int, b int) int {
 }
 
 func (v ViewData) NewLineify(str string) template.HTML {
-	return template.HTML(strings.ReplaceAll(str, "\n", "<br>"))
+	return template.HTML(strings.ReplaceAll(html.EscapeString(str), "\n", "<br>"))
 }
 
 func (v ViewData) Replace(original string, pattern string, replacement string) string {
