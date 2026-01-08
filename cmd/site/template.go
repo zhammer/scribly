@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mssola/user_agent"
+	"github.com/mssola/useragent"
 )
 
 type ViewData struct {
@@ -24,7 +24,7 @@ func (v ViewData) Query(key string) string {
 }
 
 func (v ViewData) Mobile() bool {
-	ua := user_agent.New(v.Request.Header.Get("user-agent"))
+	ua := useragent.New(v.Request.Header.Get("user-agent"))
 	return ua.Mobile()
 }
 

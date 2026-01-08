@@ -1,6 +1,6 @@
 /* global cy */
 /// <reference types="cypress" />
-import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
+import { Given, Then, When } from "@badeball/cypress-cucumber-preprocessor";
 
 beforeEach(() => {
   cy.resetDb();
@@ -35,10 +35,6 @@ Given("the following stories exist", datatable => {
       turns: parseInt(storyRow.turns)
     }))
   );
-});
-
-When("I wait for scribbot to take its turns", () => {
-  cy.exec("docker-compose run scribbot")
 });
 
 When("I wait {float} seconds", seconds => {
