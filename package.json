@@ -6,17 +6,16 @@
   "author": "zhammer <zachary_hammer@alumni.brown.edu>",
   "license": "MIT",
   "dependencies": {
-    "axe-core": "^3.4.1",
+    "@badeball/cypress-cucumber-preprocessor": "^22",
+    "@bahmutov/cypress-esbuild-preprocessor": "^2",
+    "axe-core": "^4",
     "casual": "^1.6.2",
-    "cypress": "^8",
-    "cypress-axe": "^0.5.3",
-    "cypress-cucumber-preprocessor": "^4.0.1",
-    "cypress-plugin-tab": "^1.0.3",
-    "pg": "^8.6.0",
-    "superagent": "^5.1.2",
-    "wait-on": "^3.3.0"
-  },
-  "cypress-cucumber-preprocessor": {
-    "nonGlobalStepDefinitions": true
+    "cypress": "^13",
+    "cypress-axe": "^1",
+    "cypress-real-events": "^1",
+    "esbuild": "^0.27",
+    "pg": "^8",
+    "superagent": "^10",
+    "wait-on": "^8"
   }
 }

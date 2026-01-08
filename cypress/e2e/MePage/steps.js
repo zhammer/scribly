@@ -1,6 +1,6 @@
 /* global cy */
 /// <reference types="cypress" />
-import { Given, Then, When } from "cypress-cucumber-preprocessor/steps";
+import { Given, Then, When } from "@badeball/cypress-cucumber-preprocessor";
 
 Then(`the {string} section has the stories`, (sectionTitle, datatable) => {
   const stories = datatable.hashes().map(row => row.title);
