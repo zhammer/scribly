@@ -28,15 +28,6 @@ services:
         source: "."
         target: "/project"
         read_only: true
-  #  scribbot:
-  #    build: .
-  #    image: scribly/scribly
-  #    command: /bin/scribbot
-  #    environment:
-  #      DATABASE_URL: postgres://scribly:pass@db/scribly?sslmode=disable
-  #      WEBSITE_URL: http://127.0.0.1:8000
-  #      SENDGRID_BASE_URL: http://mocksendgrid:1080
-  #      OPENAI_BASE_URL: http://mockopenai:1080
   db:
     image: postgres:16
     ports:
@@ -56,15 +47,5 @@ services:
       - "9991:1080"
     volumes:
       - "./mocksendgrid.json:/config/mocksendgrid.json"
-  mockopenai:
-    image: mockserver/mockserver:mockserver-5.15.0
-    environment:
-      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mockopenai.json
-      MOCKSERVER_LOG_LEVEL: "WARNING"
-    ports:
-      - "9992:1080"
-    volumes:
-      - "./mockopenai.json:/config/mockopenai.json"
-
 volumes:
   pgdata:
