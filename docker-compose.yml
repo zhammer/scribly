@@ -17,7 +17,7 @@ services:
       bash -c "
         ./wait-for-it.sh db:5432
         ./wait-for-it.sh mocksendgrid:1080
-        sqitch deploy db:$${DATABASE_URL} && go run ./cmd/site/
+        sqitch deploy db:$${DATABASE_URL} && /bin/scribly
       "
   migrations:
     image: sqitch/sqitch
@@ -38,7 +38,7 @@ services:
   #      SENDGRID_BASE_URL: http://mocksendgrid:1080
   #      OPENAI_BASE_URL: http://mockopenai:1080
   db:
-    image: postgres:latest
+    image: postgres:16
     ports:
       - "5432:5432"
     environment:

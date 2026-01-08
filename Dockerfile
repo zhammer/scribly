@@ -1,4 +1,4 @@
-FROM golang:1.20
+FROM golang:1.24
 
 ENV GO111MODULE=on
 
@@ -17,5 +17,4 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /bin/scribly ./cmd/site
-RUN go build -o /bin/scribbot ./cmd/scribbot
+RUN go build -o /bin/scribly ./cmd/site/server

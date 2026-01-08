@@ -3,8 +3,8 @@ package cmd
 import (
 	"scribly/internal"
 
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/stdlib"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/extra/bundebug"
@@ -22,7 +22,7 @@ func (c *Config) MakeScribly() (*internal.Scribly, error) {
 	if err != nil {
 		panic(err)
 	}
-	config.PreferSimpleProtocol = true
+	config.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
 	sqldb := stdlib.OpenDB(*config)
 	db := bun.NewDB(sqldb, pgdialect.New())
