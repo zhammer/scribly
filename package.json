@@ -5,6 +5,7 @@
   "repository": "git@github.com:zhammer/scribly.git",
   "author": "zhammer <zachary_hammer@alumni.brown.edu>",
   "license": "MIT",
+  "packageManager": "yarn@4.6.0",
   "dependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^22",
     "@bahmutov/cypress-esbuild-preprocessor": "^2",
