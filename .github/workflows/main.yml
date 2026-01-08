@@ -25,6 +25,8 @@ jobs:
         with:
           node-version: '20'
       - run: corepack enable
+      # Create static directory for email testing hack (Cypress writes email HTML here)
+      - run: mkdir -p static
       - uses: cypress-io/github-action@v6
         with:
           browser: chrome
