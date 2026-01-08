@@ -13,7 +13,6 @@
     "casual": "^1.6.2",
     "cypress": "^13",
     "cypress-axe": "^1",
-    "cypress-real-events": "^1",
     "esbuild": "^0.27",
     "pg": "^8",
     "superagent": "^10",
