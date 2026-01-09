@@ -11,10 +11,10 @@ import (
 )
 
 type Config struct {
-	DatabaseURL     string `envconfig:"database_url" default:"postgres://scribly:pass@localhost/scribly?sslmode=disable"`
-	SendgridBaseURL string `envconfig:"sendgrid_base_url" default:"https://api.sendgrid.com"`
-	SendgridAPIKey  string `envconfig:"sendgrid_api_key" default:"test_sendgrid_api_key"`
-	Debug           bool
+	DatabaseURL   string `envconfig:"database_url" default:"postgres://scribly:pass@localhost/scribly?sslmode=disable"`
+	ResendBaseURL string `envconfig:"resend_base_url" default:"https://api.resend.com"`
+	ResendAPIKey  string `envconfig:"resend_api_key" default:"test_resend_api_key"`
+	Debug         bool
 }
 
 func (c *Config) MakeScribly() (*internal.Scribly, error) {
@@ -31,10 +31,10 @@ func (c *Config) MakeScribly() (*internal.Scribly, error) {
 		db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 	}
 
-	sendgrid := internal.NewSendgridClient(c.SendgridBaseURL, c.SendgridAPIKey)
+	resend := internal.NewResendClient(c.ResendBaseURL, c.ResendAPIKey)
 	messageGateway := internal.GoroutineMessageGateway{}
 
-	scribly, err := internal.NewScribly(db, sendgrid, &messageGateway)
+	scribly, err := internal.NewScribly(db, resend, &messageGateway)
 	if err != nil {
 		return nil, err
 	}

@@ -124,12 +124,10 @@ Then(`I see the title {string}`, title => {
 
 function getEmail(emails, expectedAddress, expectedSubject) {
   return emails.find(email => {
-    return email.personalizations.find(({ to, subject }) => {
-      return (
-        subject === expectedSubject &&
-        to.find(({ email }) => email === expectedAddress)
-      );
-    });
+    return (
+      email.subject === expectedSubject &&
+      email.to.includes(expectedAddress)
+    );
   });
 }
 
@@ -148,7 +146,7 @@ When(
   (address, subject) => {
     cy.getEmails().then(emails => {
       const email = getEmail(emails, address, subject);
-      const html = email.content[0].value;
+      const html = email.html;
       cy.writeFile("static/tempfile.html", html);
       cy.visit("_cypress_email");
     });

@@ -1,6 +1,6 @@
 const MockServer = require("./mockserver");
 
-class MockSendGrid {
+class MockResend {
   constructor(port) {
     this.mockserver = new MockServer(port);
   }
@@ -9,11 +9,11 @@ class MockSendGrid {
     await this.mockserver.reset();
     await this.mockserver.addMock({
       request: {
-        path: "/v3/mail/send",
+        path: "/emails",
         method: "POST"
       },
       response: {
-        statusCode: 202
+        statusCode: 200
       }
     });
     return null;
@@ -26,4 +26,4 @@ class MockSendGrid {
   };
 }
 
-module.exports = MockSendGrid;
+module.exports = MockResend;
