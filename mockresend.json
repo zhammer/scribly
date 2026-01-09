@@ -1,11 +1,11 @@
 [
   {
     "httpRequest": {
-      "path": "/v3/mail/send",
+      "path": "/emails",
       "method": "POST"
     },
     "httpResponse": {
-      "statusCode": 202
+      "statusCode": 200
     }
   }
 ]
