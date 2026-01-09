@@ -7,7 +7,7 @@ const {
   createEsbuildPlugin,
 } = require("@badeball/cypress-cucumber-preprocessor/esbuild");
 const DB = require("./cypress/plugins/db");
-const MockSendGrid = require("./cypress/plugins/mocksendgrid");
+const MockResend = require("./cypress/plugins/mockresend");
 
 module.exports = defineConfig({
   projectId: "nxmvpu",
@@ -27,14 +27,14 @@ module.exports = defineConfig({
 
       // Custom tasks from old plugins/index.js
       const db = new DB();
-      const sendgrid = new MockSendGrid(9991);
+      const resend = new MockResend(9991);
 
       on("task", {
         resetDb: db.resetDb,
         addUsers: db.addUsers,
         addStories: db.addStories,
-        listenForEmails: sendgrid.listenForEmails,
-        getEmails: sendgrid.getEmails,
+        listenForEmails: resend.listenForEmails,
+        getEmails: resend.getEmails,
       });
 
       return config;
