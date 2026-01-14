@@ -7,9 +7,9 @@ type EmailGateway interface {
 }
 
 type MessageGateway interface {
-	AnnounceUserCreated(ctx context.Context, user User)
-	AnnounceTurnTaken(ctx context.Context, story Story)
-	AnnounceCowritersAdded(ctx context.Context, story Story)
+	AnnounceUserCreated(ctx context.Context, user User) error
+	AnnounceTurnTaken(ctx context.Context, story Story) error
+	AnnounceCowritersAdded(ctx context.Context, story Story) error
 }
 
 type OpenAIGateway interface {

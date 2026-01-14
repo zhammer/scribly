@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"scribly/pkg/db"
 
 	"github.com/uptrace/bun"
@@ -40,7 +41,10 @@ func (s *Scribly) SignUp(ctx context.Context, input SignUpInput) (*User, error) 
 		return nil, err
 	}
 
-	s.messageGateway.AnnounceUserCreated(ctx, user)
+	// Log but don't fail signup if verification email fails
+	if err := s.messageGateway.AnnounceUserCreated(ctx, user); err != nil {
+		fmt.Printf("failed to send verification email for user %d: %s\n", user.ID, err)
+	}
 
 	return &user, nil
 }
@@ -172,7 +176,10 @@ func (s *Scribly) AddCowriters(ctx context.Context, user User, storyID int, inpu
 		return err
 	}
 
-	s.messageGateway.AnnounceCowritersAdded(ctx, story)
+	// Log but don't fail if email notification fails
+	if err := s.messageGateway.AnnounceCowritersAdded(ctx, story); err != nil {
+		fmt.Printf("failed to send added-to-story emails for story %d: %s\n", story.ID, err)
+	}
 
 	return nil
 }
@@ -218,7 +225,10 @@ func (s *Scribly) TakeTurn(ctx context.Context, user User, storyID int, input Tu
 		return err
 	}
 
-	s.messageGateway.AnnounceTurnTaken(ctx, story)
+	// Log but don't fail if email notification fails
+	if err := s.messageGateway.AnnounceTurnTaken(ctx, story); err != nil {
+		fmt.Printf("failed to send turn notification emails for story %d: %s\n", story.ID, err)
+	}
 
 	return nil
 }
