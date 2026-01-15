@@ -1,6 +1,6 @@
 {{template "before" .}}
 <h1 class="title">{{ .Data.UserStory.Story.Title }}</h1>
-<p class="text">{{ (index .Data.UserStory.Story.Turns 0).Text }}</p>
+<p class="text">{{- (index .Data.UserStory.Story.Turns 0).Text -}}</p>
 <form id="add-cowriters" class="add-cowriters" action="/stories/{{ .Data.UserStory.Story.ID }}/addcowriters"
   method="post">
   <hr />

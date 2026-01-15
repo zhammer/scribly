@@ -59,5 +59,9 @@ func TestStoryTemplate(t *testing.T) {
 	assert.Contains(t, buff.String(), "There was a car\nwow")
 	// test that <horse> was escaped, by showing what it would be escaped to
 	assert.Contains(t, buff.String(), "&lt;horse&gt;")
+	// test that there's no leading/trailing whitespace around turn text
+	assert.Contains(t, buff.String(), `<p id="turn-1" class="text">There was a car
+wow</p>`)
+	assert.Contains(t, buff.String(), `<p id="turn-2" class="text">And there was a &lt;horse&gt;</p>`)
 
 }
