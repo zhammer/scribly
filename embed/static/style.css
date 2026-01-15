@@ -18,6 +18,7 @@ textarea {
 }
 
 .text {
+  white-space: pre-wrap;
 }
 
 h3 {
