@@ -5,7 +5,7 @@
     {{ range $index, $turn := .Data.Story.Turns }}
     {{ if or (eq $turn.Action "write") (eq $turn.Action "write_and_finish") }}
     <p id="turn-{{ $.Add $index 1 }}" class="text">
-      {{ $turn.Text }}
+      {{- $turn.Text -}}
     </p>
     {{end}}
     {{ if eq $turn.Action "write" }}
