@@ -56,7 +56,7 @@ func TestStoryTemplate(t *testing.T) {
 		Data: &userStory,
 	})
 	assert.NoError(t, err)
-	assert.Contains(t, buff.String(), "There was a car<br>wow")
+	assert.Contains(t, buff.String(), "There was a car\nwow")
 	// test that <horse> was escaped, by showing what it would be escaped to
 	assert.Contains(t, buff.String(), "&lt;horse&gt;")
 
