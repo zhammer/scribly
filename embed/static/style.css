@@ -229,6 +229,15 @@ body.theme-candlelit {
   }
 }
 
+@keyframes hands-sway {
+  0%, 100% {
+    background-position: calc(50% - 10px) center;
+  }
+  50% {
+    background-position: calc(50% + 10px) center;
+  }
+}
+
 body.theme-candlelit h1,
 body.theme-candlelit h2,
 body.theme-candlelit h3,
@@ -289,6 +298,7 @@ body.theme-candlelit .title {
 
 body.theme-candlelit .text-divider {
   background-color: lightyellow;
+  animation: hands-sway 6s ease-in-out infinite;
 }
 
 body.theme-candlelit a:not(.button) {
