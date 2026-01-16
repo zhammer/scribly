@@ -9,3 +9,4 @@ cypress/videos
 .vscode
 /tmp/
 .vercel
+.env*.local
