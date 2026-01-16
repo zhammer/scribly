@@ -93,13 +93,17 @@ type Theme struct {
 // availableThemes defines the rotation order
 // Note: Icon represents what you'll see on the button to switch TO this theme (from the previous theme)
 var availableThemes = []Theme{
-	{Name: "default", CSSClass: "", Icon: "⬜"},
+	{Name: "default", CSSClass: "", Icon: "📃"},
 	{Name: "candlelit", CSSClass: "theme-candlelit", Icon: "🕯️"},
 	// Future themes can be added here
 }
 
 // getCurrentTheme returns the current theme based on cookie value
 func getCurrentTheme(r *http.Request) Theme {
+	if r == nil {
+		return availableThemes[0] // default
+	}
+
 	cookie, err := r.Cookie("scribly-style-preference")
 	if err != nil {
 		return availableThemes[0] // default
@@ -134,4 +138,11 @@ func (v ViewData) NextThemeIcon() string {
 	currentTheme := getCurrentTheme(v.Request)
 	nextTheme := getNextTheme(currentTheme)
 	return nextTheme.Icon
+}
+
+// NextThemeIcon returns the icon for the next theme in rotation
+func (v ViewData) NextThemeName() string {
+	currentTheme := getCurrentTheme(v.Request)
+	nextTheme := getNextTheme(currentTheme)
+	return nextTheme.Name
 }
