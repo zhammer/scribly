@@ -343,6 +343,29 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 
 	}).Methods("POST")
 
+	router.HandleFunc("/theme/toggle", func(w http.ResponseWriter, r *http.Request) {
+		// Get current theme and advance to next in rotation
+		currentTheme := getCurrentTheme(r)
+		nextTheme := getNextTheme(currentTheme)
+
+		// Set cookie with 365 day expiry
+		http.SetCookie(w, &http.Cookie{
+			Name:     "scribly-style-preference",
+			Value:    nextTheme.Name,
+			Path:     "/",
+			MaxAge:   365 * 24 * 60 * 60, // 365 days in seconds
+			HttpOnly: false,               // Allow JavaScript to read if needed
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		// Redirect back to referrer
+		referer := r.Header.Get("referer")
+		if referer == "" {
+			referer = "/me"
+		}
+		http.Redirect(w, r, pathFromURL(referer), http.StatusSeeOther)
+	}).Methods("POST")
+
 	router.HandleFunc("/stories/{storyId:[0-9]+}/nudge/{nudgeeId:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
 		user, _ := sessions.GetUser(r)
 		if user == nil {

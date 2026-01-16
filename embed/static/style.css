@@ -208,3 +208,54 @@ li.me-story:hover > .me-story-hover {
   font-size: inherit;
   text-decoration: underline;
 }
+
+/* Theme: Candlelit */
+body.theme-candlelit {
+  background-image: url("/static/candle.gif");
+  background-color: black;
+  background-repeat: repeat;
+  color: lightyellow;
+  min-height: 110vh;
+}
+
+body.theme-candlelit input,
+body.theme-candlelit textarea {
+  color: lightyellow;
+  background-color: transparent;
+  border-color: lightyellow;
+}
+
+body.theme-candlelit button {
+  color: lightyellow;
+  border-color: lightyellow;
+}
+
+body.theme-candlelit button:hover,
+body.theme-candlelit button:focus,
+body.theme-candlelit a.button:hover,
+body.theme-candlelit a.button:focus {
+  background: rgba(255, 255, 224, 0.2);
+}
+
+body.theme-candlelit a.button,
+body.theme-candlelit a.button:hover,
+body.theme-candlelit a.button:focus,
+body.theme-candlelit a.button:visited {
+  color: lightyellow;
+}
+
+body.theme-candlelit .faded {
+  color: rgba(255, 255, 224, 0.5);
+}
+
+body.theme-candlelit .story__details {
+  border-color: lightyellow;
+}
+
+body.theme-candlelit .view-preferences {
+  border-color: lightyellow;
+}
+
+body.theme-candlelit .title {
+  border-color: lightyellow;
+}

@@ -82,3 +82,56 @@ func (v ViewData) Propogate(data interface{}) ViewData {
 		Request: v.Request,
 	}
 }
+
+// Theme represents a visual style for the app
+type Theme struct {
+	Name     string // "default", "candlelit", etc.
+	CSSClass string // "", "theme-candlelit", etc.
+	Icon     string // emoji shown for this theme
+}
+
+// availableThemes defines the rotation order
+// Note: Icon represents what you'll see on the button to switch TO this theme (from the previous theme)
+var availableThemes = []Theme{
+	{Name: "default", CSSClass: "", Icon: "⬜"},
+	{Name: "candlelit", CSSClass: "theme-candlelit", Icon: "🕯️"},
+	// Future themes can be added here
+}
+
+// getCurrentTheme returns the current theme based on cookie value
+func getCurrentTheme(r *http.Request) Theme {
+	cookie, err := r.Cookie("scribly-style-preference")
+	if err != nil {
+		return availableThemes[0] // default
+	}
+
+	for _, theme := range availableThemes {
+		if theme.Name == cookie.Value {
+			return theme
+		}
+	}
+	return availableThemes[0] // fallback to default
+}
+
+// getNextTheme returns the next theme in rotation
+func getNextTheme(currentTheme Theme) Theme {
+	for i, theme := range availableThemes {
+		if theme.Name == currentTheme.Name {
+			// Return next theme (wrap around to start if at end)
+			return availableThemes[(i+1)%len(availableThemes)]
+		}
+	}
+	return availableThemes[0] // fallback
+}
+
+// ThemeClass returns the CSS class for the current theme
+func (v ViewData) ThemeClass() string {
+	return getCurrentTheme(v.Request).CSSClass
+}
+
+// NextThemeIcon returns the icon for the next theme in rotation
+func (v ViewData) NextThemeIcon() string {
+	currentTheme := getCurrentTheme(v.Request)
+	nextTheme := getNextTheme(currentTheme)
+	return nextTheme.Icon
+}
