@@ -139,7 +139,7 @@ a.button:visited {
 }
 
 #new-story {
-  height: 95vh;
+  height: 85vh;
 }
 
 .typewriter {
@@ -234,9 +234,15 @@ body.theme-candlelit h2,
 body.theme-candlelit h3,
 body.theme-candlelit p,
 body.theme-candlelit li,
-body.theme-candlelit a {
+body.theme-candlelit a:not(.button) {
   background-color: black;
   animation: candlelit-pulse 4s ease-in-out infinite;
+}
+
+body.theme-candlelit button,
+body.theme-candlelit a.button {
+  background-color: transparent;
+  animation: none;
 }
 
 body.theme-candlelit input,
