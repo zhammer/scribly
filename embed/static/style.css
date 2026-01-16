@@ -211,11 +211,32 @@ li.me-story:hover > .me-story-hover {
 
 /* Theme: Candlelit */
 body.theme-candlelit {
+  --candle-orange-inner: rgb(235, 178, 100);
+  --candle-orange-outer: rgb(185, 87, 52);
   background-image: url("/static/candle.gif");
   background-color: black;
   background-repeat: repeat;
   color: lightyellow;
   min-height: 110vh;
+}
+
+@keyframes candlelit-pulse {
+  0%, 100% {
+    background-color: rgba(0, 0, 0, 1);
+  }
+  50% {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+}
+
+body.theme-candlelit h1,
+body.theme-candlelit h2,
+body.theme-candlelit h3,
+body.theme-candlelit p,
+body.theme-candlelit li,
+body.theme-candlelit a {
+  background-color: black;
+  animation: candlelit-pulse 4s ease-in-out infinite;
 }
 
 body.theme-candlelit input,
@@ -258,4 +279,16 @@ body.theme-candlelit .view-preferences {
 
 body.theme-candlelit .title {
   border-color: lightyellow;
+}
+
+body.theme-candlelit .text-divider {
+  background-color: lightyellow;
+}
+
+body.theme-candlelit a:not(.button) {
+  color: var(--candle-orange-inner);
+}
+
+body.theme-candlelit a:not(.button):visited {
+  color: var(--candle-orange-outer);
 }
