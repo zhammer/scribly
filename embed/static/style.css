@@ -139,7 +139,7 @@ a.button:visited {
 }
 
 #new-story {
-  height: 95vh;
+  height: 85vh;
 }
 
 .typewriter {
@@ -207,4 +207,104 @@ li.me-story:hover > .me-story-hover {
   padding: 0;
   font-size: inherit;
   text-decoration: underline;
+}
+
+/* Theme: Candlelit */
+body.theme-candlelit {
+  --candle-orange-inner: rgb(235, 178, 100);
+  --candle-orange-outer: rgb(185, 87, 52);
+  background-image: url("/static/candle.gif");
+  background-color: black;
+  background-repeat: repeat;
+  color: lightyellow;
+  min-height: 110vh;
+}
+
+@keyframes candlelit-pulse {
+  0%, 100% {
+    background-color: rgba(0, 0, 0, 1);
+  }
+  50% {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+}
+
+@keyframes hands-sway {
+  0%, 100% {
+    background-position: calc(50% - 10px) center;
+  }
+  50% {
+    background-position: calc(50% + 10px) center;
+  }
+}
+
+body.theme-candlelit h1,
+body.theme-candlelit h2,
+body.theme-candlelit h3,
+body.theme-candlelit p,
+body.theme-candlelit li,
+body.theme-candlelit a:not(.button) {
+  background-color: black;
+  animation: candlelit-pulse 4s ease-in-out infinite;
+}
+
+body.theme-candlelit button,
+body.theme-candlelit a.button {
+  background-color: transparent;
+  animation: none;
+}
+
+body.theme-candlelit input,
+body.theme-candlelit textarea {
+  color: lightyellow;
+  background-color: transparent;
+  border-color: lightyellow;
+}
+
+body.theme-candlelit button {
+  color: lightyellow;
+  border-color: lightyellow;
+}
+
+body.theme-candlelit button:hover,
+body.theme-candlelit button:focus,
+body.theme-candlelit a.button:hover,
+body.theme-candlelit a.button:focus {
+  background: rgba(255, 255, 224, 0.2);
+}
+
+body.theme-candlelit a.button,
+body.theme-candlelit a.button:hover,
+body.theme-candlelit a.button:focus,
+body.theme-candlelit a.button:visited {
+  color: lightyellow;
+}
+
+body.theme-candlelit .faded {
+  color: rgba(255, 255, 224, 0.5);
+}
+
+body.theme-candlelit .story__details {
+  border-color: lightyellow;
+}
+
+body.theme-candlelit .view-preferences {
+  border-color: lightyellow;
+}
+
+body.theme-candlelit .title {
+  border-color: lightyellow;
+}
+
+body.theme-candlelit .text-divider {
+  background-color: lightyellow;
+  animation: hands-sway 6s ease-in-out infinite;
+}
+
+body.theme-candlelit a:not(.button) {
+  color: var(--candle-orange-inner);
+}
+
+body.theme-candlelit a:not(.button):visited {
+  color: var(--candle-orange-outer);
 }

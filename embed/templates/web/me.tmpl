@@ -26,6 +26,13 @@
     {{else}}
     <a href="?show_hidden=1">show hidden stories</a>
     {{end}}
+    <form action="/theme/toggle" method="post" style="margin-left: auto;">
+        <button type="submit"
+                style="border: none; padding: 0; font-size: 16px; background: transparent; cursor: pointer;"
+                title="Toggle theme">
+            {{.NextThemeIcon}}
+        </button>
+    </form>
 </div>
 <div>
 <section>
