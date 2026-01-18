@@ -196,6 +196,12 @@ li.me-story:hover > .me-story-hover {
   border-bottom: solid 1px;
   padding: 0.5em;
   display: flex;
+  align-items: center;
+}
+
+.view-preferences > form > button {
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .story-hide-form {
