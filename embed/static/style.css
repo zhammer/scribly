@@ -304,3 +304,84 @@ body.theme-candlelit a:not(.button) {
 body.theme-candlelit a:not(.button):visited {
   color: var(--candle-orange-outer);
 }
+
+/* Theme: Stars */
+body.theme-stars {
+  --star-yellow: rgb(252, 190, 17);
+  --star-dark-blue: rgba(10, 20, 40, 0.92);
+  background-image: url("/static/stars.gif");
+  background-color: black;
+  background-repeat: repeat;
+  color: var(--star-yellow);
+  min-height: 110vh;
+}
+
+body.theme-stars h1,
+body.theme-stars h2,
+body.theme-stars h3,
+body.theme-stars p,
+body.theme-stars li,
+body.theme-stars a:not(.button) {
+  background-color: var(--star-dark-blue);
+}
+
+body.theme-stars button,
+body.theme-stars a.button {
+  background-color: transparent;
+}
+
+body.theme-stars input,
+body.theme-stars textarea {
+  color: var(--star-yellow);
+  background-color: transparent;
+  border-color: var(--star-yellow);
+}
+
+body.theme-stars button {
+  color: var(--star-yellow);
+  border-color: var(--star-yellow);
+}
+
+body.theme-stars button:hover,
+body.theme-stars button:focus,
+body.theme-stars a.button:hover,
+body.theme-stars a.button:focus {
+  background: rgba(252, 190, 17, 0.2);
+}
+
+body.theme-stars a.button,
+body.theme-stars a.button:hover,
+body.theme-stars a.button:focus,
+body.theme-stars a.button:visited {
+  color: var(--star-yellow);
+}
+
+body.theme-stars .faded {
+  color: rgba(252, 190, 17, 0.5);
+}
+
+body.theme-stars .story__details {
+  border-color: var(--star-yellow);
+}
+
+body.theme-stars .view-preferences {
+  border-color: var(--star-yellow);
+}
+
+body.theme-stars .title {
+  border-color: var(--star-yellow);
+}
+
+body.theme-stars a:not(.button) {
+  color: var(--star-yellow);
+}
+
+body.theme-stars a:not(.button):visited {
+  color: rgba(252, 190, 17, 0.8);
+}
+
+body.theme-stars .text-divider {
+  position: relative;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(43%) saturate(583%) hue-rotate(359deg) brightness(110%) contrast(98%);
+}
+
