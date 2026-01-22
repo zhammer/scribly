@@ -1,9 +1,0 @@
-build:
-  docker:
-    web: Dockerfile
-release:
-  image: web
-  command:
-    - sqitch deploy db:$DATABASE_URL
-run:
-  web: /bin/scribly

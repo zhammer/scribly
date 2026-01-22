@@ -354,7 +354,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			Value:    nextTheme.Name,
 			Path:     "/",
 			MaxAge:   365 * 24 * 60 * 60, // 365 days in seconds
-			HttpOnly: false,               // Allow JavaScript to read if needed
+			HttpOnly: false,              // Allow JavaScript to read if needed
 			SameSite: http.SameSiteLaxMode,
 		})
 
@@ -433,9 +433,6 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 	}).Methods("GET")
-
-	// middleware
-	router.Use(HerokuHTTPSMiddleware)
 
 	return router, nil
 }
