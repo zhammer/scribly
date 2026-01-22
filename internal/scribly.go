@@ -92,7 +92,7 @@ func (s *Scribly) UserStory(ctx context.Context, user User, storyID int) (*UserS
 // on the site. return everyone who's not the current user.
 func (s *Scribly) UserSuggestions(ctx context.Context, user User) ([]User, error) {
 	var users []User
-	if err := s.db.NewSelect().Model(&users).Where("id != ?", user.ID).Scan(ctx); err != nil {
+	if err := s.db.NewSelect().Model(&users).Where("id != ?", user.ID).Where("email_verification_status = ?", EmailVerificationStateVerified).Scan(ctx); err != nil {
 		return users, err
 	}
 
