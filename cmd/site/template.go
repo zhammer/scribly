@@ -95,6 +95,7 @@ type Theme struct {
 var availableThemes = []Theme{
 	{Name: "default", CSSClass: "", Icon: "📃"},
 	{Name: "candlelit", CSSClass: "theme-candlelit", Icon: "🕯️"},
+	{Name: "stars", CSSClass: "theme-stars", Icon: "🌌"},
 	// Future themes can be added here
 }
 
