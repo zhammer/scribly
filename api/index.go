@@ -18,7 +18,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(os.Environ())
 
 	router, err = site.MakeRouter(cfg)
 	if err != nil {
@@ -31,5 +30,8 @@ func init() {
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL.Path)
+	if r.URL.Path == "/env" {
+		fmt.Println(os.Environ())
+	}
 	router.ServeHTTP(w, r)
 }
