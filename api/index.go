@@ -13,6 +13,9 @@ import (
 var router http.Handler
 
 func init() {
+	// https://github.com/vercel-community/php/issues/603#issuecomment-3792299533
+	os.Setenv("AWS_LAMBDA_EXEC_WRAPPER_OLD", os.Getenv("AWS_LAMBDA_EXEC_WRAPPER"))
+	os.Setenv("AWS_LAMBDA_EXEC_WRAPPER", "")
 	cfg := site.Config{}
 	err := envconfig.Process("", &cfg)
 	if err != nil {
@@ -24,8 +27,6 @@ func init() {
 		log.Fatal(err)
 	}
 
-	// https://github.com/vercel-community/php/issues/603#issuecomment-3792299533
-	os.Setenv("AWS_LAMBDA_EXEC_WRAPPER", "")
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
