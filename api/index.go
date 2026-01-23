@@ -18,6 +18,7 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(os.Environ())
 
 	router, err = site.MakeRouter(cfg)
 	if err != nil {
