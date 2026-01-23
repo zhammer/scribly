@@ -32,7 +32,7 @@ func init() {
 func Handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL.Path)
 	if r.URL.Path == "/env" {
-		fmt.Println(os.Environ())
+		fmt.Println("Wrapper: ", os.Getenv("AWS_LAMBDA_EXEC_WRAPPER"))
 	}
 	router.ServeHTTP(w, r)
 }
