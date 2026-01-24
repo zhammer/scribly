@@ -17,7 +17,6 @@ type Config struct {
 	cmd.Config
 	Port             int    `default:"8000"`
 	SessionSecretKey string `envconfig:"session_secret_key" default:"dev_session_secret"`
-	SiteURL          string `envconfig:"site_url"`
 }
 
 // func main() {

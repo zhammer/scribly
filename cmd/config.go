@@ -14,6 +14,7 @@ type Config struct {
 	DatabaseURL   string `envconfig:"database_url" default:"postgres://scribly:pass@localhost/scribly?sslmode=disable"`
 	ResendBaseURL string `envconfig:"resend_base_url" default:"https://api.resend.com"`
 	ResendAPIKey  string `envconfig:"resend_api_key" default:"test_resend_api_key"`
+	SiteURL       string `envconfig:"site_url"`
 	Debug         bool
 }
 
@@ -34,7 +35,7 @@ func (c *Config) MakeScribly() (*internal.Scribly, error) {
 	resend := internal.NewResendClient(c.ResendBaseURL, c.ResendAPIKey)
 	messageGateway := internal.GoroutineMessageGateway{}
 
-	scribly, err := internal.NewScribly(db, resend, &messageGateway)
+	scribly, err := internal.NewScribly(db, resend, &messageGateway, c.SiteURL)
 	if err != nil {
 		return nil, err
 	}
