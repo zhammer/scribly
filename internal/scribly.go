@@ -14,6 +14,7 @@ type Scribly struct {
 	db             *bun.DB
 	emailer        EmailGateway
 	messageGateway MessageGateway
+	websiteURL     string
 }
 
 func (s *Scribly) LogIn(ctx context.Context, input LoginInput) (*User, error) {
@@ -271,7 +272,7 @@ func (s *Scribly) Nudge(ctx context.Context, nudger User, nudgeeID int, storyID 
 		return err
 	}
 
-	email, err := BuildNudgeEmail(nudger, nudgee, story)
+	email, err := BuildNudgeEmail(s.websiteURL, nudger, nudgee, story)
 	if err != nil {
 		return err
 	}
@@ -292,7 +293,7 @@ func (s *Scribly) SendAddedToStoryEmails(ctx context.Context, storyID int) error
 		return err
 	}
 
-	emails, err := BuildAddedToStoryEmails(story)
+	emails, err := BuildAddedToStoryEmails(s.websiteURL, story)
 	if err != nil {
 		return err
 	}
@@ -318,7 +319,7 @@ func (s *Scribly) SendTurnEmailNotifications(ctx context.Context, storyID int, t
 		return err
 	}
 
-	emails, err := BuildTurnNotificationEmails(story, turnNumber)
+	emails, err := BuildTurnNotificationEmails(s.websiteURL, story, turnNumber)
 	if err != nil {
 		return err
 	}
@@ -347,7 +348,7 @@ func (s *Scribly) SendVerificationEmail(ctx context.Context, userID int) error {
 		return err
 	}
 
-	email, err := BuildEmailVerificationEmail(user, verificationToken)
+	email, err := BuildEmailVerificationEmail(s.websiteURL, user, verificationToken)
 	if err != nil {
 		return err
 	}
@@ -377,10 +378,11 @@ func (s *Scribly) VerifyEmail(ctx context.Context, user User, token string) erro
 	return nil
 }
 
-func NewScribly(db *bun.DB, emailer EmailGateway, messageGateway MessageGateway) (*Scribly, error) {
+func NewScribly(db *bun.DB, emailer EmailGateway, messageGateway MessageGateway, websiteURL string) (*Scribly, error) {
 	return &Scribly{
 		db:             db,
 		emailer:        emailer,
 		messageGateway: messageGateway,
+		websiteURL:     websiteURL,
 	}, nil
 }

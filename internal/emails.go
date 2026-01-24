@@ -4,25 +4,39 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"os"
 	"scribly/embed"
 	"strings"
 
 	"github.com/vanng822/go-premailer/premailer"
 )
 
-var websiteURL = os.Getenv("WEBSITE_URL")
-
 type viewData struct {
-	Data interface{}
+	Data       interface{}
+	websiteURL string
+}
+
+type viewDataOption func(*viewData)
+
+func newViewData(websiteURL string, opts ...viewDataOption) viewData {
+	vd := viewData{websiteURL: websiteURL}
+	for _, opt := range opts {
+		opt(&vd)
+	}
+	return vd
+}
+
+func withData(data interface{}) viewDataOption {
+	return func(vd *viewData) {
+		vd.Data = data
+	}
 }
 
 func (v viewData) StoryLink(story Story) template.HTML {
-	return template.HTML(fmt.Sprintf(`<a href="%s/stories/%d">%s</a>`, websiteURL, story.ID, story.Title))
+	return template.HTML(fmt.Sprintf(`<a href="%s/stories/%d">%s</a>`, v.websiteURL, story.ID, story.Title))
 }
 
 func (v viewData) WebsiteURL() string {
-	return websiteURL
+	return v.websiteURL
 }
 
 func (v viewData) Replace(original string, pattern string, replacement string) string {
@@ -45,13 +59,13 @@ func (v viewData) CSS() template.HTML {
 	return template.HTML("<style>" + embed.CSS + "</style>")
 }
 
-func BuildNudgeEmail(nudger User, nudgee User, story Story) (*Email, error) {
+func BuildNudgeEmail(websiteURL string, nudger User, nudgee User, story Story) (*Email, error) {
 	subject := fmt.Sprintf("%s nudged you to take your turn on %s", nudger.Username, story.Title)
 	data := map[string]interface{}{
 		"Story":  story,
 		"Nudger": nudger,
 	}
-	body, err := renderTemplateWithCSS("nudge.tmpl", data)
+	body, err := renderTemplateWithCSS("nudge.tmpl", websiteURL, data)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +77,7 @@ func BuildNudgeEmail(nudger User, nudgee User, story Story) (*Email, error) {
 	}, nil
 }
 
-func BuildAddedToStoryEmails(story Story) ([]Email, error) {
+func BuildAddedToStoryEmails(websiteURL string, story Story) ([]Email, error) {
 	var recipients []User
 	for _, cowriter := range story.Cowriters {
 		if cowriter.User.ID != story.CreatedByID && cowriter.User.EmailVerificationStatus == EmailVerificationStateVerified {
@@ -77,7 +91,7 @@ func BuildAddedToStoryEmails(story Story) ([]Email, error) {
 			"Story":     story,
 			"Recipient": recipient,
 		}
-		body, err := renderTemplateWithCSS("addedtostory.tmpl", data)
+		body, err := renderTemplateWithCSS("addedtostory.tmpl", websiteURL, data)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +105,7 @@ func BuildAddedToStoryEmails(story Story) ([]Email, error) {
 	return emails, nil
 }
 
-func BuildTurnNotificationEmails(story Story, turnNumber int) ([]Email, error) {
+func BuildTurnNotificationEmails(websiteURL string, story Story, turnNumber int) ([]Email, error) {
 	turn := story.Turns[turnNumber-1]
 	var recipients []User
 	for _, cowriter := range story.Cowriters {
@@ -108,7 +122,7 @@ func BuildTurnNotificationEmails(story Story, turnNumber int) ([]Email, error) {
 			"Turn":       &turn,
 			"Recipient":  recipient,
 		}
-		body, err := renderTemplateWithCSS("storyturnnotification.tmpl", data)
+		body, err := renderTemplateWithCSS("storyturnnotification.tmpl", websiteURL, data)
 		if err != nil {
 			return nil, err
 		}
@@ -134,12 +148,12 @@ func BuildTurnNotificationEmails(story Story, turnNumber int) ([]Email, error) {
 	return emails, nil
 }
 
-func BuildEmailVerificationEmail(user User, token string) (*Email, error) {
+func BuildEmailVerificationEmail(websiteURL string, user User, token string) (*Email, error) {
 	data := map[string]interface{}{
 		"Recipient":         user,
 		"VerificationToken": token,
 	}
-	body, err := renderTemplateWithCSS("verification.tmpl", data)
+	body, err := renderTemplateWithCSS("verification.tmpl", websiteURL, data)
 	if err != nil {
 		return nil, err
 	}
@@ -151,10 +165,10 @@ func BuildEmailVerificationEmail(user User, token string) (*Email, error) {
 	}, nil
 }
 
-func renderTemplateWithCSS(templateName string, data interface{}) (string, error) {
+func renderTemplateWithCSS(templateName string, websiteURL string, data interface{}) (string, error) {
 	var buffer bytes.Buffer
-	viewData := viewData{Data: data}
-	if err := embed.EmailTemplates.ExecuteTemplate(&buffer, templateName, viewData); err != nil {
+	vd := newViewData(websiteURL, withData(data))
+	if err := embed.EmailTemplates.ExecuteTemplate(&buffer, templateName, vd); err != nil {
 		return "", err
 	}
 	prem, err := premailer.NewPremailerFromBytes(buffer.Bytes(), premailer.NewOptions())

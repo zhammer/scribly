@@ -55,7 +55,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 
 	errorPage := func(w http.ResponseWriter, r *http.Request, e error) error {
 		fmt.Printf("error on request %s: %s\n", r.URL.String(), e.Error())
-		return embedded.WebTemplates.ExecuteTemplate(w, "exception.tmpl", ViewData{e, r, "Uh Oh!", ""})
+		return embedded.WebTemplates.ExecuteTemplate(w, "exception.tmpl", NewViewData(r, cfg, WithData(e), WithTitle("Uh Oh!")))
 	}
 
 	router.HandleFunc("/exception", func(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +69,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := embedded.WebTemplates.ExecuteTemplate(w, "index.tmpl", ViewData{nil, r, "", ""}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "index.tmpl", NewViewData(r, cfg)); err != nil {
 			errorPage(w, r, err)
 		}
 	}).Methods("GET")
@@ -80,7 +80,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := embedded.WebTemplates.ExecuteTemplate(w, "login.tmpl", ViewData{nil, r, "Scribly - Log in", ""}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "login.tmpl", NewViewData(r, cfg, WithTitle("Scribly - Log in"))); err != nil {
 			errorPage(w, r, err)
 		}
 	}).Methods("GET")
@@ -118,7 +118,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 	}).Methods("POST")
 
 	router.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
-		if err := embedded.WebTemplates.ExecuteTemplate(w, "signup.tmpl", ViewData{nil, r, "Scribly - Sign up", ""}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "signup.tmpl", NewViewData(r, cfg, WithTitle("Scribly - Sign up"))); err != nil {
 			errorPage(w, r, err)
 		}
 	}).Methods("GET")
@@ -173,7 +173,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := embedded.WebTemplates.ExecuteTemplate(w, "me.tmpl", ViewData{me, r, "", ""}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "me.tmpl", NewViewData(r, cfg, WithData(me))); err != nil {
 			errorPage(w, r, err)
 			return
 		}
@@ -200,20 +200,19 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 		switch story.Story.State {
 		case internal.StoryStateDraft:
 			userSuggestions, _ := scribly.UserSuggestions(r.Context(), *user)
-			viewData := ViewData{
-				Data: map[string]interface{}{
+			viewData := NewViewData(r, cfg,
+				WithData(map[string]interface{}{
 					"UserStory":       story,
 					"UserSuggestions": userSuggestions,
-				},
-				Request: r,
-				title:   fmt.Sprintf("%s - Add Cowriters", story.Story.Title),
-			}
+				}),
+				WithTitle(fmt.Sprintf("%s - Add Cowriters", story.Story.Title)),
+			)
 			if err := embedded.WebTemplates.ExecuteTemplate(w, "addpeopletostory.tmpl", viewData); err != nil {
 				errorPage(w, r, err)
 				return
 			}
 		default:
-			if err := embedded.WebTemplates.ExecuteTemplate(w, "story.tmpl", ViewData{story, r, fmt.Sprintf("Scribly - %s", story.Story.Title), ""}); err != nil {
+			if err := embedded.WebTemplates.ExecuteTemplate(w, "story.tmpl", NewViewData(r, cfg, WithData(story), WithTitle(fmt.Sprintf("Scribly - %s", story.Story.Title)))); err != nil {
 				errorPage(w, r, err)
 				return
 			}
@@ -286,7 +285,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := embedded.WebTemplates.ExecuteTemplate(w, "newstory.tmpl", ViewData{nil, r, "Scribly - New Story", "page page-tall"}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "newstory.tmpl", NewViewData(r, cfg, WithTitle("Scribly - New Story"), WithPageClass("page page-tall"))); err != nil {
 			errorPage(w, r, err)
 			return
 		}
@@ -381,14 +380,13 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		data := ViewData{
-			Request: r,
-			Data: map[string]interface{}{
+		data := NewViewData(r, cfg,
+			WithData(map[string]interface{}{
 				"User":    user,
 				"StoryID": storyID,
-			},
-			title: "Nudge delivered",
-		}
+			}),
+			WithTitle("Nudge delivered"),
+		)
 		if err := embedded.WebTemplates.ExecuteTemplate(w, "nudged.tmpl", data); err != nil {
 			errorPage(w, r, err)
 			return
@@ -408,7 +406,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := embedded.WebTemplates.ExecuteTemplate(w, "emailverificationrequested.tmpl", ViewData{user, r, "Email Verification Sent", ""}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "emailverificationrequested.tmpl", NewViewData(r, cfg, WithData(user), WithTitle("Email Verification Sent"))); err != nil {
 			errorPage(w, r, err)
 			return
 		}
@@ -428,7 +426,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 			return
 		}
 
-		if err := embedded.WebTemplates.ExecuteTemplate(w, "emailverificationsuccess.tmpl", ViewData{user, r, "Email Verified!", ""}); err != nil {
+		if err := embedded.WebTemplates.ExecuteTemplate(w, "emailverificationsuccess.tmpl", NewViewData(r, cfg, WithData(user), WithTitle("Email Verified!"))); err != nil {
 			errorPage(w, r, err)
 			return
 		}
