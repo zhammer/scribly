@@ -1,4 +1,5 @@
 {
+    "outputDirectory": "embed/public",
     "rewrites": [
         {
             "source": "/:path*",
