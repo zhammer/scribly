@@ -15,6 +15,35 @@ type ViewData struct {
 	Request   *http.Request
 	title     string
 	pageClass string
+	cfg       Config
+}
+
+type ViewDataOption func(*ViewData)
+
+func NewViewData(r *http.Request, cfg Config, opts ...ViewDataOption) ViewData {
+	vd := ViewData{Request: r, cfg: cfg}
+	for _, opt := range opts {
+		opt(&vd)
+	}
+	return vd
+}
+
+func WithData(data interface{}) ViewDataOption {
+	return func(vd *ViewData) {
+		vd.Data = data
+	}
+}
+
+func WithTitle(title string) ViewDataOption {
+	return func(vd *ViewData) {
+		vd.title = title
+	}
+}
+
+func WithPageClass(pageClass string) ViewDataOption {
+	return func(vd *ViewData) {
+		vd.pageClass = pageClass
+	}
 }
 
 // v *ViewData doesn't seem to work. i guess go templates don't have the same
@@ -33,6 +62,10 @@ func (v ViewData) Title() string {
 		return "Scribly"
 	}
 	return v.title
+}
+
+func (v ViewData) SiteURL() string {
+	return v.cfg.SiteURL
 }
 
 func (v ViewData) PageClass() string {
@@ -80,6 +113,7 @@ func (v ViewData) Propogate(data interface{}) ViewData {
 	return ViewData{
 		Data:    data,
 		Request: v.Request,
+		cfg:     v.cfg,
 	}
 }
 
