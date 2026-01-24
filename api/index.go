@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"scribly/cmd/site"
 
 	"github.com/kelseyhightower/envconfig"
@@ -13,9 +12,6 @@ import (
 var router http.Handler
 
 func init() {
-	// https://github.com/vercel-community/php/issues/603#issuecomment-3792299533
-	os.Setenv("AWS_LAMBDA_EXEC_WRAPPER", "")
-
 	cfg := site.Config{}
 	err := envconfig.Process("", &cfg)
 	if err != nil {
