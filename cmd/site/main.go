@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"scribly/cmd"
 	embedded "scribly/embed"
+	"scribly/embed_static"
 	"scribly/internal"
 	"strconv"
 
@@ -47,7 +48,7 @@ func MakeRouter(cfg Config) (http.Handler, error) {
 		return nil, fmt.Errorf("error making scribly: %w", err)
 	}
 
-	router.PathPrefix("/static/").Handler(http.FileServer(http.FS(embedded.StaticFS)))
+	router.PathPrefix("/static/").Handler(http.FileServer(http.FS(embed_static.StaticFS)))
 
 	router.HandleFunc("/_cypress_email", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/tempfile.html")

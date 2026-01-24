@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"os"
 	"scribly/embed"
+	"scribly/embed_static"
 	"strings"
 
 	"github.com/vanng822/go-premailer/premailer"
@@ -42,7 +43,7 @@ func (v viewData) WhoseTurnText(story Story, recipient User) string {
 }
 
 func (v viewData) CSS() template.HTML {
-	return template.HTML("<style>" + embed.CSS + "</style>")
+	return template.HTML("<style>" + embed_static.CSS + "</style>")
 }
 
 func BuildNudgeEmail(nudger User, nudgee User, story Story) (*Email, error) {
