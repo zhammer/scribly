@@ -11,7 +11,7 @@ services:
       - "./static:/project/static"
     environment:
       DATABASE_URL: postgres://scribly:pass@db/scribly?sslmode=disable
-      WEBSITE_URL: http://127.0.0.1:8000
+      SITE_URL: http://127.0.0.1:8000
       RESEND_BASE_URL: http://mockresend:1080
     command: >
       bash -c "
