@@ -1,13 +1,12 @@
 {
-  "outputDirectory": "embed_static",
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "destination": "/api"
-    },
-    {
-      "source": "/",
-      "destination": "/api"
-    }
-  ]
+    "rewrites": [
+        {
+            "source": "/:path*",
+            "destination": "/api"
+        },
+        {
+            "source": "/",
+            "destination": "/api"
+        }
+    ]
 }
